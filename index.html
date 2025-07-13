@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<!-- Loadspreader Calculator — mobile‑friendly single‑file web‑app
+     2025‑07‑13  (revision 25: add steel‑mat self‑weight Wm input; qmax now uses (Pmax+Wm)) -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loadspreader Calculator</title>
+  <style>
+    *{box-sizing:border-box}
+    .responsive{width:100%;height:auto}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff;color:#111}
+    .hide{display:none}
+    .section-title{font-weight:600;margin:24px 0 4px;border-bottom:1px solid #ccc;padding-bottom:4px;font-size:.95rem}
+    .green{color:#0a8a0a}.red{color:#d00}
+    button,input,select{font-size:1rem;border-radius:6px}
+    .btn{display:block;width:100%;background:#0a7bd9;color:#fff;border:none;padding:12px 16px;margin:8px 0;cursor:pointer}
+    .btn:disabled{background:#8aa8c4;cursor:not-allowed}
+    header{background:#f5f5f5;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:2}
+    header h1{margin:0;font-size:1.2rem;flex:1;text-align:center}
+    input,select{width:100%;padding:10px;border:1px solid #bbb;margin-top:4px;margin-bottom:12px}
+    label{display:block;font-size:.85rem}
+    nav{text-align:center;padding:32px 16px}
+    nav img{width:45%;max-width:180px}
+    .container{padding:16px}
+    #plot{width:100%;height:100%;border:1px solid #eee;border-radius:6px}
+  </style>
+</head>
+<body>
+  <!-- ========= MENU ========= -->
+  <div id="menu-screen">
+    <nav><img src="icon.png" class="responsive" alt="App icon"></nav>
+    <div class="container">
+      <h1 style="text-align:center;margin-top:0">Engineering Tools</h1>
+      <button class="btn" id="open-calculator">Loadspreader Calculator</button>
+      <button class="btn" disabled>Tailing Calculator (coming soon)</button>
+      <button class="btn" disabled>Rigging Calculator (coming soon)</button>
+    </div>
+  </div>
+
+  <!-- ======= CALCULATOR ====== -->
+  <div id="calc-screen" class="hide">
+    <header>
+      <button class="btn" id="back-menu" style="width:auto;padding:6px 12px;background:#ddd;color:#111">← Menu</button>
+      <h1>Loadspreader Calculator</h1>
+    </header>
+    <div class="container">
+      <!-- Dynamic schematic diagram -->
+      <img id="diagram" src="LSP.png" class="responsive" alt="Loadspreader schematic diagram">
+
+      <div class="section-title">Input Parameters</div>
+
+      <!-- Top contact type selector -->
+      <label>Top Contact Type
+        <select id="top_type">
+          <option value="mat">Steel Mat</option>
+          <option value="crawler">Crawler Tracks</option>
+        </select>
+      </label>
+
+      <!-- Top contact dimensions -->
+      <label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>
+        <input id="Lw" type="number" step="0.01" value="2">
+      </label>
+      <label id="label_Lr"><span class="label-text">Top Steel Mat Width&nbsp;L<sub>r</sub> (m)</span>
+        <input id="Lr" type="number" step="0.01" value="1">
+      </label>
+
+      <!-- Load inputs -->
+      <label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
+        <input id="q_max" type="number" step="0.1" value="40">
+      </label>
+      <label id="label_Pmax" class="hide">Point Load Force P<sub>max</sub> (t)
+        <input id="p_max" type="number" step="0.1" value="100">
+      </label>
+      <label id="label_Wmat" class="hide">Steel Mat Self‑Weight W<sub>m</sub> (t)
+        <input id="w_mat" type="number" step="0.1" value="0">
+      </label>
+
+      <!-- Remaining existing inputs -->
+      <label>Loadspreader Length L<sub>sl</sub> (m)
+        <input id="Lsl" type="number" step="0.01" value="3">
+      </label>
+      <label>Loadspreader Width L<sub>sb</sub> (m)
+        <input id="Lsb" type="number" step="0.01" value="1">
+      </label>
+      <label>Loadspreader Thickness h (m)
+        <input id="Lsh" type="number" step="0.01" value="0.4">
+      </label>
+      <label>Number of Base Layers
+        <input id="layers" type="number" step="1" value="1">
+      </label>
+      <label>Allowable Ground Pressure (t/m²)
+        <input id="GBP_allow" type="number" step="0.1" value="20">
+      </label>
+      <label>Decimal Precision
+        <input id="precision" type="number" step="1" value="2">
+      </label>
+
+      <div class="section-title">Material</div>
+      <select id="material">
+        <option value="Azobe">Azobe (timber)</option>
+        <option value="S235">S235 (steel)</option>
+        <option value="S355">S355 (steel)</option>
+      </select>
+
+      <button class="btn" id="calc-btn">Calculate</button>
+
+      <div class="section-title">Results</div>
+      <div id="results"></div>
+      <div id="verdict" style="font-weight:600"></div>
+
+      <div class="section-title">3‑D View (schematic)</div>
+      <div style="width:100%;height:60vh;min-height:400px"><canvas id="plot"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ========= SCRIPT ========= -->
+  <script>
+  /***** DATA & UTILITIES *****/
+  const materials = {
+    Azobe: { rho:1.05, sigma_max:25,  tau_max:2,   sigma_c_max:8 },
+    S235:  { rho:7.85, sigma_max:234.3, tau_max:142, sigma_c_max:319.5 },
+    S355:  { rho:7.85, sigma_max:345,   tau_max:207, sigma_c_max:485 }
+  };
+  const g = 9.81;
+  const round = (v,p) => 
+    (!isFinite(v) || isNaN(v)) 
+      ? v 
+      : Number(Math.round(`${v}e${p}`) + `e-${p}`);
+  const $ = id => document.getElementById(id);
+
+  /* image paths for schematic based on top contact type */
+  const diagramSrc = {
+    mat: 'LSP.png',      // default steel mat schematic
+    crawler: 'crawler.png'  // crawler track schematic (provide this image in same directory)
+  };
+
+  /***** DYNAMIC LABELS & DIAGRAM FOR TOP CONTACT *****/
+  function updateTopLabels(){
+    const type = $('top_type').value; // "mat" or "crawler"
+
+    /* update dimension labels */
+    const txtLw = type==='crawler' ?
+      'Crawler Track Length L<sub>r</sub> (m)' :
+      'Top Steel Mat Length L<sub>r</sub> (m)';
+    const txtLr = type==='crawler' ?
+      'Crawler Track Width L<sub>w</sub> (m)' :
+      'Top Steel Mat Width L<sub>w</sub> (m)';
+    $('label_Lw').querySelector('.label-text').innerHTML = txtLw;
+    $('label_Lr').querySelector('.label-text').innerHTML = txtLr;
+
+    /* toggle load inputs */
+    const isMat = type==='mat';
+    $('label_qmax').classList.toggle('hide',  isMat);
+    $('label_Pmax').classList.toggle('hide', !isMat ? true : false); // hide when NOT mat
+    $('label_Wmat').classList.toggle('hide', !isMat);
+
+    /* update schematic diagram */
+    $('diagram').src = diagramSrc[type];
+  }
+  $('top_type').addEventListener('change', updateTopLabels);
+  updateTopLabels(); // initialise on load
+
+  /***** SOLVER *****/
+  function solve(p){
+    const Qs    = p.q_max * p.Lw * p.Lsb;
+    const qb    = Qs / p.Lsl;
+    const Lb    = (p.Lsl - p.Lw) / 2;
+    const Ab    = p.Lsb*1000 * p.Lsh*1000;
+    const Sx    = Ab * p.Lsh*1000 / 6;
+    const Mx    = 0.5 * qb * Lb*Lb * g * 1e6;
+    const sigmaB= Mx / (p.layers * Sx);
+    const tauS  = (qb * Lb * g * 1e3) / (p.layers * Ab);
+    const sigmaC= p.q_max * g / 1e3;
+    const GBP   = p.q_max * p.Lw/p.Lsl + p.material.rho * p.Lsh * p.layers;
+    const res = { Qs, qb, Lb, Ab, Sx, Mx, sigmaB, tauS, sigmaC, GBP };
+    res.passB   = Math.abs(sigmaB) < p.material.sigma_max;
+    res.passS   = Math.abs(tauS)   < p.material.tau_max;
+    res.passC   = sigmaC           < p.material.sigma_c_max;
+    res.passGBP = GBP              < p.GBP_allow;
+    for(const k in res) if(typeof res[k]==='number') res[k] = round(res[k], p.precision);
+    return res;
+  }
+
+  /***** NAVIGATION *****/
+  $('open-calculator').onclick = () => {
+    $('menu-screen').classList.add('hide');
+    $('calc-screen').classList.remove('hide');
+  };
+  $('back-menu').onclick = () => {
+    $('calc-screen').classList.add('hide');
+    $('menu-screen').classList.remove('hide');
+  };
+
+  /***** CALCULATE BUTTON *****/
+  $('calc-btn').onclick = () => {
+    const topType = $('top_type').value;
+
+    const p = {
+      Lw:       +$('Lw').value,
+      Lr:       +$('Lr').value,   // width (or track width)
+      Lsl:      +$('Lsl').value,  // base-loadspreader length
+      Lsb:      +$('Lsb').value,
+      Lsh:      +$('Lsh').value,
+      layers:   +$('layers').value,
+      GBP_allow:+$('GBP_allow').value,
+      precision:+$('precision').value,
+      material: materials[$('material').value]
+    };
+
+    let totalLoad = 0; // in tonnes
+
+    /* handle load inputs based on top contact type */
+    if(topType==='mat'){
+      p.p_max = +$('p_max').value;
+      p.w_mat = +$('w_mat').value;
+
+      // validation
+      if(isNaN(p.p_max) || p.p_max<=0){
+        alert('Please enter a valid Pmax (>0).');
+        return;
+      }
+      if(isNaN(p.w_mat) || p.w_mat<0){
+        alert('Please enter a valid self‑weight (≥0).');
+        return;
+      }
+      if(p.w_mat===0){
+        alert('Warning: you entered 0 t for steel‑mat self‑weight – please ensure this is intended.');
+      }
+
+      totalLoad = p.p_max + p.w_mat; // combined load in tonnes
+      p.q_max = totalLoad / (p.Lr * p.Lw);  // t/m²
+      $('q_max').value = round(p.q_max, p.precision); // keep sync (hidden but data consistent)
+    }else{
+      p.q_max = +$('q_max').value;
+      if(isNaN(p.q_max) || p.q_max<=0){
+        alert('Please enter a valid qmax (>0).');
+        return;
+      }
+      totalLoad = p.q_max * p.Lr * p.Lw; // for information only (not displayed)
+    }
+
+    // ── Validation: top contact width must be strictly less than base length ──
+    if (p.Lr >= p.Lsl) {
+      alert('Error: Top-contact width (Lr / Wt) must be less than base loadspreader length (Lsl).');
+      return;
+    }
+
+    /* numeric validation */
+    const numericCommon = ['Lw','Lr','Lsl','Lsb','Lsh','layers','GBP_allow','precision'];
+    const numeric = topType==='mat' ? [...numericCommon,'p_max','w_mat'] : [...numericCommon,'q_max'];
+    if (numeric.some(k=>isNaN(p[k]))) {
+      alert('Please enter valid numbers.');
+      return;
+    }
+
+    const r = solve(p);
+
+    // ----- Build formatted results -----
+    const out = $('results');
+    out.innerHTML = '';
+    const heading = t => {
+      const d = document.createElement('div');
+      d.textContent = t;
+      d.style.fontWeight = '600';
+      out.appendChild(d);
+    };
+    const line = (label,val,pass) => {
+      const d = document.createElement('div');
+      d.textContent = `${label}: ${val}`;
+      if (pass !== undefined) d.className = pass ? 'green' : 'red';
+      out.appendChild(d);
+    };
+
+    heading('=== Load Results ===');
+    if(topType==='mat') {
+      line('Point Load (Pmax)', round(p.p_max, p.precision));
+      line('Mat Self‑Weight (Wm)', round(p.w_mat, p.precision));
+      line('Total Load (P+W)', round(totalLoad, p.precision));
+    }
+    line('Applied Pressure (qmax)', round(p.q_max, p.precision));
+    line('Shear Force Top Contact (QS)', r.Qs);
+    line('Shear per Metre (QB)',       r.qb);
+    out.appendChild(document.createElement('br'));
+
+    heading('=== Stress Checks ===');
+    line('Bending Stress (σB)',    r.sigmaB, r.passB);
+    line('Shear Stress (τS)',      r.tauS,   r.passS);
+    line('Compression Stress (σC)',r.sigmaC, r.passC);
+    out.appendChild(document.createElement('br'));
+
+    heading('=== Ground Pressure ===');
+    line('Ground Bearing Pressure (GBP)', r.GBP, r.passGBP);
+
+    const passAll = r.passB && r.passS && r.passC && r.passGBP;
+    $('verdict').textContent  = passAll
+      ? '✅ All checks passed'
+      : '❌ Fails – see red items';
+    $('verdict').className     = passAll ? 'green' : 'red';
+
+    render3D({...p, q_max:p.q_max});
+  };
+
+  /***** 3‑D RENDERER (unchanged except for requiring q_max in p) *****/
+  function render3D(p){
+    const c = $('plot'), ctx = c.getContext('2d');
+    c.width = c.clientWidth;  c.height = c.clientHeight;
+    const w = c.width, h = c.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#333';
+
+    /* plank replication counts */
+    const nLen = Math.floor(p.Lr / p.Lsl) + 1;
+    const nWid = Math.floor(p.Lw / p.Lsb) + 1;
+    const totalLen = nLen * p.Lsl;
+    const totalWid = nWid * p.Lsb;
+
+    /* dynamic scale */
+    const projW  = (totalLen + totalWid) * Math.cos(Math.PI/6) * 100;
+    const projD  = (totalLen + totalWid) * Math.sin(Math.PI/6) * 100;
+    const height = p.layers * p.Lsh * 100 + p.Lsh * 10;
+    const sc     = 0.9 * Math.min(w / projW, h / (projD + height));
+
+    // ── Rotate everything 90° CCW about Z ──
+    const θ  = Math.PI/2;
+    const cθ = Math.cos(θ), sθ = Math.sin(θ);
+
+    /* iso projection with pre‑rotation */
+    const iso = (x,y,z) => {
+      // 1) rotate in‑plane
+      const xr = x * cθ - y * sθ;
+      const yr = x * sθ + y * cθ;
+      // 2) then isometric project
+      const ix = (xr - yr) * Math.cos(Math.PI/6);
+      const iy = (xr + yr) * Math.sin(Math.PI/6) - z;
+      return [ w/2 + ix * sc, h*0.6 + iy * sc ];
+    };
+
+    /* helpers */
+    const poly = pts => {
+      ctx.beginPath();
+      ctx.moveTo(...pts[0]);
+      pts.slice(1).forEach(pt=>ctx.lineTo(...pt));
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    };
+    const arrow = (p1,p2) => {
+      ctx.beginPath();
+      ctx.moveTo(...p1);
+      ctx.lineTo(...p2);
+      ctx.stroke();
+      const drawHead = (f,t) => {
+        const ang = Math.atan2(t[1]-f[1], t[0]-f[0]);
+        const len = 6;
+        [ang+Math.PI/6, ang-Math.PI/6].forEach(a=>{
+          ctx.moveTo(...t);
+          ctx.lineTo(t[0]-len*Math.cos(a), t[1]-len*Math.sin(a));
+        });
+        ctx.stroke();
+      };
+      drawHead(p1,p2);
+      drawHead(p2,p1);
+    };
+    const label = (txt,pos) => {
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = '#000';
+      ctx.fillText(txt, pos[0], pos[1]-4);
+    };
+
+    /* full‑face box */
+    const box = (x,y,z,dx,dy,dz,col,a) => {
+      ctx.fillStyle = col;
+      ctx.globalAlpha = a;
+      poly([ iso(x,    y+dy, z   ),
+             iso(x+dx, y+dy, z   ),
+             iso(x+dx, y+dy, z+dz),
+             iso(x,    y+dy, z+dz) ]); // back
+      poly([ iso(x+dx, y,    z   ),
+             iso(x+dx, y+dy, z   ),
+             iso(x+dx, y+dy, z+dz),
+             iso(x+dx, y,    z+dz) ]); // right
+      poly([ iso(x,    y,    z   ),
+             iso(x,    y+dy, z   ),
+             iso(x,    y+dy, z+dz),
+             iso(x,    y,    z+dz) ]); // left
+      poly([ iso(x,    y,    z   ),
+             iso(x+dx, y,    z   ),
+             iso(x+dx, y,    z+dz),
+             iso(x,    y,    z+dz) ]); // front
+      poly([ iso(x,    y,    z+dz),
+             iso(x+dx, y,    z+dz),
+             iso(x+dx, y+dy, z+dz),
+             iso(x,    y+dy, z+dz) ]); // top
+      ctx.globalAlpha = 1;
+    };
+
+    /* draw base layers */
+    for(let layer=0; layer<p.layers; layer++){
+      const z = layer * p.Lsh * 100;
+      for(let i=0; i<nLen; i++){
+        for(let j=0; j<nWid; j++){
+           const x = (-totalLen/2 + i*p.Lsl) * 100;
+          const y = (-totalWid/2 + j*p.Lsb) * 100;
+          box(x, y, z, p.Lsl*100, p.Lsb*100, p.Lsh*100, '#8B4513', 0.7);
+        }
+      }
+    }
+
+    /* top contact */
+    const matW = p.Lr*100, matL=p.Lw*100, matH=p.Lsh*10, matZ=p.layers*p.Lsh*100;
+    box(-matW/2, -matL/2, matZ, matW, matL, matH, '#707070', 0.85);
+
+      /* dimension arrows */
+    ctx.strokeStyle = '#000';
+
+    // ── Length Lsl (front edge) ──
+    let baseX = -totalLen/2*100, baseY = -totalWid/2*100, baseZ = 0;
+    let p1 = iso(baseX,                baseY - 20, baseZ);
+    let p2 = iso(baseX + p.Lsl * 100,  baseY - 20, baseZ);
+    arrow(p1, p2);
+    label(`Lsl ${p.Lsl} m`, [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
+
+    // ── Width Lsb (left edge) ──
+    p1 = iso(baseX - 20, baseY,                 baseZ);
+    p2 = iso(baseX - 20, baseY + p.Lsb * 100,   baseZ);
+    arrow(p1, p2);
+    label(`Lsb ${p.Lsb} m`, [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
+
+    // ── Height (layers × h) ──
+    p1 = iso(baseX + p.Lsl * 100 + 20, baseY + p.Lsb * 100, 0);
+    p2 = iso(baseX + p.Lsl * 100 + 20, baseY + p.Lsb * 100, p.layers * p.Lsh * 100);
+    arrow(p1, p2);
+    label(`${p.layers}×h = ${(p.layers * p.Lsh).toFixed(p.precision)} m`,
+          [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
+
+    ctx.lineWidth = 1;   // reset in case something else re-uses the canvas
+  } // ────── end render3D ──────
+  </script>
+</body>
+</html>
+
