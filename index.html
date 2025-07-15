@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- Loadspreader Calculator — mobile‑friendly single‑file web‑app
-     2025‑07‑13  (revision 25: add steel‑mat self‑weight Wm input; qmax now uses (Pmax+Wm)) -->
+     2025‑07‑13  (revision 26: add contextual Help modal) -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -24,6 +24,17 @@
     nav img{width:45%;max-width:180px}
     .container{padding:16px}
     #plot{width:100%;height:100%;border:1px solid #eee;border-radius:6px}
+	
+	
+    /* ── HELP MODAL ─────────────────────────────────────────── */
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:5000}
+    .modal-content{background:#fff;padding:24px;border-radius:8px;max-width:700px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+    .modal.hide{display:none}
+    .modal-content h2{margin-top:0}
+    .modal-content table{width:100%;border-collapse:collapse;margin:8px 0}
+    .modal-content th,.modal-content td{padding:4px 6px;text-align:center}
+    .modal-content th{border-bottom:1px solid #aaa;font-weight:600}
+    .modal-content tr:nth-child(even){background:#f8f8f8}
   </style>
 </head>
 <body>
@@ -43,6 +54,8 @@
     <header>
       <button class="btn" id="back-menu" style="width:auto;padding:6px 12px;background:#ddd;color:#111">← Menu</button>
       <h1>Loadspreader Calculator</h1>
+      <!-- Help button -->
+      <button class="btn" id="help-btn" title="Help" style="width:auto;padding:6px 12px">Help</button>
     </header>
     <div class="container">
       <!-- Dynamic schematic diagram -->
@@ -62,7 +75,7 @@
       <label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>
         <input id="Lw" type="number" step="0.01" value="2">
       </label>
-      <label id="label_Lr"><span class="label-text">Top Steel Mat Width&nbsp;L<sub>r</sub> (m)</span>
+      <label id="label_Lr"><span class="label-text">Top Steel Mat Width L<sub>r</sub> (m)</span>
         <input id="Lr" type="number" step="0.01" value="1">
       </label>
 
@@ -115,332 +128,426 @@
     </div>
   </div>
 
+  <!-- ========= HELP MODAL ========= -->
+  <div id="help-modal" class="modal hide">
+    <div class="modal-content">
+      <button id="help-close" style="float:right;font-size:1.2rem;border:none;background:transparent;cursor:pointer">✕</button>
+      <h2>Loadspreader Calculator – Help Guide</h2>
+      <p><strong>Version:</strong> 2025‑07‑13</p>
+
+      <h3>1. Purpose</h3>
+      <p>The calculator checks the structural adequacy of timber or steel load‑spreaders used under outrigger pads, steering bogies, or crawler tracks. It verifies bending, shear, compression and ground bearing pressure against user‑defined limits.</p>
+
+      <h3>2. Quick Workflow</h3>
+      <ol>
+        <li>Select <em>Top Contact Type</em> (steel mat or crawler tracks).</li>
+        <li>Enter contact dimensions (<code>L<sub>w</sub></code>, <code>L<sub>r</sub></code>) and load information:<br>
+          &nbsp;&nbsp;• For steel mats: total point load <code>P<sub>max</sub></code> and mat self‑weight <code>W<sub>m</sub></code>.<br>
+          &nbsp;&nbsp;• For crawlers: maximum applied pressure <code>q<sub>max</sub></code>.</li>
+        <li>Define base load‑spreader geometry (<code>L<sub>sl</sub></code>, <code>L<sub>sb</sub></code>, thickness <code>h</code> and number of layers).</li>
+        <li>Choose material grade (timber or steel).</li>
+        <li>Click <strong>Calculate</strong>. Failed checks show in <span style="color:#d00">red</span>.</li>
+      </ol>
+
+      <h3>3. Input Definitions</h3>
+      <ul>
+        <li><code>L<sub>w</sub></code> – Length of the top contact area (m).</li>
+        <li><code>L<sub>r</sub></code> – Width of the top contact area (m).</li>
+        <li><code>P<sub>max</sub></code> – Maximum working load transferred through the mat (t).</li>
+        <li><code>W<sub>m</sub></code> – Self‑weight of the steel mat (t).</li>
+        <li><code>q<sub>max</sub></code> – Uniform pressure applied by tracks or pads (t/m²).</li>
+        <li><code>L<sub>sl</sub></code> – Length of the base load‑spreader (m).</li>
+        <li><code>L<sub>sb</sub></code> – Width of the base load‑spreader (m).</li>
+        <li><code>h</code> – Thickness per layer (m).</li>
+        <li><code>Layers</code> – Number of laminated layers acting compositely.</li>
+        <li><code>GBP<sub>allow</sub></code> – Allowable ground bearing pressure (t/m²).</li>
+        <li><code>Precision</code> – Number of decimals shown in results.</li>
+      </ul>
+
+      <h3>4. Output Parameters</h3>
+      <ul>
+        <li><code>σ<sub>B</sub></code> – Extreme fibre bending stress (t/m²).</li>
+        <li><code>τ<sub>S</sub></code> – Shear stress at neutral axis (t/m²).</li>
+        <li><code>σ<sub>C</sub></code> – Bearing (crushing) stress (t/m²).</li>
+        <li><code>GBP</code> – Calculated ground bearing pressure including self‑weight (t/m²).</li>
+        <li><code>Q<sub>S</sub></code>, <code>q<sub>B</sub></code> – Shear forces used in stress calculations.</li>
+      </ul>
+
+      <h3>5. Pass/Fail Criteria</h3>
+      <p>Each stress is compared with the selected material capacities:</p>
+      <table>
+        <tr><th>Material</th><th>Bending<br>σ<sub>max</sub> (t/m²)</th><th>Shear<br>τ<sub>max</sub> (t/m²)</th><th>Compression<br>σ<sub>c,max</sub> (t/m²)</th></tr>
+        <tr><td>Azobe</td><td>25</td><td>2</td><td>8</td></tr>
+        <tr><td>S235</td><td>234.3</td><td>142</td><td>319.5</td></tr>
+        <tr><td>S355</td><td>345</td><td>207</td><td>485</td></tr>
+      </table>
+      <p>All four checks must be satisfied and <code>GBP</code> must be below the allowable value for an overall pass.</p>
+
+      <h3>6. 3‑D View</h3>
+      <p>The schematic at the bottom of the calculator displays the laminate arrangement and dimensions. It is for visual confirmation only – it is <em>not</em> a detailed finite‑element model.</p>
+
+      <h3>7. Assumptions & Limitations</h3>
+      <ul>
+        <li>Load distribution is linear and symmetrical.</li>
+        <li>No interaction between adjacent load‑spreaders is considered.</li>
+        <li>Deflection is not evaluated – check serviceability separately if required.</li>
+        <li>Material strengths correspond to characteristic values under static loading.</li>
+        <li>Results are intended for preliminary sizing and must be verified by a competent engineer.</li>
+      </ul>
+
+      <h3>8. Troubleshooting</h3>
+      <p>If you see the error message “Top‑contact width must be less than base length”, either reduce <code>L<sub>r</sub></code>, increase <code>L<sub>sl</sub></code>, or add more layers to raise capacity.</p>
+
+      <h3>9. Contact</h3>
+      <p>Feedback and bug reports: <a href="mailto:engineering.tools@example.com">engineering.tools@example.com</a></p>
+
+      <p style="text-align:center;margin-top:24px;font-size:.85rem">© 2025 Engineering Tools – All rights reserved.</p>
+    </div>
+  </div>
+
   <!-- ========= SCRIPT ========= -->
-  <script>
-  /***** DATA & UTILITIES *****/
-  const materials = {
-    Azobe: { rho:1.05, sigma_max:25,  tau_max:2,   sigma_c_max:8 },
-    S235:  { rho:7.85, sigma_max:234.3, tau_max:142, sigma_c_max:319.5 },
-    S355:  { rho:7.85, sigma_max:345,   tau_max:207, sigma_c_max:485 }
+ <script>
+/***** DATA & UTILITIES *****/
+const materials = {
+  Azobe: { rho: 1.05, sigma_max: 25,   tau_max: 2,   sigma_c_max: 8   },
+  S235:  { rho: 7.85, sigma_max: 234.3, tau_max: 142, sigma_c_max: 319.5 },
+  S355:  { rho: 7.85, sigma_max: 345,   tau_max: 207, sigma_c_max: 485 }
+};
+const g = 9.81;                                     // gravity (m/s²)
+const round = (v, p) =>
+  (!isFinite(v) || isNaN(v))
+    ? v
+    : Number(Math.round(`${v}e${p}`) + `e-${p}`);
+const $ = id => document.getElementById(id);
+
+/* image paths for schematic based on top-contact type */
+const diagramSrc = {
+  mat:     'LSP.png',      // steel-mat schematic
+  crawler: 'crawler.png'   // crawler-track schematic
+};
+
+/***** DYNAMIC LABELS & DIAGRAM FOR TOP CONTACT *****/
+function updateTopLabels () {
+  const type = $('top_type').value; // "mat" or "crawler"
+
+  /* update dimension labels */
+  const txtLw = type === 'crawler'
+    ? 'Crawler Track Length L<sub>r</sub> (m)'
+    : 'Top Steel Mat Length L<sub>r</sub> (m)';
+  const txtLr = type === 'crawler'
+    ? 'Crawler Track Width L<sub>w</sub> (m)'
+    : 'Top Steel Mat Width L<sub>w</sub> (m)';
+  $('label_Lw').querySelector('.label-text').innerHTML = txtLw;
+  $('label_Lr').querySelector('.label-text').innerHTML = txtLr;
+
+  /* toggle load inputs */
+  const isMat = type === 'mat';
+  $('label_qmax').classList.toggle('hide',  isMat);
+  $('label_Pmax').classList.toggle('hide', !isMat);
+  $('label_Wmat').classList.toggle('hide', !isMat);
+
+  /* update schematic diagram */
+  $('diagram').src = diagramSrc[type];
+}
+$('top_type').addEventListener('change', updateTopLabels);
+updateTopLabels();                                   // initialise on load
+
+/***** CORE SOLVER *****/
+function solve (p) {
+  const Qs     = p.q_max * p.Lw * p.Lsb;            // total shear (t)
+  const qb     = Qs / p.Lsl;                        // shear per metre (t/m)
+  const Lb     = (p.Lsl - p.Lw) / 2;                // half-span (m)
+  const Ab     = p.Lsb * 1000 * p.Lsh * 1000;       // cross-section area (mm²)
+  const Sx     = Ab * p.Lsh * 1000 / 6;             // section modulus (mm³)
+  const Mx     = 0.5 * qb * Lb * Lb * g * 1e6;      // bending moment (N·mm)
+  const sigmaB = Mx / (p.layers * Sx);              // bending stress (t/m²)
+  const tauS   = (qb * Lb * g * 1e3) / (p.layers * Ab); // shear stress (t/m²)
+  const sigmaC = p.q_max * g / 1e3;                 // compression stress (t/m²)
+  const GBP    = p.q_max * p.Lw / p.Lsl + p.material.rho * p.Lsh * p.layers;
+
+  const res = { Qs, qb, Lb, Ab, Sx, Mx, sigmaB, tauS, sigmaC, GBP };
+  res.passB   = Math.abs(sigmaB) < p.material.sigma_max;
+  res.passS   = Math.abs(tauS)   < p.material.tau_max;
+  res.passC   = sigmaC           < p.material.sigma_c_max;
+  res.passGBP = GBP              < p.GBP_allow;
+
+  /* round numbers to requested precision */
+  for (const k in res)
+    if (typeof res[k] === 'number')
+      res[k] = round(res[k], p.precision);
+
+  return res;
+}
+
+/***** NAVIGATION *****/
+$('open-calculator').onclick = () => {
+  $('menu-screen').classList.add('hide');
+  $('calc-screen').classList.remove('hide');
+};
+$('back-menu').onclick = () => {
+  $('calc-screen').classList.add('hide');
+  $('menu-screen').classList.remove('hide');
+};
+
+/* ── HELP MODAL TOGGLE ───────────────────────────── */
+$('help-btn').onclick   = () => $('help-modal').classList.remove('hide');
+$('help-close').onclick = () => $('help-modal').classList.add('hide');
+$('help-modal').onclick = e => {                     // close on backdrop click
+  if (e.target === $('help-modal')) $('help-modal').classList.add('hide');
+};
+/* ────────────────────────────────────────────────── */
+
+/***** CALCULATE BUTTON *****/
+$('calc-btn').onclick = () => {
+  const topType = $('top_type').value;
+
+  /* gather inputs */
+  const p = {
+    Lw:        +$('Lw').value,
+    Lr:        +$('Lr').value,
+    Lsl:       +$('Lsl').value,
+    Lsb:       +$('Lsb').value,
+    Lsh:       +$('Lsh').value,
+    layers:    +$('layers').value,
+    GBP_allow: +$('GBP_allow').value,
+    precision: +$('precision').value,
+    material:  materials[$('material').value]
   };
-  const g = 9.81;
-  const round = (v,p) => 
-    (!isFinite(v) || isNaN(v)) 
-      ? v 
-      : Number(Math.round(`${v}e${p}`) + `e-${p}`);
-  const $ = id => document.getElementById(id);
 
-  /* image paths for schematic based on top contact type */
-  const diagramSrc = {
-    mat: 'LSP.png',      // default steel mat schematic
-    crawler: 'crawler.png'  // crawler track schematic (provide this image in same directory)
-  };
+  let totalLoad = 0;                               // in tonnes
 
-  /***** DYNAMIC LABELS & DIAGRAM FOR TOP CONTACT *****/
-  function updateTopLabels(){
-    const type = $('top_type').value; // "mat" or "crawler"
+  /* handle load inputs based on top‐contact type */
+  if (topType === 'mat') {
+    p.p_max = +$('p_max').value;
+    p.w_mat = +$('w_mat').value;
 
-    /* update dimension labels */
-    const txtLw = type==='crawler' ?
-      'Crawler Track Length L<sub>r</sub> (m)' :
-      'Top Steel Mat Length L<sub>r</sub> (m)';
-    const txtLr = type==='crawler' ?
-      'Crawler Track Width L<sub>w</sub> (m)' :
-      'Top Steel Mat Width L<sub>w</sub> (m)';
-    $('label_Lw').querySelector('.label-text').innerHTML = txtLw;
-    $('label_Lr').querySelector('.label-text').innerHTML = txtLr;
+    /* basic validation */
+    if (isNaN(p.p_max) || p.p_max <= 0)  { alert('Enter a valid Pmax (>0).'); return; }
+    if (isNaN(p.w_mat) || p.w_mat < 0)   { alert('Enter a valid self-weight (≥0).'); return; }
+    if (p.w_mat === 0) alert('Warning: 0 t self-weight – is that correct?');
 
-    /* toggle load inputs */
-    const isMat = type==='mat';
-    $('label_qmax').classList.toggle('hide',  isMat);
-    $('label_Pmax').classList.toggle('hide', !isMat ? true : false); // hide when NOT mat
-    $('label_Wmat').classList.toggle('hide', !isMat);
-
-    /* update schematic diagram */
-    $('diagram').src = diagramSrc[type];
+    totalLoad = p.p_max + p.w_mat;                // t
+    p.q_max   = totalLoad / (p.Lr * p.Lw);        // t/m²
+    $('q_max').value = round(p.q_max, p.precision); // keep hidden field in sync
+  } else {
+    p.q_max = +$('q_max').value;
+    if (isNaN(p.q_max) || p.q_max <= 0) { alert('Enter a valid qmax (>0).'); return; }
+    totalLoad = p.q_max * p.Lr * p.Lw;            // informational
   }
-  $('top_type').addEventListener('change', updateTopLabels);
-  updateTopLabels(); // initialise on load
 
-  /***** SOLVER *****/
-  function solve(p){
-    const Qs    = p.q_max * p.Lw * p.Lsb;
-    const qb    = Qs / p.Lsl;
-    const Lb    = (p.Lsl - p.Lw) / 2;
-    const Ab    = p.Lsb*1000 * p.Lsh*1000;
-    const Sx    = Ab * p.Lsh*1000 / 6;
-    const Mx    = 0.5 * qb * Lb*Lb * g * 1e6;
-    const sigmaB= Mx / (p.layers * Sx);
-    const tauS  = (qb * Lb * g * 1e3) / (p.layers * Ab);
-    const sigmaC= p.q_max * g / 1e3;
-    const GBP   = p.q_max * p.Lw/p.Lsl + p.material.rho * p.Lsh * p.layers;
-    const res = { Qs, qb, Lb, Ab, Sx, Mx, sigmaB, tauS, sigmaC, GBP };
-    res.passB   = Math.abs(sigmaB) < p.material.sigma_max;
-    res.passS   = Math.abs(tauS)   < p.material.tau_max;
-    res.passC   = sigmaC           < p.material.sigma_c_max;
-    res.passGBP = GBP              < p.GBP_allow;
-    for(const k in res) if(typeof res[k]==='number') res[k] = round(res[k], p.precision);
-    return res;
+  /* geometry validation */
+  if (p.Lr >= p.Lsl) {
+    alert('Error: Top-contact width (Lr) must be less than base length (Lsl).');
+    return;
   }
 
-  /***** NAVIGATION *****/
-  $('open-calculator').onclick = () => {
-    $('menu-screen').classList.add('hide');
-    $('calc-screen').classList.remove('hide');
+  /* numeric validation */
+  const numericCommon = ['Lw','Lr','Lsl','Lsb','Lsh','layers','GBP_allow','precision'];
+  const numeric = topType === 'mat'
+    ? [...numericCommon,'p_max','w_mat']
+    : [...numericCommon,'q_max'];
+  if (numeric.some(k => isNaN(p[k]))) {
+    alert('Please enter valid numbers.'); return;
+  }
+
+  /* run solver */
+  const r = solve(p);
+
+  /* build results panel */
+  const out = $('results');
+  out.innerHTML = '';
+
+  const heading = t => {
+    const d = document.createElement('div');
+    d.textContent = t; d.style.fontWeight = '600';
+    out.appendChild(d);
   };
-  $('back-menu').onclick = () => {
-    $('calc-screen').classList.add('hide');
-    $('menu-screen').classList.remove('hide');
-  };
-
-  /***** CALCULATE BUTTON *****/
-  $('calc-btn').onclick = () => {
-    const topType = $('top_type').value;
-
-    const p = {
-      Lw:       +$('Lw').value,
-      Lr:       +$('Lr').value,   // width (or track width)
-      Lsl:      +$('Lsl').value,  // base-loadspreader length
-      Lsb:      +$('Lsb').value,
-      Lsh:      +$('Lsh').value,
-      layers:   +$('layers').value,
-      GBP_allow:+$('GBP_allow').value,
-      precision:+$('precision').value,
-      material: materials[$('material').value]
-    };
-
-    let totalLoad = 0; // in tonnes
-
-    /* handle load inputs based on top contact type */
-    if(topType==='mat'){
-      p.p_max = +$('p_max').value;
-      p.w_mat = +$('w_mat').value;
-
-      // validation
-      if(isNaN(p.p_max) || p.p_max<=0){
-        alert('Please enter a valid Pmax (>0).');
-        return;
-      }
-      if(isNaN(p.w_mat) || p.w_mat<0){
-        alert('Please enter a valid self‑weight (≥0).');
-        return;
-      }
-      if(p.w_mat===0){
-        alert('Warning: you entered 0 t for steel‑mat self‑weight – please ensure this is intended.');
-      }
-
-      totalLoad = p.p_max + p.w_mat; // combined load in tonnes
-      p.q_max = totalLoad / (p.Lr * p.Lw);  // t/m²
-      $('q_max').value = round(p.q_max, p.precision); // keep sync (hidden but data consistent)
-    }else{
-      p.q_max = +$('q_max').value;
-      if(isNaN(p.q_max) || p.q_max<=0){
-        alert('Please enter a valid qmax (>0).');
-        return;
-      }
-      totalLoad = p.q_max * p.Lr * p.Lw; // for information only (not displayed)
-    }
-
-    // ── Validation: top contact width must be strictly less than base length ──
-    if (p.Lr >= p.Lsl) {
-      alert('Error: Top-contact width (Lr / Wt) must be less than base loadspreader length (Lsl).');
-      return;
-    }
-
-    /* numeric validation */
-    const numericCommon = ['Lw','Lr','Lsl','Lsb','Lsh','layers','GBP_allow','precision'];
-    const numeric = topType==='mat' ? [...numericCommon,'p_max','w_mat'] : [...numericCommon,'q_max'];
-    if (numeric.some(k=>isNaN(p[k]))) {
-      alert('Please enter valid numbers.');
-      return;
-    }
-
-    const r = solve(p);
-
-    // ----- Build formatted results -----
-    const out = $('results');
-    out.innerHTML = '';
-    const heading = t => {
-      const d = document.createElement('div');
-      d.textContent = t;
-      d.style.fontWeight = '600';
-      out.appendChild(d);
-    };
-    const line = (label,val,pass) => {
-      const d = document.createElement('div');
-      d.textContent = `${label}: ${val}`;
-      if (pass !== undefined) d.className = pass ? 'green' : 'red';
-      out.appendChild(d);
-    };
-
-    heading('=== Load Results ===');
-    if(topType==='mat') {
-      line('Point Load (Pmax)', round(p.p_max, p.precision));
-      line('Mat Self‑Weight (Wm)', round(p.w_mat, p.precision));
-      line('Total Load (P+W)', round(totalLoad, p.precision));
-    }
-    line('Applied Pressure (qmax)', round(p.q_max, p.precision));
-    line('Shear Force Top Contact (QS)', r.Qs);
-    line('Shear per Metre (QB)',       r.qb);
-    out.appendChild(document.createElement('br'));
-
-    heading('=== Stress Checks ===');
-    line('Bending Stress (σB)',    r.sigmaB, r.passB);
-    line('Shear Stress (τS)',      r.tauS,   r.passS);
-    line('Compression Stress (σC)',r.sigmaC, r.passC);
-    out.appendChild(document.createElement('br'));
-
-    heading('=== Ground Pressure ===');
-    line('Ground Bearing Pressure (GBP)', r.GBP, r.passGBP);
-
-    const passAll = r.passB && r.passS && r.passC && r.passGBP;
-    $('verdict').textContent  = passAll
-      ? '✅ All checks passed'
-      : '❌ Fails – see red items';
-    $('verdict').className     = passAll ? 'green' : 'red';
-
-    render3D({...p, q_max:p.q_max});
+  const line = (label, val, pass) => {
+    const d = document.createElement('div');
+    d.textContent = `${label}: ${val}`;
+    if (pass !== undefined) d.className = pass ? 'green' : 'red';
+    out.appendChild(d);
   };
 
-  /***** 3‑D RENDERER (unchanged except for requiring q_max in p) *****/
-  function render3D(p){
-    const c = $('plot'), ctx = c.getContext('2d');
-    c.width = c.clientWidth;  c.height = c.clientHeight;
-    const w = c.width, h = c.height;
-    ctx.clearRect(0,0,w,h);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#333';
+  heading('=== Load Results ===');
+  if (topType === 'mat') {
+    line('Point Load (Pmax)', round(p.p_max, p.precision));
+    line('Mat Self-Weight (Wm)', round(p.w_mat, p.precision));
+    line('Total Load (P+W)', round(totalLoad, p.precision));
+  }
+  line('Applied Pressure (qmax)', round(p.q_max, p.precision));
+  line('Shear Force Top Contact (QS)', r.Qs);
+  line('Shear per Metre (QB)',         r.qb);
+  out.appendChild(document.createElement('br'));
 
-    /* plank replication counts */
-    const nLen = Math.floor(p.Lr / p.Lsl) + 1;
-    const nWid = Math.floor(p.Lw / p.Lsb) + 1;
-    const totalLen = nLen * p.Lsl;
-    const totalWid = nWid * p.Lsb;
+  heading('=== Stress Checks ===');
+  line('Bending Stress (σB)',    r.sigmaB, r.passB);
+  line('Shear Stress (τS)',      r.tauS,   r.passS);
+  line('Compression Stress (σC)',r.sigmaC, r.passC);
+  out.appendChild(document.createElement('br'));
 
-    /* dynamic scale */
-    const projW  = (totalLen + totalWid) * Math.cos(Math.PI/6) * 100;
-    const projD  = (totalLen + totalWid) * Math.sin(Math.PI/6) * 100;
-    const height = p.layers * p.Lsh * 100 + p.Lsh * 10;
-    const sc     = 0.9 * Math.min(w / projW, h / (projD + height));
+  heading('=== Ground Pressure ===');
+  line('Ground Bearing Pressure (GBP)', r.GBP, r.passGBP);
 
-    // ── Rotate everything 90° CCW about Z ──
-    const θ  = Math.PI/2;
-    const cθ = Math.cos(θ), sθ = Math.sin(θ);
+  const passAll = r.passB && r.passS && r.passC && r.passGBP;
+  $('verdict').textContent = passAll
+    ? '✅ All checks passed'
+    : '❌ Fails – see red items';
+  $('verdict').className  = passAll ? 'green' : 'red';
 
-    /* iso projection with pre‑rotation */
-    const iso = (x,y,z) => {
-      // 1) rotate in‑plane
-      const xr = x * cθ - y * sθ;
-      const yr = x * sθ + y * cθ;
-      // 2) then isometric project
-      const ix = (xr - yr) * Math.cos(Math.PI/6);
-      const iy = (xr + yr) * Math.sin(Math.PI/6) - z;
-      return [ w/2 + ix * sc, h*0.6 + iy * sc ];
-    };
+  /* update 3-D schematic */
+  render3D({ ...p, q_max: p.q_max });
+};
 
-    /* helpers */
-    const poly = pts => {
-      ctx.beginPath();
-      ctx.moveTo(...pts[0]);
-      pts.slice(1).forEach(pt=>ctx.lineTo(...pt));
-      ctx.closePath();
-      ctx.fill();
+/***** 3-D RENDERER (isometric canvas) *****/
+function render3D (p) {
+  const c   = $('plot'),
+        ctx = c.getContext('2d');
+  c.width  = c.clientWidth;
+  c.height = c.clientHeight;
+  const w = c.width, h = c.height;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#333';
+
+  /* plank replication counts */
+  const nLen = Math.floor(p.Lr / p.Lsl) + 1;
+  const nWid = Math.floor(p.Lw / p.Lsb) + 1;
+  const totalLen = nLen * p.Lsl;
+  const totalWid = nWid * p.Lsb;
+
+  /* dynamic scale */
+  const projW  = (totalLen + totalWid) * Math.cos(Math.PI/6) * 100;
+  const projD  = (totalLen + totalWid) * Math.sin(Math.PI/6) * 100;
+  const height = p.layers * p.Lsh * 100 + p.Lsh * 10;
+  const sc     = 0.9 * Math.min(w / projW, h / (projD + height));
+
+  /* rotate 90° CCW about Z for better view */
+  const θ  = Math.PI / 2,
+        cθ = Math.cos(θ),
+        sθ = Math.sin(θ);
+
+  /* isometric projection helper */
+  const iso = (x, y, z) => {
+    /* in-plane rotation */
+    const xr = x * cθ - y * sθ;
+    const yr = x * sθ + y * cθ;
+    /* iso project */
+    const ix = (xr - yr) * Math.cos(Math.PI/6);
+    const iy = (xr + yr) * Math.sin(Math.PI/6) - z;
+    return [ w/2 + ix * sc, h*0.6 + iy * sc ];
+  };
+
+  /* drawing helpers */
+  const poly = pts => {
+    ctx.beginPath();
+    ctx.moveTo(...pts[0]);
+    pts.slice(1).forEach(pt => ctx.lineTo(...pt));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  };
+  const arrow = (p1, p2) => {
+    ctx.beginPath();
+    ctx.moveTo(...p1); ctx.lineTo(...p2); ctx.stroke();
+    const head = (f, t) => {
+      const a = Math.atan2(t[1]-f[1], t[0]-f[0]), len = 6;
+      [a+Math.PI/6, a-Math.PI/6].forEach(ang => {
+        ctx.moveTo(...t);
+        ctx.lineTo(t[0]-len*Math.cos(ang), t[1]-len*Math.sin(ang));
+      });
       ctx.stroke();
     };
-    const arrow = (p1,p2) => {
-      ctx.beginPath();
-      ctx.moveTo(...p1);
-      ctx.lineTo(...p2);
-      ctx.stroke();
-      const drawHead = (f,t) => {
-        const ang = Math.atan2(t[1]-f[1], t[0]-f[0]);
-        const len = 6;
-        [ang+Math.PI/6, ang-Math.PI/6].forEach(a=>{
-          ctx.moveTo(...t);
-          ctx.lineTo(t[0]-len*Math.cos(a), t[1]-len*Math.sin(a));
-        });
-        ctx.stroke();
-      };
-      drawHead(p1,p2);
-      drawHead(p2,p1);
-    };
-    const label = (txt,pos) => {
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillStyle = '#000';
-      ctx.fillText(txt, pos[0], pos[1]-4);
-    };
+    head(p1, p2); head(p2, p1);
+  };
+  const label = (txt, pos) => {
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = '#000';
+    ctx.fillText(txt, pos[0], pos[1]-4);
+  };
+  const box = (x, y, z, dx, dy, dz, col, a) => {
+    ctx.fillStyle = col; ctx.globalAlpha = a;
 
-    /* full‑face box */
-    const box = (x,y,z,dx,dy,dz,col,a) => {
-      ctx.fillStyle = col;
-      ctx.globalAlpha = a;
-      poly([ iso(x,    y+dy, z   ),
-             iso(x+dx, y+dy, z   ),
-             iso(x+dx, y+dy, z+dz),
-             iso(x,    y+dy, z+dz) ]); // back
-      poly([ iso(x+dx, y,    z   ),
-             iso(x+dx, y+dy, z   ),
-             iso(x+dx, y+dy, z+dz),
-             iso(x+dx, y,    z+dz) ]); // right
-      poly([ iso(x,    y,    z   ),
-             iso(x,    y+dy, z   ),
-             iso(x,    y+dy, z+dz),
-             iso(x,    y,    z+dz) ]); // left
-      poly([ iso(x,    y,    z   ),
-             iso(x+dx, y,    z   ),
-             iso(x+dx, y,    z+dz),
-             iso(x,    y,    z+dz) ]); // front
-      poly([ iso(x,    y,    z+dz),
-             iso(x+dx, y,    z+dz),
-             iso(x+dx, y+dy, z+dz),
-             iso(x,    y+dy, z+dz) ]); // top
-      ctx.globalAlpha = 1;
-    };
+    /* back */
+    poly([ iso(x,    y+dy, z),
+           iso(x+dx, y+dy, z),
+           iso(x+dx, y+dy, z+dz),
+           iso(x,    y+dy, z+dz) ]);
+    /* right */
+    poly([ iso(x+dx, y, z),
+           iso(x+dx, y+dy, z),
+           iso(x+dx, y+dy, z+dz),
+           iso(x+dx, y, z+dz) ]);
+    /* left */
+    poly([ iso(x, y, z),
+           iso(x, y+dy, z),
+           iso(x, y+dy, z+dz),
+           iso(x, y, z+dz) ]);
+    /* front */
+    poly([ iso(x, y, z),
+           iso(x+dx, y, z),
+           iso(x+dx, y, z+dz),
+           iso(x, y, z+dz) ]);
+    /* top */
+    poly([ iso(x,    y,    z+dz),
+           iso(x+dx, y,    z+dz),
+           iso(x+dx, y+dy, z+dz),
+           iso(x,    y+dy, z+dz) ]);
 
-    /* draw base layers */
-    for(let layer=0; layer<p.layers; layer++){
-      const z = layer * p.Lsh * 100;
-      for(let i=0; i<nLen; i++){
-        for(let j=0; j<nWid; j++){
-           const x = (-totalLen/2 + i*p.Lsl) * 100;
-          const y = (-totalWid/2 + j*p.Lsb) * 100;
-          box(x, y, z, p.Lsl*100, p.Lsb*100, p.Lsh*100, '#8B4513', 0.7);
-        }
+    ctx.globalAlpha = 1;
+  };
+
+  /* draw base layers */
+  for (let layer = 0; layer < p.layers; layer++) {
+    const z = layer * p.Lsh * 100;
+    for (let i = 0; i < nLen; i++) {
+      for (let j = 0; j < nWid; j++) {
+        const x = (-totalLen/2 + i*p.Lsl) * 100;
+        const y = (-totalWid/2 + j*p.Lsb) * 100;
+        box(x, y, z, p.Lsl*100, p.Lsb*100, p.Lsh*100, '#8B4513', 0.7);
       }
     }
+  }
 
-    /* top contact */
-    const matW = p.Lr*100, matL=p.Lw*100, matH=p.Lsh*10, matZ=p.layers*p.Lsh*100;
-    box(-matW/2, -matL/2, matZ, matW, matL, matH, '#707070', 0.85);
+  /* top contact (steel mat or crawler track) */
+  const matW = p.Lr * 100,
+        matL = p.Lw * 100,
+        matH = p.Lsh * 10,
+        matZ = p.layers * p.Lsh * 100;
+  box(-matW/2, -matL/2, matZ, matW, matL, matH, '#707070', 0.85);
 
-      /* dimension arrows */
-    ctx.strokeStyle = '#000';
+  /* dimension arrows */
+  ctx.strokeStyle = '#000';
 
-    // ── Length Lsl (front edge) ──
-    let baseX = -totalLen/2*100, baseY = -totalWid/2*100, baseZ = 0;
-    let p1 = iso(baseX,                baseY - 20, baseZ);
-    let p2 = iso(baseX + p.Lsl * 100,  baseY - 20, baseZ);
-    arrow(p1, p2);
-    label(`Lsl ${p.Lsl} m`, [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
+  /* Lsl (front edge) */
+  let baseX = -totalLen/2 * 100,
+      baseY = -totalWid/2 * 100,
+      baseZ = 0;
+  let p1 = iso(baseX,                baseY - 20, baseZ);
+  let p2 = iso(baseX + p.Lsl*100,    baseY - 20, baseZ);
+  arrow(p1, p2); label(`Lsl ${p.Lsl} m`, [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2]);
 
-    // ── Width Lsb (left edge) ──
-    p1 = iso(baseX - 20, baseY,                 baseZ);
-    p2 = iso(baseX - 20, baseY + p.Lsb * 100,   baseZ);
-    arrow(p1, p2);
-    label(`Lsb ${p.Lsb} m`, [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
+  /* Lsb (left edge) */
+  p1 = iso(baseX - 20, baseY,               baseZ);
+  p2 = iso(baseX - 20, baseY + p.Lsb*100,   baseZ);
+  arrow(p1, p2); label(`Lsb ${p.Lsb} m`, [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2]);
 
-    // ── Height (layers × h) ──
-    p1 = iso(baseX + p.Lsl * 100 + 20, baseY + p.Lsb * 100, 0);
-    p2 = iso(baseX + p.Lsl * 100 + 20, baseY + p.Lsb * 100, p.layers * p.Lsh * 100);
-    arrow(p1, p2);
-    label(`${p.layers}×h = ${(p.layers * p.Lsh).toFixed(p.precision)} m`,
-          [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
+  /* height (layers × h) */
+  p1 = iso(baseX + p.Lsl*100 + 20,
+           baseY + p.Lsb*100,
+           0);
+  p2 = iso(baseX + p.Lsl*100 + 20,
+           baseY + p.Lsb*100,
+           p.layers * p.Lsh * 100);
+  arrow(p1, p2);
+  label(`${p.layers}×h = ${(p.layers * p.Lsh).toFixed(p.precision)} m`,
+        [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2]);
 
-    ctx.lineWidth = 1;   // reset in case something else re-uses the canvas
-  } // ────── end render3D ──────
-  </script>
+  ctx.lineWidth = 1;                                 // reset
+}
+</script>
 </body>
 </html>
-
