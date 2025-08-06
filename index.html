@@ -1,4 +1,4 @@
-<!DOCTYPE html> <!-- Loadspreader Calculator — mobile-friendly single-file web-app  2025-07-13  (revision 35 – main-menu button fixed, no JS errors) -->
+<!DOCTYPE html> <!-- Loadspreader Calculator — mobile-friendly single-file web-app  2025-07-13  (revision 37 – mobile+dark-mode, full help modal) -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -7,35 +7,182 @@
 
   <!-- ============ STYLES ============ -->
   <style>
+    /* ---------- colour scheme ---------- */
+    :root{
+      --bg:#ffffff;
+      --text:#111111;
+      --primary:#0a7bd9;
+      --primary-disabled:#8aa8c4;
+      --btn-text:#ffffff;
+      --header-bg:#f5f5f5;
+      --border:#cccccc;
+      --advert-bg:#ffeeba;
+      --advert-border:#f0c36d;
+      --advert-text:#111111;
+      --modal-bg:#ffffff;
+    }
+    /* dark-mode overrides */
+    [data-theme="dark"]{
+      --bg:#121212;
+      --text:#e0e0e0;
+      --primary:#1a8fff;
+      --primary-disabled:#3a4a5c;
+      --btn-text:#ffffff;
+      --header-bg:#1e1e1e;
+      --border:#444444;
+      --advert-bg:#5a4500;
+      --advert-border:#8a6f1d;
+      --advert-text:#e0e0e0;
+      --modal-bg:#1e1e1e;
+    }
+
+    /* ---------- base & helpers ---------- */
     *{box-sizing:border-box}
     .responsive{width:100%;height:auto}
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff;color:#111}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
     .hide{display:none}
-    .section-title{font-weight:600;margin:24px 0 4px;border-bottom:1px solid #ccc;padding-bottom:4px;font-size:.95rem}
-    .green{color:#0a8a0a}.red{color:#d00}
-    button,input,select{font-size:1rem;border-radius:6px}
-    .btn{display:block;width:100%;background:#0a7bd9;color:#fff;border:none;padding:12px 16px;margin:8px 0;cursor:pointer}
-    .btn:disabled{background:#8aa8c4;cursor:not-allowed}
-    header{background:#f5f5f5;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:2}
-    header h1{margin:0;font-size:1.2rem;flex:1;text-align:center}
-    input,select{width:100%;padding:10px;border:1px solid #bbb;margin-top:4px;margin-bottom:12px}
-    label{display:block;font-size:.85rem}
-    nav{text-align:center;padding:32px 16px}
+    .section-title{
+      font-weight:600;
+      margin:24px 0 4px;
+      border-bottom:1px solid var(--border);
+      padding-bottom:4px;
+      font-size:.95rem
+    }
+    .green{color:#0a8a0a}
+    .red{color:#d00}
+    button,input,select{
+      font-size:1rem;
+      border-radius:6px
+    }
+    .btn{
+      display:block;
+      width:100%;
+      background:var(--primary);
+      color:var(--btn-text);
+      border:none;
+      padding:12px 16px;
+      margin:8px 0;
+      cursor:pointer
+    }
+    .btn:disabled{
+      background:var(--primary-disabled);
+      cursor:not-allowed
+    }
+    header{
+      background:var(--header-bg);
+      padding:12px 16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      position:sticky;
+      top:0;
+      z-index:2
+    }
+    header h1{
+      margin:0;
+      font-size:1.2rem;
+      flex:1;
+      text-align:center
+    }
+    input,select{
+      width:100%;
+      padding:10px;
+      border:1px solid #bbb;
+      margin-top:4px;
+      margin-bottom:12px
+    }
+    label{
+      display:block;
+      font-size:.85rem
+    }
+    nav{
+      text-align:center;
+      padding:32px 16px
+    }
     nav img{width:45%;max-width:180px}
     .container{padding:16px}
-    #plot{width:100%;height:100%;border:1px solid #eee;border-radius:6px}
+    #plot{
+      width:100%;
+      height:100%;
+      border:1px solid #eee;
+      border-radius:6px
+    }
 
     /* modal & advert bar */
-    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:5000}
-    .modal-content{background:#fff;padding:24px;border-radius:8px;max-width:700px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+    .modal{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,.6);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:5000
+    }
+    .modal-content{
+      background:var(--modal-bg);
+      color:var(--text);
+      padding:24px;
+      border-radius:8px;
+      max-width:700px;
+      max-height:80vh;
+      overflow-y:auto;
+      box-shadow:0 4px 12px rgba(0,0,0,.4)
+    }
     .modal.hide{display:none}
     .modal-content h2{margin-top:0}
-    .modal-content table{width:100%;border-collapse:collapse;margin:8px 0}
-    .modal-content th,.modal-content td{padding:4px 6px;text-align:center}
-    .modal-content th{border-bottom:1px solid #aaa;font-weight:600}
-    .modal-content tr:nth-child(even){background:#f8f8f8}
-    .advert-bar{background:#ffeeba;color:#111;padding:8px 12px;text-align:center;font-size:.9rem;border:1px solid #f0c36d;border-radius:6px;margin-bottom:12px}
-    .advert-bar a{color:inherit;text-decoration:none;font-weight:600}
+    .modal-content table{
+      width:100%;
+      border-collapse:collapse;
+      margin:8px 0
+    }
+    .modal-content th,.modal-content td{
+      padding:4px 6px;
+      text-align:center
+    }
+    .modal-content th{
+      border-bottom:1px solid var(--border);
+      font-weight:600
+    }
+    .modal-content tr:nth-child(even){
+      background:rgba(0,0,0,.04)
+    }
+    [data-theme="dark"] .modal-content tr:nth-child(even){
+      background:rgba(255,255,255,.04)
+    }
+    .advert-bar{
+      background:var(--advert-bg);
+      color:var(--advert-text);
+      padding:8px 12px;
+      text-align:center;
+      font-size:.9rem;
+      border:1px solid var(--advert-border);
+      border-radius:6px;
+      margin-bottom:12px
+    }
+    .advert-bar a{
+      color:inherit;
+      text-decoration:none;
+      font-weight:600
+    }
+
+    /* ---------- small-screen tweaks ---------- */
+    @media (max-width:480px){
+      body{font-size:14px}
+      header h1{font-size:1rem}
+      button,input,select{font-size:.9rem}
+      .container{padding:12px}
+      .section-title{margin:16px 0 4px}
+      nav{padding:24px 8px}
+    }
   </style>
 </head>
 
@@ -57,6 +204,7 @@
     <button class="btn" id="back-menu" style="width:auto;padding:6px 12px;background:#ddd;color:#111">← Menu</button>
     <h1>Loadspreader Calculator</h1>
     <button class="btn" id="help-btn" title="Help" style="width:auto;padding:6px 12px">Help</button>
+    <button class="btn" id="theme-toggle" title="Toggle light / dark" style="width:auto;padding:6px 12px">🌙</button>
   </header>
 
   <div class="container">
@@ -137,48 +285,48 @@
 <div id="help-modal" class="modal hide">
   <div class="modal-content">
     <button id="help-close" style="float:right;font-size:1.2rem;border:none;background:transparent;cursor:pointer">✕</button>
-    <h2>Loadspreader Calculator – Help Guide</h2>
-    <p><strong>Version:</strong> 2025‑07‑13</p>
+    <h2>Loadspreader Calculator – Help Guide</h2>
+    <p><strong>Version:</strong> 2025-07-13</p>
 
     <h3>1. Purpose</h3>
-    <p>The calculator checks the structural adequacy of timber or steel load‑spreaders used under outrigger pads, steering bogies, or crawler tracks. It verifies bending, shear, compression and ground bearing pressure against user‑defined limits.</p>
+    <p>The calculator checks the structural adequacy of timber or steel load-spreaders used under outrigger pads, steering bogies, or crawler tracks. It verifies bending, shear, compression and ground bearing pressure against user-defined limits.</p>
 
-    <h3>2. Quick Workflow</h3>
+    <h3>2. Quick Workflow</h3>
     <ol>
       <li>Select <em>Top Contact Type</em> (steel mat or crawler tracks).</li>
       <li>Enter contact dimensions (<code>L<sub>w</sub></code>, <code>L<sub>r</sub></code>) and load information:<br>
-        &nbsp;&nbsp;• For steel mats: total point load <code>P<sub>max</sub></code> and mat self‑weight <code>W<sub>m</sub></code>.<br>
-        &nbsp;&nbsp;• For crawlers: maximum applied pressure <code>q<sub>max</sub></code>.</li>
-      <li>Define base load‑spreader geometry (<code>L<sub>sl</sub></code>, <code>L<sub>sb</sub></code>, thickness <code>h</code> and number of layers).</li>
+        &nbsp;&nbsp;• For steel mats: total point load <code>P<sub>max</sub></code> and mat self-weight <code>W<sub>m</sub></code>.<br>
+        &nbsp;&nbsp;• For crawlers: maximum applied pressure <code>q<sub>max</sub></code>.</li>
+      <li>Define base load-spreader geometry (<code>L<sub>sl</sub></code>, <code>L<sub>sb</sub></code>, thickness <code>h</code> and number of layers).</li>
       <li>Choose material grade (timber or steel).</li>
       <li>Click <strong>Calculate</strong>. Failed checks show in <span style="color:#d00">red</span>.</li>
     </ol>
 
-    <h3>3. Input Definitions</h3>
+    <h3>3. Input Definitions</h3>
     <ul>
       <li><code>L<sub>w</sub></code> – Length of the top contact area (m).</li>
       <li><code>L<sub>r</sub></code> – Width of the top contact area (m).</li>
       <li><code>P<sub>max</sub></code> – Maximum working load transferred through the mat (t).</li>
-      <li><code>W<sub>m</sub></code> – Self‑weight of the steel mat (t).</li>
+      <li><code>W<sub>m</sub></code> – Self-weight of the steel mat (t).</li>
       <li><code>q<sub>max</sub></code> – Uniform pressure applied by tracks or pads (t/m²).</li>
-      <li><code>L<sub>sl</sub></code> – Length of the base load‑spreader (m).</li>
-      <li><code>L<sub>sb</sub></code> – Width of the base load‑spreader (m).</li>
+      <li><code>L<sub>sl</sub></code> – Length of the base load-spreader (m).</li>
+      <li><code>L<sub>sb</sub></code> – Width of the base load-spreader (m).</li>
       <li><code>h</code> – Thickness per layer (m).</li>
       <li><code>Layers</code> – Number of laminated layers acting compositely.</li>
       <li><code>GBP<sub>allow</sub></code> – Allowable ground bearing pressure (t/m²).</li>
       <li><code>Precision</code> – Number of decimals shown in results.</li>
     </ul>
 
-    <h3>4. Output Parameters</h3>
+    <h3>4. Output Parameters</h3>
     <ul>
       <li><code>σ<sub>B</sub></code> – Extreme fibre bending stress (t/m²).</li>
       <li><code>τ<sub>S</sub></code> – Shear stress at neutral axis (t/m²).</li>
       <li><code>σ<sub>C</sub></code> – Bearing (crushing) stress (t/m²).</li>
-      <li><code>GBP</code> – Calculated ground bearing pressure including self‑weight (t/m²).</li>
+      <li><code>GBP</code> – Calculated ground bearing pressure including self-weight (t/m²).</li>
       <li><code>Q<sub>S</sub></code>, <code>q<sub>B</sub></code> – Shear forces used in stress calculations.</li>
     </ul>
 
-    <h3>5. Pass/Fail Criteria</h3>
+    <h3>5. Pass/Fail Criteria</h3>
     <p>Each stress is compared with the selected material capacities:</p>
     <table>
       <tr><th>Material</th><th>Bending<br>σ<sub>max</sub> (t/m²)</th><th>Shear<br>τ<sub>max</sub> (t/m²)</th><th>Compression<br>σ<sub>c,max</sub> (t/m²)</th></tr>
@@ -188,20 +336,20 @@
     </table>
     <p>All four checks must be satisfied and <code>GBP</code> must be below the allowable value for an overall pass.</p>
 
-    <h3>6. 3‑D View</h3>
-    <p>The schematic at the bottom of the calculator displays the laminate arrangement and dimensions. It is for visual confirmation only – it is <em>not</em> a detailed finite‑element model.</p>
+    <h3>6. 3-D View</h3>
+    <p>The schematic at the bottom of the calculator displays the laminate arrangement and dimensions. It is for visual confirmation only – it is <em>not</em> a detailed finite-element model.</p>
 
-    <h3>7. Assumptions & Limitations</h3>
+    <h3>7. Assumptions & Limitations</h3>
     <ul>
       <li>Load distribution is linear and symmetrical.</li>
-      <li>No interaction between adjacent load‑spreaders is considered.</li>
-      <li>Deflection is not evaluated – check serviceability separately if required.</li>
+      <li>No interaction between adjacent load-spreaders is considered.</li>
+      <li>Deflection is not evaluated – check serviceability separately if required.</li>
       <li>Material strengths correspond to characteristic values under static loading.</li>
       <li>Results are intended for preliminary sizing and must be verified by a competent engineer.</li>
     </ul>
 
     <h3>8. Troubleshooting</h3>
-    <p>If you see the error message “Top‑contact width must be less than base length”, either reduce <code>L<sub>r</sub></code>, increase <code>L<sub>sl</sub></code>, or add more layers to raise capacity.</p>
+    <p>If you see the error message “Top-contact width must be less than base length”, either reduce <code>L<sub>r</sub></code>, increase <code>L<sub>sl</sub></code>, or add more layers to raise capacity.</p>
 
     <h3>9. Contact</h3>
     <p>Feedback and bug reports: <a href="mailto:engineering.tools@example.com">engineering.tools@example.com</a></p>
@@ -209,12 +357,12 @@
     <h3>10. Load Distribution Assumptions</h3>
     <ol>
       <li><strong>Compliant Support Medium</strong><br>
-        The underlying material is assumed to be sufficiently deformable to allow redistribution of applied loads via the load spreader. This implies a non‑rigid, load‑sharing substrate.
+        The underlying material is assumed to be sufficiently deformable to allow redistribution of applied loads via the load spreader. This implies a non-rigid, load-sharing substrate.
       </li>
       <li><strong>Typical Acceptable Support Types</strong>
         <ul>
           <li>Compacted, graded granular fill (e.g. crushed stone, engineered backfill),</li>
-          <li>Engineered compressible layers such as closed‑cell polyurethane foam, geosynthetic cushions, or similar.</li>
+          <li>Engineered compressible layers such as closed-cell polyurethane foam, geosynthetic cushions, or similar.</li>
         </ul>
       </li>
       <li><strong>Full Contact Assumption</strong><br>
@@ -226,15 +374,15 @@
       <li><strong>Scope Limitations</strong>
         <ul>
           <li>The substrate is rigid (e.g. concrete slab, rock) and does not allow displacement,</li>
-          <li>There is voiding, poor compaction, or non‑homogeneous materials,</li>
-          <li>The loading is dynamic or impact‑based, unless specific material behavior is modeled.</li>
+          <li>There is voiding, poor compaction, or non-homogeneous materials,</li>
+          <li>The loading is dynamic or impact-based, unless specific material behavior is modeled.</li>
         </ul>
       </li>
     </ol>
 
     <p style="margin-top: 1rem"><em>Note:</em> Users are responsible for verifying that actual site conditions conform to these assumptions. Deviations may require advanced modeling or empirical verification.</p>
 
-    <p style="text-align:center;margin-top:24px;font-size:.85rem">© 2025 Engineering Tools – All rights reserved.</p>
+    <p style="text-align:center;margin-top:24px;font-size:.85rem">© 2025 Engineering Tools – All rights reserved.</p>
   </div>
 </div>
 
@@ -251,6 +399,21 @@ const g=9.81;
 const round=(v,p)=>(!isFinite(v)||isNaN(v))?v:Number(Math.round(`${v}e${p}`)+`e-${p}`);
 const $=id=>document.getElementById(id);
 const diagramSrc={mat:'LSP.png',crawler:'crawler.png'};
+
+/* ===== THEME TOGGLE ===== */
+function applySavedTheme(){
+  const saved=localStorage.getItem('theme')||'light';
+  document.body.setAttribute('data-theme',saved);
+  $('theme-toggle').textContent=saved==='dark'?'☀️':'🌙';
+}
+applySavedTheme();
+$('theme-toggle').onclick=()=>{
+  const current=document.body.getAttribute('data-theme')==='dark'?'dark':'light';
+  const next=current==='dark'?'light':'dark';
+  document.body.setAttribute('data-theme',next);
+  localStorage.setItem('theme',next);
+  $('theme-toggle').textContent=next==='dark'?'☀️':'🌙';
+};
 
 /* ===== DYNAMIC LABELS ===== */
 function updateTopLabels(){
@@ -330,7 +493,7 @@ $('calc-btn').onclick=()=>{
     totalLoad=p.q_max*p.Lr*p.Lw;
   }
 
-  // FIXED: Correct width check for crawler mode
+  /* width check */
   const widthToCheck=topType==='crawler'?p.Lw:p.Lw;
   const widthLabel =topType==='crawler'?'Crawler Track Width (Lw)':'Top-contact width (Lw)';
   if(widthToCheck>=p.Lsl){alert(`Error: ${widthLabel} must be less than base length (Lsl).`);return;}
@@ -364,7 +527,7 @@ $('calc-btn').onclick=()=>{
   render3D({...p,q_max:p.q_max});
 };
 
-/* ===== 3-D RENDERER ===== */
+/* ===== 3-D RENDERER (unchanged) ===== */
 function render3D(p){
   const c=$('plot'),ctx=c.getContext('2d');
   c.width=c.clientWidth; c.height=c.clientHeight;
@@ -394,8 +557,3 @@ function render3D(p){
 </script>
 </body>
 </html>
-
-
-
-  
-
