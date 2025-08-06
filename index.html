@@ -134,81 +134,110 @@
 </div>
 
  <!-- ========= HELP MODAL ========= -->
-  <div id="help-modal" class="modal hide">
-    <div class="modal-content">
-      <button id="help-close" style="float:right;font-size:1.2rem;border:none;background:transparent;cursor:pointer">✕</button>
-      <h2>Loadspreader Calculator – Help Guide</h2>
-      <p><strong>Version:</strong> 2025‑07‑13</p>
+<div id="help-modal" class="modal hide">
+  <div class="modal-content">
+    <button id="help-close" style="float:right;font-size:1.2rem;border:none;background:transparent;cursor:pointer">✕</button>
+    <h2>Loadspreader Calculator – Help Guide</h2>
+    <p><strong>Version:</strong> 2025‑07‑13</p>
 
-      <h3>1. Purpose</h3>
-      <p>The calculator checks the structural adequacy of timber or steel load‑spreaders used under outrigger pads, steering bogies, or crawler tracks. It verifies bending, shear, compression and ground bearing pressure against user‑defined limits.</p>
+    <h3>1. Purpose</h3>
+    <p>The calculator checks the structural adequacy of timber or steel load‑spreaders used under outrigger pads, steering bogies, or crawler tracks. It verifies bending, shear, compression and ground bearing pressure against user‑defined limits.</p>
 
-      <h3>2. Quick Workflow</h3>
-      <ol>
-        <li>Select <em>Top Contact Type</em> (steel mat or crawler tracks).</li>
-        <li>Enter contact dimensions (<code>L<sub>w</sub></code>, <code>L<sub>r</sub></code>) and load information:<br>
-          &nbsp;&nbsp;• For steel mats: total point load <code>P<sub>max</sub></code> and mat self‑weight <code>W<sub>m</sub></code>.<br>
-          &nbsp;&nbsp;• For crawlers: maximum applied pressure <code>q<sub>max</sub></code>.</li>
-        <li>Define base load‑spreader geometry (<code>L<sub>sl</sub></code>, <code>L<sub>sb</sub></code>, thickness <code>h</code> and number of layers).</li>
-        <li>Choose material grade (timber or steel).</li>
-        <li>Click <strong>Calculate</strong>. Failed checks show in <span style="color:#d00">red</span>.</li>
-      </ol>
+    <h3>2. Quick Workflow</h3>
+    <ol>
+      <li>Select <em>Top Contact Type</em> (steel mat or crawler tracks).</li>
+      <li>Enter contact dimensions (<code>L<sub>w</sub></code>, <code>L<sub>r</sub></code>) and load information:<br>
+        &nbsp;&nbsp;• For steel mats: total point load <code>P<sub>max</sub></code> and mat self‑weight <code>W<sub>m</sub></code>.<br>
+        &nbsp;&nbsp;• For crawlers: maximum applied pressure <code>q<sub>max</sub></code>.</li>
+      <li>Define base load‑spreader geometry (<code>L<sub>sl</sub></code>, <code>L<sub>sb</sub></code>, thickness <code>h</code> and number of layers).</li>
+      <li>Choose material grade (timber or steel).</li>
+      <li>Click <strong>Calculate</strong>. Failed checks show in <span style="color:#d00">red</span>.</li>
+    </ol>
 
-      <h3>3. Input Definitions</h3>
-      <ul>
-        <li><code>L<sub>w</sub></code> – Length of the top contact area (m).</li>
-        <li><code>L<sub>r</sub></code> – Width of the top contact area (m).</li>
-        <li><code>P<sub>max</sub></code> – Maximum working load transferred through the mat (t).</li>
-        <li><code>W<sub>m</sub></code> – Self‑weight of the steel mat (t).</li>
-        <li><code>q<sub>max</sub></code> – Uniform pressure applied by tracks or pads (t/m²).</li>
-        <li><code>L<sub>sl</sub></code> – Length of the base load‑spreader (m).</li>
-        <li><code>L<sub>sb</sub></code> – Width of the base load‑spreader (m).</li>
-        <li><code>h</code> – Thickness per layer (m).</li>
-        <li><code>Layers</code> – Number of laminated layers acting compositely.</li>
-        <li><code>GBP<sub>allow</sub></code> – Allowable ground bearing pressure (t/m²).</li>
-        <li><code>Precision</code> – Number of decimals shown in results.</li>
-      </ul>
+    <h3>3. Input Definitions</h3>
+    <ul>
+      <li><code>L<sub>w</sub></code> – Length of the top contact area (m).</li>
+      <li><code>L<sub>r</sub></code> – Width of the top contact area (m).</li>
+      <li><code>P<sub>max</sub></code> – Maximum working load transferred through the mat (t).</li>
+      <li><code>W<sub>m</sub></code> – Self‑weight of the steel mat (t).</li>
+      <li><code>q<sub>max</sub></code> – Uniform pressure applied by tracks or pads (t/m²).</li>
+      <li><code>L<sub>sl</sub></code> – Length of the base load‑spreader (m).</li>
+      <li><code>L<sub>sb</sub></code> – Width of the base load‑spreader (m).</li>
+      <li><code>h</code> – Thickness per layer (m).</li>
+      <li><code>Layers</code> – Number of laminated layers acting compositely.</li>
+      <li><code>GBP<sub>allow</sub></code> – Allowable ground bearing pressure (t/m²).</li>
+      <li><code>Precision</code> – Number of decimals shown in results.</li>
+    </ul>
 
-      <h3>4. Output Parameters</h3>
-      <ul>
-        <li><code>σ<sub>B</sub></code> – Extreme fibre bending stress (t/m²).</li>
-        <li><code>τ<sub>S</sub></code> – Shear stress at neutral axis (t/m²).</li>
-        <li><code>σ<sub>C</sub></code> – Bearing (crushing) stress (t/m²).</li>
-        <li><code>GBP</code> – Calculated ground bearing pressure including self‑weight (t/m²).</li>
-        <li><code>Q<sub>S</sub></code>, <code>q<sub>B</sub></code> – Shear forces used in stress calculations.</li>
-      </ul>
+    <h3>4. Output Parameters</h3>
+    <ul>
+      <li><code>σ<sub>B</sub></code> – Extreme fibre bending stress (t/m²).</li>
+      <li><code>τ<sub>S</sub></code> – Shear stress at neutral axis (t/m²).</li>
+      <li><code>σ<sub>C</sub></code> – Bearing (crushing) stress (t/m²).</li>
+      <li><code>GBP</code> – Calculated ground bearing pressure including self‑weight (t/m²).</li>
+      <li><code>Q<sub>S</sub></code>, <code>q<sub>B</sub></code> – Shear forces used in stress calculations.</li>
+    </ul>
 
-      <h3>5. Pass/Fail Criteria</h3>
-      <p>Each stress is compared with the selected material capacities:</p>
-      <table>
-        <tr><th>Material</th><th>Bending<br>σ<sub>max</sub> (t/m²)</th><th>Shear<br>τ<sub>max</sub> (t/m²)</th><th>Compression<br>σ<sub>c,max</sub> (t/m²)</th></tr>
-        <tr><td>Azobe</td><td>25</td><td>2</td><td>8</td></tr>
-        <tr><td>S235</td><td>234.3</td><td>142</td><td>319.5</td></tr>
-        <tr><td>S355</td><td>345</td><td>207</td><td>485</td></tr>
-      </table>
-      <p>All four checks must be satisfied and <code>GBP</code> must be below the allowable value for an overall pass.</p>
+    <h3>5. Pass/Fail Criteria</h3>
+    <p>Each stress is compared with the selected material capacities:</p>
+    <table>
+      <tr><th>Material</th><th>Bending<br>σ<sub>max</sub> (t/m²)</th><th>Shear<br>τ<sub>max</sub> (t/m²)</th><th>Compression<br>σ<sub>c,max</sub> (t/m²)</th></tr>
+      <tr><td>Azobe</td><td>25</td><td>2</td><td>8</td></tr>
+      <tr><td>S235</td><td>234.3</td><td>142</td><td>319.5</td></tr>
+      <tr><td>S355</td><td>345</td><td>207</td><td>485</td></tr>
+    </table>
+    <p>All four checks must be satisfied and <code>GBP</code> must be below the allowable value for an overall pass.</p>
 
-      <h3>6. 3‑D View</h3>
-      <p>The schematic at the bottom of the calculator displays the laminate arrangement and dimensions. It is for visual confirmation only – it is <em>not</em> a detailed finite‑element model.</p>
+    <h3>6. 3‑D View</h3>
+    <p>The schematic at the bottom of the calculator displays the laminate arrangement and dimensions. It is for visual confirmation only – it is <em>not</em> a detailed finite‑element model.</p>
 
-      <h3>7. Assumptions & Limitations</h3>
-      <ul>
-        <li>Load distribution is linear and symmetrical.</li>
-        <li>No interaction between adjacent load‑spreaders is considered.</li>
-        <li>Deflection is not evaluated – check serviceability separately if required.</li>
-        <li>Material strengths correspond to characteristic values under static loading.</li>
-        <li>Results are intended for preliminary sizing and must be verified by a competent engineer.</li>
-      </ul>
+    <h3>7. Assumptions & Limitations</h3>
+    <ul>
+      <li>Load distribution is linear and symmetrical.</li>
+      <li>No interaction between adjacent load‑spreaders is considered.</li>
+      <li>Deflection is not evaluated – check serviceability separately if required.</li>
+      <li>Material strengths correspond to characteristic values under static loading.</li>
+      <li>Results are intended for preliminary sizing and must be verified by a competent engineer.</li>
+    </ul>
 
-      <h3>8. Troubleshooting</h3>
-      <p>If you see the error message “Top‑contact width must be less than base length”, either reduce <code>L<sub>r</sub></code>, increase <code>L<sub>sl</sub></code>, or add more layers to raise capacity.</p>
+    <h3>8. Troubleshooting</h3>
+    <p>If you see the error message “Top‑contact width must be less than base length”, either reduce <code>L<sub>r</sub></code>, increase <code>L<sub>sl</sub></code>, or add more layers to raise capacity.</p>
 
-      <h3>9. Contact</h3>
-      <p>Feedback and bug reports: <a href="mailto:engineering.tools@example.com">engineering.tools@example.com</a></p>
+    <h3>9. Contact</h3>
+    <p>Feedback and bug reports: <a href="mailto:engineering.tools@example.com">engineering.tools@example.com</a></p>
 
-      <p style="text-align:center;margin-top:24px;font-size:.85rem">© 2025 Engineering Tools – All rights reserved.</p>
-    </div>
+    <h3>10. Load Distribution Assumptions</h3>
+    <ol>
+      <li><strong>Compliant Support Medium</strong><br>
+        The underlying material is assumed to be sufficiently deformable to allow redistribution of applied loads via the load spreader. This implies a non‑rigid, load‑sharing substrate.
+      </li>
+      <li><strong>Typical Acceptable Support Types</strong>
+        <ul>
+          <li>Compacted, graded granular fill (e.g. crushed stone, engineered backfill),</li>
+          <li>Engineered compressible layers such as closed‑cell polyurethane foam, geosynthetic cushions, or similar.</li>
+        </ul>
+      </li>
+      <li><strong>Full Contact Assumption</strong><br>
+        The load spreader is assumed to be in continuous contact with the support medium, with no significant voids or air gaps. The load is spread either uniformly or in a predictable gradient based on material stiffness.
+      </li>
+      <li><strong>Load Redistribution Behavior</strong><br>
+        The system assumes that point or concentrated loads applied to the spreader are redistributed over a larger area, reducing bearing stress concentrations — conditional on sufficient substrate compliance.
+      </li>
+      <li><strong>Scope Limitations</strong>
+        <ul>
+          <li>The substrate is rigid (e.g. concrete slab, rock) and does not allow displacement,</li>
+          <li>There is voiding, poor compaction, or non‑homogeneous materials,</li>
+          <li>The loading is dynamic or impact‑based, unless specific material behavior is modeled.</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p style="margin-top: 1rem"><em>Note:</em> Users are responsible for verifying that actual site conditions conform to these assumptions. Deviations may require advanced modeling or empirical verification.</p>
+
+    <p style="text-align:center;margin-top:24px;font-size:.85rem">© 2025 Engineering Tools – All rights reserved.</p>
   </div>
+</div>
+
 
 <!-- ================ SCRIPT ================ -->
 <script>
@@ -369,3 +398,4 @@ function render3D(p){
 
 
   
+
