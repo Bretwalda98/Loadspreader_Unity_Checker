@@ -1,194 +1,200 @@
-<!DOCTYPE html> <!-- Loadspreader Calculator — mobile-friendly single-file web-app  2025-07-13  (revision 37 – mobile+dark-mode, full help modal) -->    <html lang="en">    
-<head>    
-  <meta charset="utf-8">    
-  <meta name="viewport" content="width=device-width,initial-scale=1">    
-  <title>Loadspreader Calculator</title>      <!-- ============ STYLES ============ -->      <style>    
-    /* ---------- colour scheme ---------- */    
-    :root{    
-      --bg:#ffffff;    
-      --text:#111111;    
-      --primary:#0a7bd9;    
-      --primary-disabled:#8aa8c4;    
-      --btn-text:#ffffff;    
-      --header-bg:#f5f5f5;    
-      --border:#cccccc;    
-      --advert-bg:#ffeeba;    
-      --advert-border:#f0c36d;    
-      --advert-text:#111111;    
-      --modal-bg:#ffffff;    
-    }    
-    /* dark-mode overrides */    
-    [data-theme="dark"]{    
-      --bg:#121212;    
-      --text:#e0e0e0;    
-      --primary:#1a8fff;    
-      --primary-disabled:#3a4a5c;    
-      --btn-text:#ffffff;    
-      --header-bg:#1e1e1e;    
-      --border:#444444;    
-      --advert-bg:#5a4500;    
-      --advert-border:#8a6f1d;    
-      --advert-text:#e0e0e0;    
-      --modal-bg:#1e1e1e;    
-    }    
-    
-    /* ---------- base & helpers ---------- */    
-    *{box-sizing:border-box}    
-    .responsive{width:100%;height:auto}    
-    body{    
-      margin:0;    
-      font-family:Arial,Helvetica,sans-serif;    
-      background:var(--bg);    
-      color:var(--text);    
-      line-height:1.45;    
-    }    
-    .hide{display:none}    
-    .section-title{    
-      font-weight:600;    
-      margin:24px 0 4px;    
-      border-bottom:1px solid var(--border);    
-      padding-bottom:4px;    
-      font-size:.95rem    
-    }    
-    .green{color:#0a8a0a}    
-    .red{color:#d00}    
-    button,input,select{    
-      font-size:1rem;    
-      border-radius:6px    
-    }    
-    .btn{    
-      display:block;    
-      width:100%;    
-      background:var(--primary);    
-      color:var(--btn-text);    
-      border:none;    
-      padding:12px 16px;    
-      margin:8px 0;    
-      cursor:pointer    
-    }    
-    .btn:disabled{    
-      background:var(--primary-disabled);    
-      cursor:not-allowed    
-    }    
-    header{    
-      background:var(--header-bg);    
-      padding:12px 16px;    
-      display:flex;    
-      align-items:center;    
-      gap:12px;    
-      position:sticky;    
-      top:0;    
-      z-index:2    
-    }    
-    header h1{    
-      margin:0;    
-      font-size:1.2rem;    
-      flex:1;    
-      text-align:center    
-    }    
-    input,select{    
-      width:100%;    
-      padding:10px;    
-      border:1px solid #bbb;    
-      margin-top:4px;    
-      margin-bottom:12px    
-    }    
-    label{    
-      display:block;    
-      font-size:.85rem    
-    }    
-    nav{    
-      text-align:center;    
-      padding:32px 16px    
-    }    
-    nav img{width:45%;max-width:180px}    
-    .container{padding:16px}    
-    #plot{    
-      width:100%;    
-      height:100%;    
-      border:1px solid #eee;    
-      border-radius:6px    
-    }    
-    
-    /* modal & advert bar */    
-    .modal{    
-      position:fixed;    
-      top:0;    
-      left:0;    
-      width:100%;    
-      height:100%;    
-      background:rgba(0,0,0,.6);    
-      display:flex;    
-      align-items:center;    
-      justify-content:center;    
-      z-index:5000    
-    }    
-    .modal-content{    
-      background:var(--modal-bg);    
-      color:var(--text);    
-      padding:24px;    
-      border-radius:8px;    
-      max-width:700px;    
-      max-height:80vh;    
-      overflow-y:auto;    
-      box-shadow:0 4px 12px rgba(0,0,0,.4)    
-    }    
-    .modal.hide{display:none}    
-    .modal-content h2{margin-top:0}    
-    .modal-content table{    
-      width:100%;    
-      border-collapse:collapse;    
-      margin:8px 0    
-    }    
-    .modal-content th,.modal-content td{    
-      padding:4px 6px;    
-      text-align:center    
-    }    
-    .modal-content th{    
-      border-bottom:1px solid var(--border);    
-      font-weight:600    
-    }    
-    .modal-content tr:nth-child(even){    
-      background:rgba(0,0,0,.04)    
-    }    
-    [data-theme="dark"] .modal-content tr:nth-child(even){    
-      background:rgba(255,255,255,.04)    
-    }    
-    .advert-bar{    
-      background:var(--advert-bg);    
-      color:var(--advert-text);    
-      padding:8px 12px;    
-      text-align:center;    
-      font-size:.9rem;    
-      border:1px solid var(--advert-border);    
-      border-radius:6px;    
-      margin-bottom:12px    
-    }    
-    .advert-bar a{    
-      color:inherit;    
-      text-decoration:none;    
-      font-weight:600    
-    }    
-    
-    /* ---------- small-screen tweaks ---------- */    
-    @media (max-width:480px){    
-      body{font-size:14px}    
-      header h1{font-size:1rem}    
-      button,input,select{font-size:.9rem}    
-      .container{padding:12px}    
-      .section-title{margin:16px 0 4px}    
-      nav{padding:24px 8px}    
-    }    
-  </style>    </head>    <body>    
-<!-- ========= MENU ========= -->    
-<div id="menu-screen">    
-  <nav><img src="icon.png" class="responsive" alt="App icon"></nav>    
-  <div class="container">    
-    <h1 style="text-align:center;margin-top:0">Engineering Tools</h1>    
-    <button class="btn" id="open-calculator">Loadspreader Calculator</button>    
-    <button class="btn" disabled>Tailing Calculator (coming soon)</button>    
-    <button class="btn" disabled>Rigging Calculator (coming soon)</button>    
-  </div>    
+<!DOCTYPE html> <!-- Loadspreader Calculator — mobile-friendly single-file web-app  2025-07-13  (revision 37 – mobile+dark-mode, full help modal) -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Loadspreader Calculator</title>
+  <!-- ============ STYLES ============ -->
+  <style>
+    /* ---------- colour scheme ---------- */
+    :root{
+      --bg:#ffffff;
+      --text:#111111;
+      --primary:#0a7bd9;
+      --primary-disabled:#8aa8c4;
+      --btn-text:#ffffff;
+      --header-bg:#f5f5f5;
+      --border:#cccccc;
+      --advert-bg:#ffeeba;
+      --advert-border:#f0c36d;
+      --advert-text:#111111;
+      --modal-bg:#ffffff;
+    }
+    /* dark-mode overrides */
+    [data-theme="dark"]{
+      --bg:#121212;
+      --text:#e0e0e0;
+      --primary:#1a8fff;
+      --primary-disabled:#3a4a5c;
+      --btn-text:#ffffff;
+      --header-bg:#1e1e1e;
+      --border:#444444;
+      --advert-bg:#5a4500;
+      --advert-border:#8a6f1d;
+      --advert-text:#e0e0e0;
+      --modal-bg:#1e1e1e;
+    }
+
+    /* ---------- base & helpers ---------- */
+    *{box-sizing:border-box}
+    .responsive{width:100%;height:auto}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+    .hide{display:none}
+    .section-title{
+      font-weight:600;
+      margin:24px 0 4px;
+      border-bottom:1px solid var(--border);
+      padding-bottom:4px;
+      font-size:.95rem
+    }
+    .green{color:#0a8a0a}
+    .red{color:#d00}
+    button,input,select{
+      font-size:1rem;
+      border-radius:6px
+    }
+    .btn{
+      display:block;
+      width:100%;
+      background:var(--primary);
+      color:var(--btn-text);
+      border:none;
+      padding:12px 16px;
+      margin:8px 0;
+      cursor:pointer
+    }
+    .btn:disabled{
+      background:var(--primary-disabled);
+      cursor:not-allowed
+    }
+    header{
+      background:var(--header-bg);
+      padding:12px 16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      position:sticky;
+      top:0;
+      z-index:2
+    }
+    header h1{
+      margin:0;
+      font-size:1.2rem;
+      flex:1;
+      text-align:center
+    }
+    input,select{
+      width:100%;
+      padding:10px;
+      border:1px solid #bbb;
+      margin-top:4px;
+      margin-bottom:12px
+    }
+    label{
+      display:block;
+      font-size:.85rem
+    }
+    nav{
+      text-align:center;
+      padding:32px 16px
+    }
+    nav img{width:45%;max-width:180px}
+    .container{padding:16px}
+    #plot{
+      width:100%;
+      height:100%;
+      border:1px solid #eee;
+      border-radius:6px
+    }
+
+    /* modal & advert bar */
+    .modal{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,.6);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:5000
+    }
+    .modal-content{
+      background:var(--modal-bg);
+      color:var(--text);
+      padding:24px;
+      border-radius:8px;
+      max-width:700px;
+      max-height:80vh;
+      overflow-y:auto;
+      box-shadow:0 4px 12px rgba(0,0,0,.4)
+    }
+    .modal.hide{display:none}
+    .modal-content h2{margin-top:0}
+    .modal-content table{
+      width:100%;
+      border-collapse:collapse;
+      margin:8px 0
+    }
+    .modal-content th,.modal-content td{
+      padding:4px 6px;
+      text-align:center
+    }
+    .modal-content th{
+      border-bottom:1px solid var(--border);
+      font-weight:600
+    }
+    .modal-content tr:nth-child(even){
+      background:rgba(0,0,0,.04)
+    }
+    [data-theme="dark"] .modal-content tr:nth-child(even){
+      background:rgba(255,255,255,.04)
+    }
+    .advert-bar{
+      background:var(--advert-bg);
+      color:var(--advert-text);
+      padding:8px 12px;
+      text-align:center;
+      font-size:.9rem;
+      border:1px solid var(--advert-border);
+      border-radius:6px;
+      margin-bottom:12px
+    }
+    .advert-bar a{
+      color:inherit;
+      text-decoration:none;
+      font-weight:600
+    }
+
+    /* ---------- small-screen tweaks ---------- */
+    @media (max-width:480px){
+      body{font-size:14px}
+      header h1{font-size:1rem}
+      button,input,select{font-size:.9rem}
+      .container{padding:12px}
+      .section-title{margin:16px 0 4px}
+      nav{padding:24px 8px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========= MENU ========= -->
+<div id="menu-screen">
+  <nav><img src="icon.png" class="responsive" alt="App icon"></nav>
+  <div class="container">
+    <h1 style="text-align:center;margin-top:0">Engineering Tools</h1>
+    <button class="btn" id="open-calculator">Loadspreader Calculator</button>
+  </div>
+</div>
+
 </div>    <!-- ======= CALCULATOR ====== -->    <div id="calc-screen" class="hide">    
   <header>    
     <button class="btn" id="back-menu" style="width:auto;padding:6px 12px;background:#ddd;color:#111">← Menu</button>    
