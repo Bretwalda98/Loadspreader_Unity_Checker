@@ -1,537 +1,477 @@
-<!DOCTYPE html> <!-- Loadspreader Calculator — mobile-friendly single-file web-app  2025-07-13  (revision 37 – mobile+dark-mode, full help modal) -->  <html lang="en">  
-<head>  
-  <meta charset="utf-8">  
-  <meta name="viewport" content="width=device-width,initial-scale=1">  
-  <title>Loadspreader Calculator</title>    <!-- ============ STYLES ============ -->    <style>  
-    /* ---------- colour scheme ---------- */  
-    :root{  
-      --bg:#ffffff;  
-      --text:#111111;  
-      --primary:#0a7bd9;  
-      --primary-disabled:#8aa8c4;  
-      --btn-text:#ffffff;  
-      --header-bg:#f5f5f5;  
-      --border:#cccccc;  
-      --advert-bg:#ffeeba;  
-      --advert-border:#f0c36d;  
-      --advert-text:#111111;  
-      --modal-bg:#ffffff;  
-    }  
-    /* dark-mode overrides */  
-    [data-theme="dark"]{  
-      --bg:#121212;  
-      --text:#e0e0e0;  
-      --primary:#1a8fff;  
-      --primary-disabled:#3a4a5c;  
-      --btn-text:#ffffff;  
-      --header-bg:#1e1e1e;  
-      --border:#444444;  
-      --advert-bg:#5a4500;  
-      --advert-border:#8a6f1d;  
-      --advert-text:#e0e0e0;  
-      --modal-bg:#1e1e1e;  
-    }  
-  
-    /* ---------- base & helpers ---------- */  
-    *{box-sizing:border-box}  
-    .responsive{width:100%;height:auto}  
-    body{  
-      margin:0;  
-      font-family:Arial,Helvetica,sans-serif;  
-      background:var(--bg);  
-      color:var(--text);  
-      line-height:1.45;  
-    }  
-    .hide{display:none}  
-    .section-title{  
-      font-weight:600;  
-      margin:24px 0 4px;  
-      border-bottom:1px solid var(--border);  
-      padding-bottom:4px;  
-      font-size:.95rem  
-    }  
-    .green{color:#0a8a0a}  
-    .red{color:#d00}  
-    button,input,select{  
-      font-size:1rem;  
-      border-radius:6px  
-    }  
-    .btn{  
-      display:block;  
-      width:100%;  
-      background:var(--primary);  
-      color:var(--btn-text);  
-      border:none;  
-      padding:12px 16px;  
-      margin:8px 0;  
-      cursor:pointer  
-    }  
-    .btn:disabled{  
-      background:var(--primary-disabled);  
-      cursor:not-allowed  
-    }  
-    header{  
-      background:var(--header-bg);  
-      padding:12px 16px;  
-      display:flex;  
-      align-items:center;  
-      gap:12px;  
-      position:sticky;  
-      top:0;  
-      z-index:2  
-    }  
-    header h1{  
-      margin:0;  
-      font-size:1.2rem;  
-      flex:1;  
-      text-align:center  
-    }  
-    input,select{  
-      width:100%;  
-      padding:10px;  
-      border:1px solid #bbb;  
-      margin-top:4px;  
-      margin-bottom:12px  
-    }  
-    label{  
-      display:block;  
-      font-size:.85rem  
-    }  
-    nav{  
-      text-align:center;  
-      padding:32px 16px  
-    }  
-    nav img{width:45%;max-width:180px}  
-    .container{padding:16px}  
-    #plot{  
-      width:100%;  
-      height:100%;  
-      border:1px solid #eee;  
-      border-radius:6px  
-    }  
-  
-    /* modal & advert bar */  
-    .modal{  
-      position:fixed;  
-      top:0;  
-      left:0;  
-      width:100%;  
-      height:100%;  
-      background:rgba(0,0,0,.6);  
-      display:flex;  
-      align-items:center;  
-      justify-content:center;  
-      z-index:5000  
-    }  
-    .modal-content{  
-      background:var(--modal-bg);  
-      color:var(--text);  
-      padding:24px;  
-      border-radius:8px;  
-      max-width:700px;  
-      max-height:80vh;  
-      overflow-y:auto;  
-      box-shadow:0 4px 12px rgba(0,0,0,.4)  
-    }  
-    .modal.hide{display:none}  
-    .modal-content h2{margin-top:0}  
-    .modal-content table{  
-      width:100%;  
-      border-collapse:collapse;  
-      margin:8px 0  
-    }  
-    .modal-content th,.modal-content td{  
-      padding:4px 6px;  
-      text-align:center  
-    }  
-    .modal-content th{  
-      border-bottom:1px solid var(--border);  
-      font-weight:600  
-    }  
-    .modal-content tr:nth-child(even){  
-      background:rgba(0,0,0,.04)  
-    }  
-    [data-theme="dark"] .modal-content tr:nth-child(even){  
-      background:rgba(255,255,255,.04)  
-    }  
-    .advert-bar{  
-      background:var(--advert-bg);  
-      color:var(--advert-text);  
-      padding:8px 12px;  
-      text-align:center;  
-      font-size:.9rem;  
-      border:1px solid var(--advert-border);  
-      border-radius:6px;  
-      margin-bottom:12px  
-    }  
-    .advert-bar a{  
-      color:inherit;  
-      text-decoration:none;  
-      font-weight:600  
-    }  
-  
-    /* ---------- small-screen tweaks ---------- */  
-    @media (max-width:480px){  
-      body{font-size:14px}  
-      header h1{font-size:1rem}  
-      button,input,select{font-size:.9rem}  
-      .container{padding:12px}  
-      .section-title{margin:16px 0 4px}  
-      nav{padding:24px 8px}  
-    }  
-  </style>  </head>  <body>  
-<!-- ========= MENU ========= -->  
-<div id="menu-screen">  
-  <nav><img src="icon.png" class="responsive" alt="App icon"></nav>  
-  <div class="container">  
-    <h1 style="text-align:center;margin-top:0">Engineering Tools</h1>  
-    <button class="btn" id="open-calculator">Loadspreader Calculator</button>  
-    <button class="btn" disabled>Tailing Calculator (coming soon)</button>  
-    <button class="btn" disabled>Rigging Calculator (coming soon)</button>  
-  </div>  
-</div>  <!-- ======= CALCULATOR ====== -->  <div id="calc-screen" class="hide">  
-  <header>  
-    <button class="btn" id="back-menu" style="width:auto;padding:6px 12px;background:#ddd;color:#111">← Menu</button>  
-    <h1>Loadspreader Calculator</h1>  
-    <button class="btn" id="help-btn" title="Help" style="width:auto;padding:6px 12px">Help</button>  
-    <button class="btn" id="theme-toggle" title="Toggle light / dark" style="width:auto;padding:6px 12px">🌙</button>  
-  </header>    <div class="container">  
-    <div class="advert-bar">  
-      <a href="https://example.com" target="_blank" rel="noopener">Advert here</a>  
-    </div>  <img id="diagram" src="LSP.png" class="responsive" alt="Loadspreader schematic diagram">  
+<!DOCTYPE html><!-- Engineering Tools – single-file web-app • 2025-08-07 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Engineering Tools</title>
 
-<div class="section-title">Input Parameters</div>  
+  <!-- ============ STYLES ============ -->
+  <style>
+  /* ---------- colour scheme ---------- */
+  :root{
+    --bg:#ffffff;--text:#111;--primary:#0a7bd9;--primary-disabled:#8aa8c4;
+    --btn-text:#fff;--header-bg:#f5f5f5;--border:#ccc;
+    --advert-bg:#ffeeba;--advert-border:#f0c36d;--advert-text:#111;
+    --modal-bg:#fff;
+  }
+  /* dark-mode */
+  [data-theme="dark"]{
+    --bg:#121212;--text:#e0e0e0;--primary:#1a8fff;--primary-disabled:#3a4a5c;
+    --btn-text:#fff;--header-bg:#1e1e1e;--border:#444;
+    --advert-bg:#5a4500;--advert-border:#8a6f1d;--advert-text:#e0e0e0;
+    --modal-bg:#1e1e1e;
+  }
 
-<!-- Top contact type selector -->  
-<label>Top Contact Type  
-  <select id="top_type">  
-    <option value="mat">Steel Mat</option>  
-    <option value="crawler">Crawler Tracks</option>  
-  </select>  
-</label>  
+  /* ---------- base ---------- */
+  *{box-sizing:border-box}
+  .responsive{width:100%;height:auto}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+  .hide{display:none}
+  .section-title{font-weight:600;margin:24px 0 4px;border-bottom:1px solid var(--border);padding-bottom:4px;font-size:.95rem}
+  .green{color:#0a8a0a}.red{color:#d00}
+  button,input,select{font-size:1rem;border-radius:6px}
+  .btn{display:block;width:100%;background:var(--primary);color:var(--btn-text);border:none;padding:12px 16px;margin:8px 0;cursor:pointer}
+  .btn:disabled{background:var(--primary-disabled);cursor:not-allowed}
+  header{background:var(--header-bg);padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:2}
+  header h1{margin:0;font-size:1.2rem;flex:1;text-align:center}
+  input,select{width:100%;padding:10px;border:1px solid #bbb;margin-top:4px;margin-bottom:12px}
+  label{display:block;font-size:.85rem}
+  nav{text-align:center;padding:32px 16px}
+  nav img{width:45%;max-width:180px}
+  .container{padding:16px}
+  #plot,#rig-2d,#rig-3d{width:100%;height:100%;border:1px solid #eee;border-radius:6px}
 
-<!-- Top contact dimensions -->  
-<label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>  
-  <input id="Lw" type="number" step="0.01" value="2">  
-</label>  
-<label id="label_Lr"><span class="label-text">Top Steel Mat Width L<sub>r</sub> (m)</span>  
-  <input id="Lr" type="number" step="0.01" value="1">  
-</label>  
+  /* advert bar */
+  .advert-bar{background:var(--advert-bg);color:var(--advert-text);padding:8px 12px;text-align:center;font-size:.9rem;border:1px solid var(--advert-border);border-radius:6px;margin-bottom:12px}
+  .advert-bar a{color:inherit;text-decoration:none;font-weight:600}
 
-<!-- Load inputs -->  
-<label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)  
-  <input id="q_max" type="number" step="0.1" value="40">  
-</label>  
-<label id="label_Pmax" class="hide">Point Load Force P<sub>max</sub> (t)  
-  <input id="p_max" type="number" step="0.1" value="100">  
-</label>  
-<label id="label_Wmat" class="hide">Steel Mat Self-Weight W<sub>m</sub> (t)  
-  <input id="w_mat" type="number" step="0.1" value="0">  
-</label>  
+  /* small-screen */
+  @media(max-width:480px){
+    body{font-size:14px}header h1{font-size:1rem}button,input,select{font-size:.9rem}
+    .container{padding:12px}.section-title{margin:16px 0 4px}nav{padding:24px 8px}
+  }
+  </style>
+</head>
+<body>
 
-<!-- Base geometry -->  
-<label>Loadspreader Length L<sub>sl</sub> (m)  
-  <input id="Lsl" type="number" step="0.01" value="3">  
-</label>  
-<label>Loadspreader Width L<sub>sb</sub> (m)  
-  <input id="Lsb" type="number" step="0.01" value="1">  
-</label>  
-<label>Loadspreader Thickness h (m)  
-  <input id="Lsh" type="number" step="0.01" value="0.4">  
-</label>  
-<label>Number of Base Layers  
-  <input id="layers" type="number" step="1" value="1">  
-</label>  
-<label>Allowable Ground Pressure (t/m²)  
-  <input id="GBP_allow" type="number" step="0.1" value="20">  
-</label>  
-<label>Decimal Precision  
-  <input id="precision" type="number" step="1" value="2">  
-</label>  
+<!-- ========= MENU ========= -->
+<div id="menu-screen">
+  <nav><img src="icon.png" class="responsive" alt="App icon"></nav>
+  <div class="container">
+    <h1 style="text-align:center;margin-top:0">Engineering Tools</h1>
+    <button class="btn" id="open-calculator">Loadspreader Calculator</button>
+    <button class="btn" id="open-rig">Rigging Calculator</button>
+    <button class="btn" disabled>Tailing Calculator (coming soon)</button>
+  </div>
+</div>
 
-<div class="section-title">Material</div>  
-<select id="material">  
-  <option value="Azobe">Azobe (timber)</option>  
-  <option value="S235">S235 (steel)</option>  
-  <option value="S355">S355 (steel)</option>  
-</select>  
+<!-- ======= LOADSPREADER CALCULATOR ===== -->
+<div id="calc-screen" class="hide">
+  <header>
+    <button class="btn" id="back-menu-1" style="width:auto;padding:6px 12px;background:#ddd;color:#111">← Menu</button>
+    <h1>Loadspreader Calculator</h1>
+    <button class="btn" id="theme-toggle" title="Toggle light / dark" style="width:auto;padding:6px 12px">🌙</button>
+  </header>
+  <div class="container">
+    <div class="advert-bar"><a href="https://example.com" target="_blank" rel="noopener">Advert here</a></div>
+    <img id="diagram" src="LSP.png" class="responsive" alt="Loadspreader schematic">
+    <div class="section-title">Input Parameters</div>
 
-<button class="btn" id="calc-btn">Calculate</button>  
+    <!-- Top contact type -->
+    <label>Top Contact Type
+      <select id="top_type">
+        <option value="mat">Steel Mat</option>
+        <option value="crawler">Crawler Tracks</option>
+      </select>
+    </label>
 
-<div class="section-title">Results</div>  
-<div id="results"></div>  
-<div id="verdict" style="font-weight:600"></div>  
+    <!-- Top contact dims -->
+    <label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>
+      <input id="Lw" type="number" step="0.01" value="2">
+    </label>
+    <label id="label_Lr"><span class="label-text">Top Steel Mat Width L<sub>r</sub> (m)</span>
+      <input id="Lr" type="number" step="0.01" value="1">
+    </label>
 
-<div class="section-title">3-D View (schematic)</div>  
-<div style="width:100%;height:60vh;min-height:400px"><canvas id="plot"></canvas></div>
+    <!-- Load inputs -->
+    <label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
+      <input id="q_max" type="number" step="0.1" value="40">
+    </label>
+    <label id="label_Pmax" class="hide">Point Load Force P<sub>max</sub> (t)
+      <input id="p_max" type="number" step="0.1" value="100">
+    </label>
+    <label id="label_Wmat" class="hide">Steel Mat Self-Weight W<sub>m</sub> (t)
+      <input id="w_mat" type="number" step="0.1" value="0">
+    </label>
 
-  </div>  
-</div>   <!-- ========= HELP MODAL ========= -->  <div id="help-modal" class="modal hide">  
-  <div class="modal-content">  
-    <button id="help-close" style="float:right;font-size:1.2rem;border:none;background:transparent;cursor:pointer">✕</button>  
-    <h2>Loadspreader Calculator – Help Guide</h2>  
-    <p><strong>Version:</strong> 2025-07-13</p>  <h3>1. Purpose</h3>  
-<p>The calculator checks the structural adequacy of timber or steel load-spreaders used under outrigger pads, steering bogies, or crawler tracks. It verifies bending, shear, compression and ground bearing pressure against user-defined limits.</p>  
+    <!-- Base geometry -->
+    <label>Loadspreader Length L<sub>sl</sub> (m)
+      <input id="Lsl" type="number" step="0.01" value="3">
+    </label>
+    <label>Loadspreader Width L<sub>sb</sub> (m)
+      <input id="Lsb" type="number" step="0.01" value="1">
+    </label>
+    <label>Loadspreader Thickness h (m)
+      <input id="Lsh" type="number" step="0.01" value="0.4">
+    </label>
+    <label>Number of Base Layers
+      <input id="layers" type="number" step="1" value="1">
+    </label>
+    <label>Allowable Ground Pressure (t/m²)
+      <input id="GBP_allow" type="number" step="0.1" value="20">
+    </label>
+    <label>Decimal Precision
+      <input id="precision" type="number" step="1" value="2">
+    </label>
 
-<h3>2. Quick Workflow</h3>  
-<ol>  
-  <li>Select <em>Top Contact Type</em> (steel mat or crawler tracks).</li>  
-  <li>Enter contact dimensions (<code>L<sub>w</sub></code>, <code>L<sub>r</sub></code>) and load information:<br>  
-    &nbsp;&nbsp;• For steel mats: total point load <code>P<sub>max</sub></code> and mat self-weight <code>W<sub>m</sub></code>.<br>  
-    &nbsp;&nbsp;• For crawlers: maximum applied pressure <code>q<sub>max</sub></code>.</li>  
-  <li>Define base load-spreader geometry (<code>L<sub>sl</sub></code>, <code>L<sub>sb</sub></code>, thickness <code>h</code> and number of layers).</li>  
-  <li>Choose material grade (timber or steel).</li>  
-  <li>Click <strong>Calculate</strong>. Failed checks show in <span style="color:#d00">red</span>.</li>  
-</ol>  
+    <!-- material -->
+    <div class="section-title">Material</div>
+    <select id="material">
+      <option value="Azobe">Azobe (timber)</option>
+      <option value="S235">S235 (steel)</option>
+      <option value="S355">S355 (steel)</option>
+    </select>
 
-<h3>3. Input Definitions</h3>  
-<ul>  
-  <li><code>L<sub>w</sub></code> – Length of the top contact area (m).</li>  
-  <li><code>L<sub>r</sub></code> – Width of the top contact area (m).</li>  
-  <li><code>P<sub>max</sub></code> – Maximum working load transferred through the mat (t).</li>  
-  <li><code>W<sub>m</sub></code> – Self-weight of the steel mat (t).</li>  
-  <li><code>q<sub>max</sub></code> – Uniform pressure applied by tracks or pads (t/m²).</li>  
-  <li><code>L<sub>sl</sub></code> – Length of the base load-spreader (m).</li>  
-  <li><code>L<sub>sb</sub></code> – Width of the base load-spreader (m).</li>  
-  <li><code>h</code> – Thickness per layer (m).</li>  
-  <li><code>Layers</code> – Number of laminated layers acting compositely.</li>  
-  <li><code>GBP<sub>allow</sub></code> – Allowable ground bearing pressure (t/m²).</li>  
-  <li><code>Precision</code> – Number of decimals shown in results.</li>  
-</ul>  
+    <button class="btn" id="calc-btn">Calculate</button>
 
-<h3>4. Output Parameters</h3>  
-<ul>  
-  <li><code>σ<sub>B</sub></code> – Extreme fibre bending stress (t/m²).</li>  
-  <li><code>τ<sub>S</sub></code> – Shear stress at neutral axis (t/m²).</li>  
-  <li><code>σ<sub>C</sub></code> – Bearing (crushing) stress (t/m²).</li>  
-  <li><code>GBP</code> – Calculated ground bearing pressure including self-weight (t/m²).</li>  
-  <li><code>Q<sub>S</sub></code>, <code>q<sub>B</sub></code> – Shear forces used in stress calculations.</li>  
-</ul>  
+    <div class="section-title">Results</div>
+    <div id="results"></div>
+    <div id="verdict" style="font-weight:600"></div>
 
-<h3>5. Pass/Fail Criteria</h3>  
-<p>Each stress is compared with the selected material capacities:</p>  
-<table>  
-  <tr><th>Material</th><th>Bending<br>σ<sub>max</sub> (t/m²)</th><th>Shear<br>τ<sub>max</sub> (t/m²)</th><th>Compression<br>σ<sub>c,max</sub> (t/m²)</th></tr>  
-  <tr><td>Azobe</td><td>25</td><td>2</td><td>8</td></tr>  
-  <tr><td>S235</td><td>234.3</td><td>142</td><td>319.5</td></tr>  
-  <tr><td>S355</td><td>345</td><td>207</td><td>485</td></tr>  
-</table>  
-<p>All four checks must be satisfied and <code>GBP</code> must be below the allowable value for an overall pass.</p>  
+    <div class="section-title">3-D View (schematic)</div>
+    <div style="width:100%;height:60vh;min-height:400px"><canvas id="plot"></canvas></div>
+  </div>
+</div>
 
-<h3>6. 3-D View</h3>  
-<p>The schematic at the bottom of the calculator displays the laminate arrangement and dimensions. It is for visual confirmation only – it is <em>not</em> a detailed finite-element model.</p>  
+<!-- ======= RIGGING CALCULATOR ===== -->
+<div id="rig-screen" class="hide">
+  <header>
+    <button class="btn" id="back-menu-2" style="width:auto;padding:6px 12px;background:#ddd;color:#111">← Menu</button>
+    <h1>Rigging Calculator</h1>
+    <button class="btn" id="theme-toggle-2" title="Toggle light / dark" style="width:auto;padding:6px 12px">🌙</button>
+  </header>
+  <div class="container">
+    <div class="advert-bar"><a href="https://example.com" target="_blank" rel="noopener">Advert here</a></div>
 
-<h3>7. Assumptions & Limitations</h3>  
-<ul>  
-  <li>Load distribution is linear and symmetrical.</li>  
-  <li>No interaction between adjacent load-spreaders is considered.</li>  
-  <li>Deflection is not evaluated – check serviceability separately if required.</li>  
-  <li>Material strengths correspond to characteristic values under static loading.</li>  
-  <li>Results are intended for preliminary sizing and must be verified by a competent engineer.</li>  
-</ul>  
+    <div class="section-title">Input Parameters</div>
+    <label>Rigging Case
+      <select id="rig_case">
+        <option value="single">Single Vertical</option>
+        <option value="choker">Choker Hitch</option>
+        <option value="basket">Basket (2-leg)</option>
+        <option value="four">4-Leg Bridle</option>
+      </select>
+    </label>
+    <label>Load Weight W (t)
+      <input id="rig_W" type="number" step="0.1" value="5">
+    </label>
+    <label>Load Length L (m)
+      <input id="rig_L" type="number" step="0.01" value="2">
+    </label>
+    <label>Load Width B (m)
+      <input id="rig_B" type="number" step="0.01" value="1">
+    </label>
+    <label>Load Height H (m)
+      <input id="rig_H" type="number" step="0.01" value="1">
+    </label>
+    <label>Leg / Sling Angle θ (deg)<br><small>(to vertical, basket & four-leg only)</small>
+      <input id="rig_theta" type="number" step="1" value="45">
+    </label>
+    <label>Decimal Precision
+      <input id="rig_prec" type="number" step="1" value="2">
+    </label>
 
-<h3>8. Troubleshooting</h3>  
-<p>If you see the error message “Top-contact width must be less than base length”, either reduce <code>L<sub>r</sub></code>, increase <code>L<sub>sl</sub></code>, or add more layers to raise capacity.</p>  
+    <button class="btn" id="rig-calc-btn">Calculate</button>
+    <button class="btn" id="rig-sim-btn">Run Physics Sim</button>
 
-<h3>9. Contact</h3>  
-<p>Feedback and bug reports: <a href="mailto:engineering.tools@example.com">engineering.tools@example.com</a></p>  
+    <div class="section-title">Results</div>
+    <div id="rig-results"></div>
 
-<h3>10. Load Distribution Assumptions</h3>  
-<ol>  
-  <li><strong>Compliant Support Medium</strong><br>  
-    The underlying material is assumed to be sufficiently deformable to allow redistribution of applied loads via the load spreader. This implies a non-rigid, load-sharing substrate.  
-  </li>  
-  <li><strong>Typical Acceptable Support Types</strong>  
-    <ul>  
-      <li>Compacted, graded granular fill (e.g. crushed stone, engineered backfill),</li>  
-      <li>Engineered compressible layers such as closed-cell polyurethane foam, geosynthetic cushions, or similar.</li>  
-    </ul>  
-  </li>  
-  <li><strong>Full Contact Assumption</strong><br>  
-    The load spreader is assumed to be in continuous contact with the support medium, with no significant voids or air gaps. The load is spread either uniformly or in a predictable gradient based on material stiffness.  
-  </li>  
-  <li><strong>Load Redistribution Behavior</strong><br>  
-    The system assumes that point or concentrated loads applied to the spreader are redistributed over a larger area, reducing bearing stress concentrations — conditional on sufficient substrate compliance.  
-  </li>  
-  <li><strong>Scope Limitations</strong>  
-    <ul>  
-      <li>The substrate is rigid (e.g. concrete slab, rock) and does not allow displacement,</li>  
-      <li>There is voiding, poor compaction, or non-homogeneous materials,</li>  
-      <li>The loading is dynamic or impact-based, unless specific material behavior is modeled.</li>  
-    </ul>  
-  </li>  
-</ol>  
+    <div class="section-title">2-D View</div>
+    <div style="width:100%;height:45vh;min-height:300px"><canvas id="rig-2d"></canvas></div>
 
-<p style="margin-top: 1rem"><em>Note:</em> Users are responsible for verifying that actual site conditions conform to these assumptions. Deviations may require advanced modeling or empirical verification.</p>  
+    <div class="section-title">3-D View</div>
+    <div style="width:100%;height:45vh;min-height:300px"><canvas id="rig-3d"></canvas></div>
+  </div>
+</div>
 
-<p style="text-align:center;margin-top:24px;font-size:.85rem">© 2025 Engineering Tools – All rights reserved.</p>
+<!-- ================ SCRIPT ================ -->
+<script>
+/* ===== DATA & UTILITIES ===== */
+const materials={
+  Azobe:{rho:1.05,sigma_max:25,tau_max:2,sigma_c_max:8},
+  S235 :{rho:7.85,sigma_max:234.3,tau_max:142,sigma_c_max:319.5},
+  S355 :{rho:7.85,sigma_max:345,tau_max:207,sigma_c_max:485}
+};
+const g=9.81;
+const $=id=>document.getElementById(id);
+const round=(v,p)=>(!isFinite(v)||isNaN(v))?v:Number(Math.round(`${v}e${p}`)+`e-${p}`);
+/* theme */
+function applyThemeToggle(btnId){
+  const btn=$(btnId);
+  btn.textContent=document.body.getAttribute('data-theme')==='dark'?'☀️':'🌙';
+  btn.onclick=()=>{
+    const cur=document.body.getAttribute('data-theme')==='dark'?'dark':'light';
+    const next=cur==='dark'?'light':'dark';
+    document.body.setAttribute('data-theme',next);
+    localStorage.setItem('theme',next);
+    document.querySelectorAll('[id^="theme-toggle"]').forEach(b=>b.textContent=next==='dark'?'☀️':'🌙');
+  };
+}
+function applySavedTheme(){
+  const saved=localStorage.getItem('theme')||'light';
+  document.body.setAttribute('data-theme',saved);
+}
+applySavedTheme();
+applyThemeToggle('theme-toggle');
+applyThemeToggle('theme-toggle-2');
 
-  </div>  
-</div>  <!-- ================ SCRIPT ================ -->  <script>  
-/* ===== DATA & UTILITIES ===== */  
-const materials={  
-  Azobe:{rho:1.05,sigma_max:25,tau_max:2,sigma_c_max:8},  
-  S235:{rho:7.85,sigma_max:234.3,tau_max:142,sigma_c_max:319.5},  
-  S355:{rho:7.85,sigma_max:345,tau_max:207,sigma_c_max:485}  
-};  
-const g=9.81;  
-const round=(v,p)=>(!isFinite(v)||isNaN(v))?v:Number(Math.round(`${v}e${p}`)+`e-${p}`);  
-const $=id=>document.getElementById(id);  
-const diagramSrc={mat:'LSP.png',crawler:'crawler.png'};  
-  
-/* ===== THEME TOGGLE ===== */  
-function applySavedTheme(){  
-  const saved=localStorage.getItem('theme')||'light';  
-  document.body.setAttribute('data-theme',saved);  
-  $('theme-toggle').textContent=saved==='dark'?'☀️':'🌙';  
-}  
-applySavedTheme();  
-$('theme-toggle').onclick=()=>{  
-  const current=document.body.getAttribute('data-theme')==='dark'?'dark':'light';  
-  const next=current==='dark'?'light':'dark';  
-  document.body.setAttribute('data-theme',next);  
-  localStorage.setItem('theme',next);  
-  $('theme-toggle').textContent=next==='dark'?'☀️':'🌙';  
-};  
-  
-/* ===== DYNAMIC LABELS ===== */  
-function updateTopLabels(){  
-  $('label_Lw').querySelector('.label-text').innerHTML=  
-    $('top_type').value==='crawler'  
-      ? 'Crawler Track Length L<sub>r</sub> (m)'  
-      : 'Top Steel Mat Length L<sub>r</sub> (m)';  
-  $('label_Lr').querySelector('.label-text').innerHTML=  
-    $('top_type').value==='crawler'  
-      ? 'Crawler Track Width L<sub>w</sub> (m)'  
-      : 'Top Steel Mat Width L<sub>w</sub> (m)';  
-  const isMat=$('top_type').value==='mat';  
-  $('label_qmax').classList.toggle('hide',isMat);  
-  $('label_Pmax').classList.toggle('hide',!isMat);  
-  $('label_Wmat').classList.toggle('hide',!isMat);  
-  $('diagram').src=diagramSrc[$('top_type').value];  
-}  
-$('top_type').addEventListener('change',updateTopLabels);  
-updateTopLabels();  
-  
-/* ===== HELP MODAL ===== */  
-$('help-btn').onclick=()=>$('help-modal').classList.remove('hide');  
-$('help-close').onclick=()=>$('help-modal').classList.add('hide');  
-$('help-modal').addEventListener('click',e=>{  
-  if(e.target.id==='help-modal')$('help-modal').classList.add('hide');  
-});  
-document.addEventListener('keydown',e=>{  
-  if(e.key==='Escape'&&!$('help-modal').classList.contains('hide'))$('help-modal').classList.add('hide');  
-});  
-  
-/* ===== PAGE NAVIGATION ===== */  
-$('open-calculator').onclick=()=>{$('menu-screen').classList.add('hide');$('calc-screen').classList.remove('hide');};  
-$('back-menu').onclick  =()=>{$('calc-screen').classList.add('hide');$('menu-screen').classList.remove('hide');};  
-  
-/* ===== CORE SOLVER ===== */  
-function solve(p){  
-  const Qs=p.q_max*p.Lw*p.Lsb;  
-  const qb=Qs/p.Lsl;  
-  const Lb=(p.Lsl-p.Lw)/2;  
-  const Ab=p.Lsb*1000*p.Lsh*1000;  
-  const Sx=Ab*p.Lsh*1000/6;  
-  const Mx=0.5*qb*Lb*Lb*g*1e6;  
-  const σB=Mx/(p.layers*Sx);  
-  const τS=(qb*Lb*g*1e3)/(p.layers*Ab);  
-  const σC=p.q_max*g/1e3;  
-  const GBP=p.q_max*p.Lw/p.Lsl + p.material.rho*p.Lsh*p.layers;  
-  return {  
-    Qs:round(Qs,p.precision),qb:round(qb,p.precision),Lb:round(Lb,p.precision),  
-    σB:round(σB,p.precision),τS:round(τS,p.precision),σC:round(σC,p.precision),  
-    GBP:round(GBP,p.precision),  
-    passB:Math.abs(σB)<p.material.sigma_max,  
-    passS:Math.abs(τS)<p.material.tau_max,  
-    passC:σC<p.material.sigma_c_max,  
-    passGBP:GBP<p.GBP_allow  
-  };  
-}  
-  
-/* ===== CALCULATE BUTTON ===== */  
-$('calc-btn').onclick=()=>{  
-  const topType=$('top_type').value;  
-  const p={  
-    Lw:+$('Lr').value, Lr:+$('Lw').value, Lsl:+$('Lsl').value, Lsb:+$('Lsb').value,  
-    Lsh:+$('Lsh').value, layers:+$('layers').value, GBP_allow:+$('GBP_allow').value,  
-    precision:+$('precision').value, material:materials[$('material').value]  
-  };  
-  let totalLoad=0;  
-  if(topType==='mat'){  
-    p.p_max=+$('p_max').value; p.w_mat=+$('w_mat').value;  
-    if(p.p_max<=0||isNaN(p.p_max)){alert('Enter a valid Pmax (>0).');return;}  
-    if(p.w_mat<0||isNaN(p.w_mat)){alert('Enter a valid self-weight (≥0).');return;}  
-    totalLoad=p.p_max+p.w_mat;  
-    p.q_max=totalLoad/(p.Lr*p.Lw);  
-    $('q_max').value=round(p.q_max,p.precision);  
-  }else{  
-    p.q_max=+$('q_max').value;  
-    if(p.q_max<=0||isNaN(p.q_max)){alert('Enter a valid qmax (>0).');return;}  
-    totalLoad=p.q_max*p.Lr*p.Lw;  
-  }  
-  
-  /* width check */  
-  const widthToCheck=topType==='crawler'?p.Lw:p.Lw;  
-  const widthLabel =topType==='crawler'?'Crawler Track Width (Lw)':'Top-contact width (Lw)';  
-  if(widthToCheck>=p.Lsl){alert(`Error: ${widthLabel} must be less than base length (Lsl).`);return;}  
-  
-  const r=solve(p);  
-  const out=$('results'); out.innerHTML='';  
-  const heading=t=>{const d=document.createElement('div');d.textContent=t;d.style.fontWeight='600';out.appendChild(d);};  
-  const line=(lab,val,ok)=>{const d=document.createElement('div');d.textContent=`${lab}: ${val}`;if(ok!==undefined)d.className=ok?'green':'red';out.appendChild(d);};  
-  
-  heading('=== Load Results ===');  
-  if(topType==='mat'){  
-    line('Point Load (Pmax)',round(p.p_max,p.precision));  
-    line('Mat Self-Weight (Wm)',round(p.w_mat,p.precision));  
-    line('Total Load (P+W)',round(totalLoad,p.precision));  
-  }  
-  line('Applied Pressure (qmax)',round(p.q_max,p.precision));  
-  line('Shear Force Top Contact (QS)',r.Qs);  
-  line('Shear per Metre (QB)',r.qb); out.appendChild(document.createElement('br'));  
-  
-  heading('=== Stress Checks ===');  
-  line('Bending Stress (σB)',r.σB,r.passB);  
-  line('Shear Stress (τS)',r.τS,r.passS);  
-  line('Compression Stress (σC)',r.σC,r.passC); out.appendChild(document.createElement('br'));  
-  
-  heading('=== Ground Pressure ===');  
-  line('Ground Bearing Pressure (GBP)',r.GBP,r.passGBP);  
-  
-  $('verdict').textContent=r.passB&&r.passS&&r.passC&&r.passGBP?'✅ All checks passed':'❌ Fails – see red items';  
-  $('verdict').className=r.passB&&r.passS&&r.passC&&r.passGBP?'green':'red';  
-  
-  render3D({...p,q_max:p.q_max});  
-};  
-  
-/* ===== 3-D RENDERER (unchanged) ===== */  
-function render3D(p){  
-  const c=$('plot'),ctx=c.getContext('2d');  
-  c.width=c.clientWidth; c.height=c.clientHeight;  
-  const w=c.width,h=c.height;  
-  ctx.clearRect(0,0,w,h);  
-  const nLen=Math.floor(p.Lw/p.Lsl)+1, nWid=Math.floor(p.Lr/p.Lsb)+1;  
-  const totalLen=nLen*p.Lsl, totalWid=nWid*p.Lsb;  
-  const sc=0.9*Math.min(w/((totalLen+totalWid)*Math.cos(Math.PI/6)*100),  
-                        h/((totalLen+totalWid)*Math.sin(Math.PI/6)*100+p.layers*p.Lsh*100+p.Lsh*10));  
-  const iso=(x,y,z)=>{const xr=x*Math.cos(Math.PI/2)-y*Math.sin(Math.PI/2),  
-                           yr=x*Math.sin(Math.PI/2)+y*Math.cos(Math.PI/2),  
-                           ix=(xr-yr)*Math.cos(Math.PI/6),  
-                           iy=(xr+yr)*Math.sin(Math.PI/6)-z;  
-    return [w/2+ix*sc,h*0.6+iy*sc];};  
-  const poly=pts=>{ctx.beginPath();ctx.moveTo(...pts[0]);pts.slice(1).forEach(pt=>ctx.lineTo(...pt));ctx.closePath();ctx.fill();ctx.stroke();};  
-  const box=(x,y,z,dx,dy,dz,col,a)=>{ctx.fillStyle=col;ctx.globalAlpha=a;  
-    poly([iso(x,    y+dy,z),iso(x+dx,y+dy,z),iso(x+dx,y+dy,z+dz),iso(x,    y+dy,z+dz)]);  
-    poly([iso(x+dx,y,z),    iso(x+dx,y+dy,z),iso(x+dx,y+dy,z+dz),iso(x+dx,y,z+dz)]);  
-    poly([iso(x,y,z),       iso(x,y+dy,z),    iso(x,y+dy,z+dz),   iso(x,y,z+dz)]);  
-    poly([iso(x,y,z),       iso(x+dx,y,z),    iso(x+dx,y,z+dz),   iso(x,y,z+dz)]);  
-    poly([iso(x,y,z+dz),    iso(x+dx,y,z+dz), iso(x+dx,y+dy,z+dz),iso(x,y+dy,z+dz)]); ctx.globalAlpha=1;};  
-  for(let k=0;k<p.layers;k++){const z=k*p.Lsh*100;  
-    for(let i=0;i<nLen;i++){for(let j=0;j<nWid;j++){  
-      box((-totalLen/2+i*p.Lsl)*100,(-totalWid/2+j*p.Lsb)*100,z,p.Lsl*100,p.Lsb*100,p.Lsh*100,'#8B4513',0.7);}}}  
-  box(-p.Lw*50,-p.Lr*50,p.layers*p.Lsh*100,p.Lw*100,p.Lr*100,p.Lsh*10,'#707070',0.85);  
-}  
-</script>  </body>  
+/* ===== PAGE NAV ===== */
+$('open-calculator').onclick=()=>{$('menu-screen').classList.add('hide');$('calc-screen').classList.remove('hide');};
+$('open-rig').onclick     =()=>{$('menu-screen').classList.add('hide');$('rig-screen' ).classList.remove('hide');};
+$('back-menu-1').onclick  =()=>{$('calc-screen').classList.add('hide');$('menu-screen').classList.remove('hide');};
+$('back-menu-2').onclick  =()=>{$('rig-screen' ).classList.add('hide');$('menu-screen').classList.remove('hide');};
+
+/* ===== LOADSPREADER FUNCTIONS (unchanged except minor fixes) ===== */
+const diagramSrc={mat:'LSP.png',crawler:'crawler.png'};
+function updateTopLabels(){
+  const isCrawler=$('top_type').value==='crawler';
+  $('label_Lw').querySelector('.label-text').innerHTML=isCrawler
+    ?'Crawler Track Length L<sub>r</sub> (m)':'Top Steel Mat Length L<sub>w</sub> (m)';
+  $('label_Lr').querySelector('.label-text').innerHTML=isCrawler
+    ?'Crawler Track Width L<sub>w</sub> (m)':'Top Steel Mat Width L<sub>r</sub> (m)';
+  $('label_qmax').classList.toggle('hide',!isCrawler);
+  $('label_Pmax').classList.toggle('hide',isCrawler);
+  $('label_Wmat').classList.toggle('hide',isCrawler);
+  $('diagram').src=diagramSrc[$('top_type').value];
+}
+$('top_type').addEventListener('change',updateTopLabels);updateTopLabels();
+
+/* ---- solver core ---- */
+function solveLoadspreader(p){
+  /* quick elastic beam solution (simplified) */
+  const Qs=p.q_max*p.Lw*p.Lsb;
+  const qb=Qs/p.Lsl;
+  const Lb=(p.Lsl-p.Lw)/2;
+  const Ab=p.Lsb*1000*p.Lsh*1000;
+  const Sx=Ab*p.Lsh*1000/6;
+  const Mx=0.5*qb*Lb*Lb*1e6;
+  const sigmaB=Mx/(p.layers*Sx);
+  const tauS =(qb*Lb*1e3)/(p.layers*Ab);
+  const sigmaC=p.q_max*1e3;
+  const GBP =p.q_max*p.Lw/p.Lsl + p.material.rho*p.Lsh*p.layers;
+  return {Qs:round(Qs,p.precision),qb:round(qb,p.precision),Lb:round(Lb,p.precision),
+    sigmaB:round(sigmaB,p.precision),tauS:round(tauS,p.precision),sigmaC:round(sigmaC,p.precision),
+    GBP:round(GBP,p.precision),
+    passB:Math.abs(sigmaB)<p.material.sigma_max,
+    passS:Math.abs(tauS)<p.material.tau_max,
+    passC:sigmaC<p.material.sigma_c_max,
+    passGBP:GBP<p.GBP_allow
+  };
+}
+
+/* ---- calculate ---- */
+$('calc-btn').onclick=()=>{
+  const top=$('top_type').value;
+  const p={
+    Lw:+$('Lw').value,Lr:+$('Lr').value,Lsl:+$('Lsl').value,Lsb:+$('Lsb').value,
+    Lsh:+$('Lsh').value,layers:+$('layers').value,GBP_allow:+$('GBP_allow').value,
+    precision:+$('precision').value,material:materials[$('material').value]
+  };
+  let totalLoad=0;
+  if(top==='mat'){
+    p.p_max=+$('p_max').value;p.w_mat=+$('w_mat').value;
+    if(p.p_max<=0||isNaN(p.p_max)){alert('Enter a valid Pmax (>0).');return;}
+    if(p.w_mat<0||isNaN(p.w_mat)){alert('Enter a valid self-weight (≥0).');return;}
+    totalLoad=p.p_max+p.w_mat;
+    p.q_max=totalLoad/(p.Lr*p.Lw);
+    $('q_max').value=round(p.q_max,p.precision);
+  }else{
+    p.q_max=+$('q_max').value;
+    if(p.q_max<=0||isNaN(p.q_max)){alert('Enter a valid qmax (>0).');return;}
+    totalLoad=p.q_max*p.Lr*p.Lw;
+  }
+  if(p.Lw>=p.Lsl){alert('Error: Top-contact width (Lw) must be less than base length (Lsl).');return;}
+
+  const r=solveLoadspreader(p);
+  const out=$('results');out.innerHTML='';
+  const h=t=>{const d=document.createElement('div');d.textContent=t;d.style.fontWeight='600';out.appendChild(d);};
+  const l=(lab,val,ok)=>{const d=document.createElement('div');d.textContent=`${lab}: ${val}`;if(ok!==undefined)d.className=ok?'green':'red';out.appendChild(d);};
+
+  h('=== Load Results ===');
+  if(top==='mat'){
+    l('Point Load (Pmax)',round(p.p_max,p.precision));
+    l('Mat Self-Weight (Wm)',round(p.w_mat,p.precision));
+    l('Total Load (P+W)',round(totalLoad,p.precision));
+  }
+  l('Applied Pressure (qmax)',round(p.q_max,p.precision));
+  l('Shear Force (QS)',r.Qs);
+  l('Shear per m (QB)',r.qb);out.appendChild(document.createElement('br'));
+
+  h('=== Stress Checks ===');
+  l('Bending Stress σB',r.sigmaB,r.passB);
+  l('Shear Stress τS',r.tauS,r.passS);
+  l('Compression Stress σC',r.sigmaC,r.passC);out.appendChild(document.createElement('br'));
+
+  h('=== Ground Pressure ===');
+  l('Ground Bearing Pressure',r.GBP,r.passGBP);
+
+  $('verdict').textContent=r.passB&&r.passS&&r.passC&&r.passGBP?'✅ All checks passed':'❌ Fails – see red items';
+  $('verdict').className=r.passB&&r.passS&&r.passC&&r.passGBP?'green':'red';
+
+  render3D({...p,q_max:p.q_max});
+};
+
+/* ---- 3-D renderer (unchanged) ---- */
+function render3D(p){
+  const c=$('plot'),ctx=c.getContext('2d');
+  c.width=c.clientWidth;c.height=c.clientHeight;
+  const w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+  const nLen=Math.floor(p.Lw/p.Lsl)+1,nWid=Math.floor(p.Lr/p.Lsb)+1;
+  const totalLen=nLen*p.Lsl,totalWid=nWid*p.Lsb;
+  const sc=0.9*Math.min(w/((totalLen+totalWid)*Math.cos(Math.PI/6)*100),
+                        h/((totalLen+totalWid)*Math.sin(Math.PI/6)*100+p.layers*p.Lsh*100+p.Lsh*10));
+  const iso=(x,y,z)=>{const xr=x*Math.cos(Math.PI/2)-y*Math.sin(Math.PI/2),
+    yr=x*Math.sin(Math.PI/2)+y*Math.cos(Math.PI/2),
+    ix=(xr-yr)*Math.cos(Math.PI/6),
+    iy=(xr+yr)*Math.sin(Math.PI/6)-z;
+    return[w/2+ix*sc,h*0.6+iy*sc];
+  };
+  const poly=pts=>{ctx.beginPath();ctx.moveTo(...pts[0]);pts.slice(1).forEach(pt=>ctx.lineTo(...pt));ctx.closePath();ctx.fill();ctx.stroke();};
+  const box=(x,y,z,dx,dy,dz,col,a)=>{ctx.fillStyle=col;ctx.globalAlpha=a;
+    poly([iso(x,y+dy,z),iso(x+dx,y+dy,z),iso(x+dx,y+dy,z+dz),iso(x,y+dy,z+dz)]);
+    poly([iso(x+dx,y,z),iso(x+dx,y+dy,z),iso(x+dx,y+dy,z+dz),iso(x+dx,y,z+dz)]);
+    poly([iso(x,y,z),iso(x,y+dy,z),iso(x,y+dy,z+dz),iso(x,y,z+dz)]);
+    poly([iso(x,y,z),iso(x+dx,y,z),iso(x+dx,y,z+dz),iso(x,y,z+dz)]);
+    poly([iso(x,y,z+dz),iso(x+dx,y,z+dz),iso(x+dx,y+dy,z+dz),iso(x,y+dy,z+dz)]);
+    ctx.globalAlpha=1;
+  };
+  for(let k=0;k<p.layers;k++){const z=k*p.Lsh*100;
+    for(let i=0;i<nLen;i++)for(let j=0;j<nWid;j++)
+      box((-totalLen/2+i*p.Lsl)*100,(-totalWid/2+j*p.Lsb)*100,z,
+          p.Lsl*100,p.Lsb*100,p.Lsh*100,'#8B4513',0.7);}
+  box(-p.Lw*50,-p.Lr*50,p.layers*p.Lsh*100,p.Lw*100,p.Lr*100,p.Lsh*10,'#707070',0.85);
+}
+
+/* ===== RIGGING CALCULATOR ===== */
+
+function slingTension(w_ton,legs,thetaDeg,caseId){
+  /* Basic static model – conservative */
+  const theta=Math.max(1,thetaDeg)*Math.PI/180; // avoid 0°
+  if(caseId==='single' || legs===1) return w_ton;             // vertical
+  if(caseId==='choker') return 0.5*w_ton/Math.cos(theta);     // simple estimate
+  // basket & four-leg treated the same formula legs = n
+  return w_ton/(legs*Math.cos(theta));
+}
+
+/* ---- calculate ---- */
+$('rig-calc-btn').onclick=()=>{
+  const caseId=$('rig_case').value;
+  const legs = caseId==='four'?4:(caseId==='basket'?2:1);
+  const p={
+    W:+$('rig_W').value,L:+$('rig_L').value,B:+$('rig_B').value,H:+$('rig_H').value,
+    theta:+$('rig_theta').value,prec:+$('rig_prec').value,legs,caseId
+  };
+  if(p.W<=0||isNaN(p.W)){alert('Enter valid load weight.');return;}
+  if(p.theta<0||p.theta>89){alert('Angle must be 0-89°');return;}
+
+  const T=slingTension(p.W,legs,p.theta,caseId);
+  const r=$('rig-results');r.innerHTML='';
+  const l=(lab,val)=>{const d=document.createElement('div');d.textContent=`${lab}: ${val}`;r.appendChild(d);};
+  l('Rigging Case',caseId.charAt(0).toUpperCase()+caseId.slice(1));
+  l('Number of Legs',legs);
+  l('Sling Angle θ',round(p.theta,p.prec)+'°');
+  l('Estimated Leg Tension',round(T,p.prec)+' t');
+
+  drawRig2D(p,T);
+  drawRig3D(p,T);
+};
+
+/* ---- simple 2-D drawing ---- */
+function drawRig2D(p,T){
+  const c=$('rig-2d'),ctx=c.getContext('2d');
+  c.width=c.clientWidth;c.height=c.clientHeight;
+  const w=c.width,h=c.height;margin=40;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='var(--text)';ctx.lineWidth=2;ctx.font='14px sans-serif';
+
+  // load rectangle
+  const loadW=w*0.4,loadH=h*0.2,x=(w-loadW)/2,y=h*0.6;
+  ctx.strokeRect(x,y,loadW,loadH);
+  ctx.fillText(`${p.W} t`,x+loadW/2-15,y+loadH/2);
+
+  // sling lines
+  const topY=h*0.2,hookX=w/2;
+  ctx.beginPath();
+  if(p.caseId==='single'){
+    ctx.moveTo(hookX,topY);ctx.lineTo(w/2,y);ctx.stroke();
+    ctx.fillText(`T = ${round(T,p.prec)} t`,hookX+10,(topY+y)/2);
+  } else {
+    const spread=loadW*0.5;
+    for(let i=0;i<p.legs;i++){
+      const sign=i%2===0?-1:1,legX=hookX+sign*spread/2;
+      ctx.moveTo(legX,topY);ctx.lineTo(x+(sign===-1?0:loadW),y);
+      ctx.stroke();
+      ctx.fillText(round(T,p.prec)+' t',legX+10,(topY+y)/2);
+    }
+  }
+  // hook
+  ctx.beginPath();ctx.arc(hookX,topY,8,0,2*Math.PI);ctx.fill();
+}
+
+/* ---- simple 3-D pseudo-iso drawing ---- */
+function drawRig3D(p,T){
+  const c=$('rig-3d'),ctx=c.getContext('2d');
+  c.width=c.clientWidth;c.height=c.clientHeight;
+  const w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+  const sc=Math.min(w,h)*0.3;
+
+  const iso=(x,y,z)=>[
+    w/2+(x-y)*Math.cos(Math.PI/6)*sc,
+    h*0.65+(x+y)*Math.sin(Math.PI/6)*sc - z*sc
+  ];
+  const box=(x,y,z,dx,dy,dz)=>{
+    ctx.beginPath();const p0=iso(x,y,z),p1=iso(x+dx,y,z),p2=iso(x+dx,y+dy,z),p3=iso(x,y+dy,z);
+    const p4=iso(x,y,z+dz),p5=iso(x+dx,y,z+dz),p6=iso(x+dx,y+dy,z+dz),p7=iso(x,y+dy,z+dz);
+    ctx.fillStyle='#c0c0c0';ctx.globalAlpha=0.7;
+    [p0,p1,p2,p3].forEach((pt,i)=>{i?ctx.lineTo(...pt):ctx.moveTo(...pt)});ctx.closePath();ctx.fill();ctx.stroke();
+    [p4,p5,p6,p7].forEach((pt,i)=>{i?ctx.lineTo(...pt):ctx.moveTo(...pt)});ctx.closePath();ctx.fill();ctx.stroke();
+    [[p0,p1,p5,p4],[p1,p2,p6,p5],[p2,p3,p7,p6],[p3,p0,p4,p7]].forEach(pts=>{
+      ctx.beginPath();pts.forEach((pt,i)=>{i?ctx.lineTo(...pt):ctx.moveTo(...pt)});ctx.closePath();ctx.fill();ctx.stroke();
+    });
+    ctx.globalAlpha=1;
+  };
+  // draw load
+  box(-p.L/2,-p.B/2,0,p.L,p.B,p.H);
+
+  // slings
+  const hook=iso(0,0,p.H+0.5);
+  ctx.fillStyle='var(--text)';ctx.beginPath();ctx.arc(...hook,6,0,2*Math.PI);ctx.fill();
+  ctx.strokeStyle='var(--text)';ctx.lineWidth=2;
+  const legPts=[];
+  if(p.caseId==='single'){
+    legPts.push(iso(0,0,p.H));
+  }else if(p.caseId==='basket'){
+    legPts.push(iso(-p.L/2,0,p.H),iso(p.L/2,0,p.H));
+  }else if(p.caseId==='four'){
+    legPts.push(iso(-p.L/2,-p.B/2,p.H),iso(p.L/2,-p.B/2,p.H),
+                iso(p.L/2,p.B/2,p.H),iso(-p.L/2,p.B/2,p.H));
+  }else if(p.caseId==='choker'){
+    legPts.push(iso(-p.L/4,0,p.H),iso(p.L/4,0,p.H));
+  }
+  legPts.forEach(pt=>{
+    ctx.beginPath();ctx.moveTo(...hook);ctx.lineTo(...pt);ctx.stroke();
+  });
+  ctx.font='14px sans-serif';
+  ctx.fillText('T ≈ '+round(T,p.prec)+' t',hook[0]+10,hook[1]-10);
+}
+
+/* ---- rudimentary physics sim placeholder ---- */
+$('rig-sim-btn').onclick=()=>{
+  alert('Physics simulator coming soon – this placeholder will be replaced by a full engine.');
+};
+</script>
+</body>
 </html>
