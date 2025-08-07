@@ -1,4 +1,4 @@
-<!DOCTYPE html> <!-- Loadspreader Calculator — mobile-friendly single-file web-app  2025-07-13  (revision 37 – mobile+dark-mode, full help modal) -->
+<!DOCTYPE html> <!-- Loadspreader Calculator — mobile-friendly single-file web-app  2025-07-13  (revision 38 – two-column inputs, mobile+dark-mode, full help modal) -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -174,6 +174,18 @@
       font-weight:600
     }
 
+    /* ---------- two-column inputs ---------- */
+    .inputs-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:16px
+    }
+    .inputs-grid label{
+      flex:1 1 260px;
+      /* keeps same vertical rhythm as before */
+      margin:0
+    }
+
     /* ---------- small-screen tweaks ---------- */
     @media (max-width:480px){
       body{font-size:14px}
@@ -182,6 +194,7 @@
       .container{padding:12px}
       .section-title{margin:16px 0 4px}
       nav{padding:24px 8px}
+      .inputs-grid label{flex:1 1 100%}   /* stack on very small screens */
     }
   </style>
 </head>
@@ -216,7 +229,7 @@
 
     <div class="section-title">Input Parameters</div>
 
-    <!-- Top contact type selector -->
+    <!-- Top contact type selector (full width) -->
     <label>Top Contact Type
       <select id="top_type">
         <option value="mat">Steel Mat</option>
@@ -224,44 +237,48 @@
       </select>
     </label>
 
-    <!-- Top contact dimensions -->
-    <label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>
-      <input id="Lw" type="number" step="0.01" value="2">
-    </label>
-    <label id="label_Lr"><span class="label-text">Top Steel Mat Width L<sub>r</sub> (m)</span>
-      <input id="Lr" type="number" step="0.01" value="1">
-    </label>
+    <!-- Two-column input grid -->
+    <div class="inputs-grid">
 
-    <!-- Load inputs -->
-    <label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
-      <input id="q_max" type="number" step="0.1" value="40">
-    </label>
-    <label id="label_Pmax" class="hide">Point Load Force P<sub>max</sub> (t)
-      <input id="p_max" type="number" step="0.1" value="100">
-    </label>
-    <label id="label_Wmat" class="hide">Steel Mat Self-Weight W<sub>m</sub> (t)
-      <input id="w_mat" type="number" step="0.1" value="0">
-    </label>
+      <!-- Top contact dimensions -->
+      <label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>
+        <input id="Lw" type="number" step="0.01" value="2">
+      </label>
+      <label id="label_Lr"><span class="label-text">Top Steel Mat Width L<sub>r</sub> (m)</span>
+        <input id="Lr" type="number" step="0.01" value="1">
+      </label>
 
-    <!-- Base geometry -->
-    <label>Loadspreader Length L<sub>sl</sub> (m)
-      <input id="Lsl" type="number" step="0.01" value="3">
-    </label>
-    <label>Loadspreader Width L<sub>sb</sub> (m)
-      <input id="Lsb" type="number" step="0.01" value="1">
-    </label>
-    <label>Loadspreader Thickness h (m)
-      <input id="Lsh" type="number" step="0.01" value="0.4">
-    </label>
-    <label>Number of Base Layers
-      <input id="layers" type="number" step="1" value="1">
-    </label>
-    <label>Allowable Ground Pressure (t/m²)
-      <input id="GBP_allow" type="number" step="0.1" value="20">
-    </label>
-    <label>Decimal Precision
-      <input id="precision" type="number" step="1" value="2">
-    </label>
+      <!-- Load inputs -->
+      <label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
+        <input id="q_max" type="number" step="0.1" value="40">
+      </label>
+      <label id="label_Pmax" class="hide">Point Load Force P<sub>max</sub> (t)
+        <input id="p_max" type="number" step="0.1" value="100">
+      </label>
+      <label id="label_Wmat" class="hide">Steel Mat Self-Weight W<sub>m</sub> (t)
+        <input id="w_mat" type="number" step="0.1" value="0">
+      </label>
+
+      <!-- Base geometry -->
+      <label>Loadspreader Length L<sub>sl</sub> (m)
+        <input id="Lsl" type="number" step="0.01" value="3">
+      </label>
+      <label>Loadspreader Width L<sub>sb</sub> (m)
+        <input id="Lsb" type="number" step="0.01" value="1">
+      </label>
+      <label>Loadspreader Thickness h (m)
+        <input id="Lsh" type="number" step="0.01" value="0.4">
+      </label>
+      <label>Number of Base Layers
+        <input id="layers" type="number" step="1" value="1">
+      </label>
+      <label>Allowable Ground Pressure (t/m²)
+        <input id="GBP_allow" type="number" step="0.1" value="20">
+      </label>
+      <label>Decimal Precision
+        <input id="precision" type="number" step="1" value="2">
+      </label>
+    </div> <!-- /inputs-grid -->
 
     <div class="section-title">Material</div>
     <select id="material">
@@ -557,3 +574,4 @@ function render3D(p){
 </script>
 </body>
 </html>
+
