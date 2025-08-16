@@ -490,21 +490,21 @@ $('calc-btn').onclick=()=>{
     
   heading('=== Load Results ===');    
   if(topType==='mat'){    
-    line('Point Load (Pmax)',round(p.p_max,p.precision));    
-    line('Mat Self-Weight (Wm)',round(p.w_mat,p.precision));    
-    line('Total Load (P+W)',round(totalLoad,p.precision));    
+    line('Point Load (Pmax) [ton]',round(p.p_max,p.precision));    
+    line('Mat Self-Weight (Wm) [ton]',round(p.w_mat,p.precision));    
+    line('Total Load (P+W) [ton]',round(totalLoad,p.precision));    
   }    
-  line('Applied Pressure (qmax)',round(p.q_max,p.precision));    
-  line('Shear Force Top Contact (QS)',r.Qs);    
-  line('Shear per Metre (QB)',r.qb); out.appendChild(document.createElement('br'));    
+  line('Applied Pressure (qmax) [ton/m2]',round(p.q_max,p.precision));    
+  line('Shear Force Top Contact (QS) [ton]',r.Qs);    
+  line('Shear per Metre (QB) [ton/m]',r.qb); out.appendChild(document.createElement('br'));    
     
   heading('=== Stress Checks ===');    
-  line('Bending Stress (σB)',r.σB,r.passB);    
-  line('Shear Stress (τS)',r.τS,r.passS);    
-  line('Compression Stress (σC)',r.σC,r.passC); out.appendChild(document.createElement('br'));    
+  line('Bending Stress (σB) [N/mm2]',r.σB,r.passB);    
+  line('Shear Stress (τS) [N/mm2]',r.τS,r.passS);    
+  line('Compression Stress (σC) [N/mm2]',r.σC,r.passC); out.appendChild(document.createElement('br'));    
     
   heading('=== Ground Pressure ===');    
-  line('Ground Bearing Pressure (GBP)',r.GBP,r.passGBP);    
+  line('Ground Bearing Pressure (GBP) [ton/m2]',r.GBP,r.passGBP);    
     
   $('verdict').textContent=r.passB&&r.passS&&r.passC&&r.passGBP?'✅ All checks passed':'❌ Fails – see red items';    
   $('verdict').className=r.passB&&r.passS&&r.passC&&r.passGBP?'green':'red';    
