@@ -43,5 +43,3 @@ A mobile‑friendly web application designed to help engineers, planners, and si
 
 This wrapper code is released under the **MIT License** (see `LICENSE`).  
 Your original Loadspreader Calculator HTML/JS remains under its existing license.
-
-Happy spreading the load! 🙌
