@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Loadspreader Calculator</title>
 <style>
-  /* ===== Unified DARK THEME (matches other apps) ===== */
   :root{
     color-scheme: dark;
     --bg:#0b1220; --text:#e5e7eb; --muted:#94a3b8;
@@ -15,77 +14,39 @@
     --advert-bg:#17203a; --advert-border:#273759; --advert-text:#e5e7eb;
     --modal-bg:#0f172a; --danger:#ef4444; --good:#22c55e;
   }
-
   *{box-sizing:border-box}
-  body{
-    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    background:var(--bg); color:var(--text); line-height:1.5;
-  }
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text);line-height:1.5;}
   .hide{display:none}
-  .section-title{
-    font-weight:600; margin:24px 0 8px; padding-bottom:6px;
-    border-bottom:1px solid var(--border); font-size:.98rem; color:var(--muted);
-  }
+  .section-title{font-weight:600;margin:24px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);font-size:.98rem;color:var(--muted);}
   .green{color:var(--good)} .red{color:var(--danger)}
-
-  /* inputs — higher contrast (including dropdowns) */
   input,select{
-    width:100%; font-size:1rem; border-radius:10px; padding:12px 12px;
-    border:1px solid var(--border);
-    background:linear-gradient(180deg, var(--card), var(--card2));
-    color:var(--text);
-    margin-top:6px; margin-bottom:14px;
-    appearance:none;
+    width:100%;font-size:1rem;border-radius:10px;padding:12px 12px;border:1px solid var(--border);
+    background:linear-gradient(180deg, var(--card), var(--card2));color:var(--text);
+    margin-top:6px;margin-bottom:14px;appearance:none;
   }
-  select:focus, input:focus{
-    outline:none; border-color:var(--primary);
-    box-shadow:0 0 0 2px rgba(59,130,246,.35);
-  }
-  /* Force option panel colours across browsers */
-  select option{
-    background:var(--card);
-    color:var(--text);
-  }
-  /* Firefox dropdown list */
-  @-moz-document url-prefix(){
-    select{ color:var(--text); background:var(--card); }
-  }
-
-  label{display:block; font-size:.9rem; color:var(--muted)}
-
-  header{
-    background:var(--header-bg); padding:14px 16px; display:flex; align-items:center; gap:12px;
-    position:sticky; top:0; z-index:2; border-bottom:1px solid var(--border);
-  }
-  header h1{margin:0; font-size:1.1rem; flex:1; text-align:center; color:var(--text); letter-spacing:.2px}
-  .help-kbd{
-    border:1px solid var(--border); padding:2px 8px; border-radius:8px;
-    background:rgba(255,255,255,.03); color:var(--text); cursor:pointer;
-  }
-
-  .container{padding:16px; max-width:min(1400px,96vw); margin:0 auto;}
-
-  /* ===== Layout that scales ===== */
-  .layout{display:grid; gap:20px}
-  .left, .right{background:transparent}
-  @media (min-width: 980px){
-    .layout{grid-template-columns: 1fr 1fr; align-items:start}
-  }
-
-  #plot{
-    width:100%; height:100%;
-    border:1px solid var(--line); border-radius:12px;
-    background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(0,0,0,0.15));
-  }
-  .canvas-wrap{width:100%; height:clamp(360px, 62vh, 820px)}
-
-  .advert-bar{
-    background:var(--advert-bg); color:var(--advert-text); padding:10px 12px; text-align:center; font-size:.9rem;
-    border:1px solid var(--advert-border); border-radius:10px; margin-bottom:16px
-  }
-  .advert-bar a{color:inherit; text-decoration:none; font-weight:600}
-  .responsive{width:100%; height:auto}
-  .err{font-size:.82rem; margin-top:-10px; margin-bottom:10px; color:var(--danger)}
+  select:focus,input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(59,130,246,.35);}
+  select option{background:var(--card);color:var(--text);}
+  @-moz-document url-prefix(){select{color:var(--text);background:var(--card);}}
+  label{display:block;font-size:.9rem;color:var(--muted)}
+  header{background:var(--header-bg);padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--border);}
+  header h1{margin:0;font-size:1.1rem;flex:1;text-align:center;color:var(--text);letter-spacing:.2px}
+  .help-kbd{border:1px solid var(--border);padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;}
+  .container{padding:16px;max-width:min(1400px,96vw);margin:0 auto;}
+  .layout{display:grid;gap:20px}
+  .left,.right{background:transparent}
+  @media (min-width:980px){.layout{grid-template-columns:1fr 1fr;align-items:start}}
+  #plot{width:100%;height:100%;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.015),rgba(0,0,0,0.15));}
+  .canvas-wrap{width:100%;height:clamp(360px,62vh,820px)}
+  .advert-bar{background:var(--advert-bg);color:var(--advert-text);padding:10px 12px;text-align:center;font-size:.9rem;border:1px solid var(--advert-border);border-radius:10px;margin-bottom:16px}
+  .advert-bar a{color:inherit;text-decoration:none;font-weight:600}
+  .responsive{width:100%;height:auto}
+  .err{font-size:.82rem;margin-top:-10px;margin-bottom:10px;color:var(--danger)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:5000}
+  .modal-content{background:var(--modal-bg);color:var(--text);padding:24px;border-radius:14px;max-width:840px;max-height:84vh;overflow:auto;box-shadow:0 15px 40px rgba(0,0,0,.5);border:1px solid var(--border);}
+  .modal.hide{display:none}.modal-content h2{margin:0 0 8px}.modal-content h3{margin:18px 0 8px;color:var(--muted)}
+  .modal-content table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:.95rem}
+  .modal-content th,.modal-content td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)}
+  .modal-content tr:nth-child(even){background:rgba(255,255,255,.03)}
 </style>
 </head>
 <body>
@@ -97,9 +58,7 @@
   </header>
 
   <div class="container">
-    <div class="advert-bar">
-      <a href="#" target="_blank" rel="noopener">Advert here</a>
-    </div>
+    <div class="advert-bar"><a href="#" target="_blank" rel="noopener">Advert here</a></div>
 
     <div class="layout">
       <!-- LEFT: inputs & diagram -->
@@ -107,6 +66,15 @@
         <img id="diagram" src="LSP.png" class="responsive" alt="Loadspreader schematic diagram">
 
         <div class="section-title">Input Parameters</div>
+
+        <!-- ⬇️ Material moved to the top ⬇️ -->
+        <label>Material
+          <select id="material">
+            <option value="Azobe">Azobe (timber)</option>
+            <option value="S235">S235 (steel)</option>
+            <option value="S355">S355 (steel)</option>
+          </select>
+        </label>
 
         <label>Top Contact Type
           <select id="top_type">
@@ -125,12 +93,9 @@
         </label>
 
         <label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
-          <select id="q_max" onfocus="this.select()" >
-            <!-- using select here improves visibility on some Android skins; JS treats it like input via value -->
-            <option value="40">40</option>
-            <option value="30">30</option>
-            <option value="50">50</option>
-            <option value="60">60</option>
+          <select id="q_max">
+            <option value="40">40</option><option value="30">30</option>
+            <option value="50">50</option><option value="60">60</option>
           </select>
           <div id="err_qmax" class="err hide"></div>
         </label>
@@ -159,13 +124,6 @@
         <label>Decimal Precision
           <input id="precision" type="number" step="1" value="2">
         </label>
-
-        <div class="section-title">Material</div>
-        <select id="material">
-          <option value="Azobe">Azobe (timber)</option>
-          <option value="S235">S235 (steel)</option>
-          <option value="S355">S355 (steel)</option>
-        </select>
       </div>
 
       <!-- RIGHT: results & canvas -->
@@ -181,7 +139,7 @@
   </div>
 </div>
 
-<!-- ===== Help modal kept from previous rev ===== -->
+<!-- Help modal (unchanged content) -->
 <div id="help-modal" class="modal hide">
   <div class="modal-content">
     <button id="help-close" style="float:right;font-size:1.05rem;border:1px solid var(--border);background:transparent;color:var(--text);padding:2px 8px;border-radius:8px;cursor:pointer">✕</button>
@@ -224,17 +182,15 @@
 </div>
 
 <script>
-/* ===== Materials (corrected values) ===== */
-const materials={
-  Azobe:{rho:1.05,  sigma_max:25,   tau_max:2,     sigma_c_max:8},
-  S235: {rho:7.85,  sigma_max:235,  tau_max:135.7, sigma_c_max:319},
-  S355: {rho:7.85,  sigma_max:355,  tau_max:205,   sigma_c_max:480}
-};
-const g=9.81, $=id=>document.getElementById(id);
+/* Materials */
+const materials={Azobe:{rho:1.05,sigma_max:25,tau_max:2,sigma_c_max:8},
+                 S235:{rho:7.85,sigma_max:235,tau_max:135.7,sigma_c_max:319},
+                 S355:{rho:7.85,sigma_max:355,tau_max:205,sigma_c_max:480}};
+const g=9.81,$=id=>document.getElementById(id);
 const round=(v,p)=>(!isFinite(v)||isNaN(v))?v:Number(Math.round(`${v}e${p}`)+`e-${p}`);
-const diagramSrc={mat:'LSP.png', crawler:'crawler.png'};
+const diagramSrc={mat:'LSP.png',crawler:'crawler.png'};
 
-/* Label behaviour preserved */
+/* Labels */
 function updateTopLabels(){
   $('label_Lw').querySelector('.label-text').innerHTML=
     $('top_type').value==='crawler' ? 'Crawler Track Length L<sub>r</sub> (m)' : 'Top Steel Mat Length L<sub>r</sub> (m)';
@@ -246,16 +202,16 @@ function updateTopLabels(){
   $('label_Wmat').classList.toggle('hide',!isMat);
   $('diagram').src=diagramSrc[$('top_type').value];
 }
-$('top_type').addEventListener('change',()=>{updateTopLabels(); runCalc();});
+$('top_type').addEventListener('change',()=>{updateTopLabels();runCalc();});
 updateTopLabels();
 
 /* Modal */
 $('help-btn').onclick=()=>$('help-modal').classList.remove('hide');
 $('help-close').onclick=()=>$('help-modal').classList.add('hide');
-$('help-modal').addEventListener('click',e=>{ if(e.target.id==='help-modal')$('help-modal').classList.add('hide'); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('help-modal').classList.contains('hide'))$('help-modal').classList.add('hide'); });
+$('help-modal').addEventListener('click',e=>{if(e.target.id==='help-modal')$('help-modal').classList.add('hide');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('help-modal').classList.contains('hide'))$('help-modal').classList.add('hide');});
 
-/* Core solver (unchanged maths) */
+/* Solver */
 function solve(p){
   const Qs=p.q_max*p.Lw*p.Lsb;
   const qb=Qs/p.Lsl;
@@ -267,24 +223,21 @@ function solve(p){
   const tS= (qb*Lb*g*1e3)/(p.layers*Ab);
   const sC= p.q_max*g/1e3;
   const GBP= p.q_max*p.Lw/p.Lsl + p.material.rho*p.Lsh*p.layers;
-  return {
-    Qs:round(Qs,p.precision), qb:round(qb,p.precision), Lb:round(Lb,p.precision),
-    sB:round(sB,p.precision), tS:round(tS,p.precision), sC:round(sC,p.precision),
-    GBP:round(GBP,p.precision),
-    passB:Math.abs(sB)<p.material.sigma_max,
-    passS:Math.abs(tS)<p.material.tau_max,
-    passC:sC<p.material.sigma_c_max,
-    passGBP:GBP<p.GBP_allow
-  };
+  return {Qs:round(Qs,p.precision),qb:round(qb,p.precision),Lb:round(Lb,p.precision),
+          sB:round(sB,p.precision),tS:round(tS,p.precision),sC:round(sC,p.precision),
+          GBP:round(GBP,p.precision),
+          passB:Math.abs(sB)<p.material.sigma_max,
+          passS:Math.abs(tS)<p.material.tau_max,
+          passC:sC<p.material.sigma_c_max,
+          passGBP:GBP<p.GBP_allow};
 }
 
-/* Live calc + resize-aware re-render */
+/* Live calc */
 function runCalc(){
   const topType=$('top_type').value;
   ['err_Lw','err_Lr','err_qmax'].forEach(id=>$(id).classList.add('hide'));
 
   const p={
-    /* keep your existing field mapping intact */
     Lw:+$('Lr').value, Lr:+$('Lw').value, Lsl:+$('Lsl').value, Lsb:+$('Lsb').value,
     Lsh:+$('Lsh').value, layers:+$('layers').value, GBP_allow:+$('GBP_allow').value,
     precision:+$('precision').value, material:materials[$('material').value]
@@ -293,20 +246,18 @@ function runCalc(){
   let totalLoad=0;
   if(topType==='mat'){
     p.p_max=+$('p_max').value; p.w_mat=+$('w_mat').value;
-    if(!(p.p_max>0)){showErr('err_qmax','Enter a valid Pmax (>0).'); return;}
-    if(!(p.w_mat>=0)){showErr('err_qmax','Enter a valid self-weight (≥0).'); return;}
+    if(!(p.p_max>0)){showErr('err_qmax','Enter a valid Pmax (>0).');return;}
+    if(!(p.w_mat>=0)){showErr('err_qmax','Enter a valid self-weight (≥0).');return;}
     totalLoad=p.p_max+p.w_mat;
     p.q_max=totalLoad/(p.Lr*p.Lw);
-    // Reflect derived qmax in the dropdown
     syncQmaxDisplay(round(p.q_max,p.precision));
   }else{
-    // Read from select (treat like input)
     p.q_max=+($('q_max').value || $('q_max').selectedOptions[0]?.value || 0);
-    if(!(p.q_max>0)){showErr('err_qmax','Enter a valid qmax (>0).'); return;}
+    if(!(p.q_max>0)){showErr('err_qmax','Enter a valid qmax (>0).');return;}
     totalLoad=p.q_max*p.Lr*p.Lw;
   }
 
-  if(p.Lw>=p.Lsl){ showErr('err_Lw','Top-contact width (Lw) must be less than base length (Lsl).'); return; }
+  if(p.Lw>=p.Lsl){showErr('err_Lw','Top-contact width (Lw) must be less than base length (Lsl).');return;}
 
   const r=solve(p);
   const out=$('results'); out.innerHTML='';
@@ -319,7 +270,7 @@ function runCalc(){
     line('Mat Self-Weight (Wm) [ton]',round(p.w_mat,p.precision));
     line('Total Load (P+W) [ton]',round(totalLoad,p.precision));
   }
-  line('Applied Pressure (qmax) [ton/m2]', topType==='mat' ? round(p.q_max,p.precision) : round(p.q_max,p.precision));
+  line('Applied Pressure (qmax) [ton/m2]',round(p.q_max,p.precision));
   line('Shear Force Top Contact (QS) [ton]',r.Qs);
   line('Shear per Metre (QB) [ton/m]',r.qb); out.appendChild(document.createElement('br'));
 
@@ -339,40 +290,34 @@ function runCalc(){
 
 function syncQmaxDisplay(val){
   const sel=$('q_max');
-  // If derived value not in list, inject it as the first option so it shows correctly
   let opt=sel.querySelector('option[data-derived="1"]');
   if(!opt){ opt=document.createElement('option'); opt.setAttribute('data-derived','1'); sel.prepend(opt); }
   opt.value=String(val); opt.textContent=String(val);
   sel.value=String(val);
 }
 
-function showErr(id,msg){ const el=$(id); el.textContent=msg; el.classList.remove('hide'); }
-function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),ms); }; }
-const liveRun = debounce(runCalc, 120);
-
-document.querySelectorAll('#calc-screen input, #calc-screen select').forEach(el=>{
-  el.addEventListener('input', liveRun);
-  el.addEventListener('change', liveRun);
+function showErr(id,msg){const el=$(id);el.textContent=msg;el.classList.remove('hide');}
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn.apply(this,a),ms);};}
+const liveRun=debounce(runCalc,120);
+document.querySelectorAll('#calc-screen input,#calc-screen select').forEach(el=>{
+  el.addEventListener('input',liveRun); el.addEventListener('change',liveRun);
 });
-
-window.addEventListener('resize', debounce(runCalc, 150));
+window.addEventListener('resize',debounce(runCalc,150));
 runCalc();
 
-/* Renderer unchanged, just reads canvas size */
+/* Renderer */
 function render3D(p){
   const c=$('plot'),ctx=c.getContext('2d');
   c.width=c.clientWidth; c.height=c.clientHeight;
   const w=c.width,h=c.height; ctx.clearRect(0,0,w,h);
   const nLen=Math.floor(p.Lw/p.Lsl)+1, nWid=Math.floor(p.Lr/p.Lsb)+1;
   const totalLen=nLen*p.Lsl, totalWid=nWid*p.Lsb;
-  const sc=0.9*Math.min(
-    w/((totalLen+totalWid)*Math.cos(Math.PI/6)*100),
-    h/((totalLen+totalWid)*Math.sin(Math.PI/6)*100+p.layers*p.Lsh*100+p.Lsh*10)
-  );
-  const iso=(x,y,z)=>{ const xr=x*Math.cos(Math.PI/2)-y*Math.sin(Math.PI/2),
-                             yr=x*Math.sin(Math.PI/2)+y*Math.cos(Math.PI/2),
-                             ix=(xr-yr)*Math.cos(Math.PI/6),
-                             iy=(xr+yr)*Math.sin(Math.PI/6)-z;
+  const sc=0.9*Math.min(w/((totalLen+totalWid)*Math.cos(Math.PI/6)*100),
+                        h/((totalLen+totalWid)*Math.sin(Math.PI/6)*100+p.layers*p.Lsh*100+p.Lsh*10));
+  const iso=(x,y,z)=>{const xr=x*Math.cos(Math.PI/2)-y*Math.sin(Math.PI/2),
+                            yr=x*Math.sin(Math.PI/2)+y*Math.cos(Math.PI/2),
+                            ix=(xr-yr)*Math.cos(Math.PI/6),
+                            iy=(xr+yr)*Math.sin(Math.PI/6)-z;
     return [w/2+ix*sc,h*0.6+iy*sc];
   };
   const poly=pts=>{ctx.beginPath();ctx.moveTo(...pts[0]);pts.slice(1).forEach(pt=>ctx.lineTo(...pt));ctx.closePath();ctx.fill();ctx.stroke();};
@@ -398,3 +343,4 @@ function render3D(p){
 </script>
 </body>
 </html>
+
