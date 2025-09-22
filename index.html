@@ -92,13 +92,12 @@
           <div id="err_Lr" class="err hide"></div>
         </label>
 
+        <!-- CHANGED: q_max is now a number input -->
         <label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
-          <select id="q_max">
-            <option value="40">40</option><option value="30">30</option>
-            <option value="50">50</option><option value="60">60</option>
-          </select>
+          <input id="q_max" type="number" step="0.1" min="0" value="40">
           <div id="err_qmax" class="err hide"></div>
         </label>
+
         <label id="label_Pmax" class="hide">Point Load Force P<sub>max</sub> (t)
           <input id="p_max" type="number" step="0.1" value="100">
         </label>
@@ -149,7 +148,7 @@
     <p>Checks bending, shear, bearing stress of timber/steel load-spreaders and estimates ground bearing pressure (GBP). Suitable for outriggers, bogies, and crawler tracks.</p>
     <h3>2) Quick Workflow</h3>
     <ol>
-      <li>Select <em>Steel Mat</em> (enter <strong>P<sub>max</sub></strong> and <strong>W<sub>m</sub></strong>) or <em>Crawler</em> (enter <strong>q<sub>max</sub></strong>).</li>
+      <li>Select <em>Steel Mat</em> (enter <strong>P<sub>max</strong></sub> and <strong>W<sub>m</sub></strong>) or <em>Crawler</em> (enter <strong>q<sub>max</sub></strong>).</li>
       <li>Set top footprint <strong>L<sub>w</sub></strong> (width) and <strong>L<sub>r</sub></strong> (length).</li>
       <li>Set base geometry <strong>L<sub>sl</sub></strong>, <strong>L<sub>sb</sub></strong>, thickness <strong>h</strong>, layers, and material.</li>
       <li>Results update live; failed checks are red.</li>
@@ -250,9 +249,9 @@ function runCalc(){
     if(!(p.w_mat>=0)){showErr('err_qmax','Enter a valid self-weight (≥0).');return;}
     totalLoad=p.p_max+p.w_mat;
     p.q_max=totalLoad/(p.Lr*p.Lw);
-    syncQmaxDisplay(round(p.q_max,p.precision));
+    syncQmaxDisplay(round(p.q_max,p.precision)); // updates hidden input for info
   }else{
-    p.q_max=+($('q_max').value || $('q_max').selectedOptions[0]?.value || 0);
+    p.q_max=+($('q_max').value || 0);
     if(!(p.q_max>0)){showErr('err_qmax','Enter a valid qmax (>0).');return;}
     totalLoad=p.q_max*p.Lr*p.Lw;
   }
@@ -289,11 +288,8 @@ function runCalc(){
 }
 
 function syncQmaxDisplay(val){
-  const sel=$('q_max');
-  let opt=sel.querySelector('option[data-derived="1"]');
-  if(!opt){ opt=document.createElement('option'); opt.setAttribute('data-derived','1'); sel.prepend(opt); }
-  opt.value=String(val); opt.textContent=String(val);
-  sel.value=String(val);
+  // now that q_max is an <input>, just write the value (it’s hidden in MAT mode)
+  $('q_max').value = String(val);
 }
 
 function showErr(id,msg){const el=$(id);el.textContent=msg;el.classList.remove('hide');}
@@ -343,4 +339,3 @@ function render3D(p){
 </script>
 </body>
 </html>
-
