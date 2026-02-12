@@ -5,56 +5,341 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Loadspreader Calculator</title>
 <style>
+  /* =========================
+     Ingeniarch Labs UI System
+     ========================= */
   :root{
+    --radius:14px;
+    --shadow: 0 14px 40px rgba(0,0,0,.35);
+
+    /* Controls */
+    --control-font: clamp(.92rem, .9rem + .15vw, 1rem);
+    --control-pad-y: 9px;
+    --control-pad-x: 10px;
+
+    /* Layout */
+    --page-pad: clamp(10px, 1.4vw, 16px);
+    --card-pad: clamp(12px, 1.6vw, 16px);
+    --grid-min: 220px;
+
+    /* Brand */
+    --primary:#3b82f6;
+    --danger:#ef4444;
+    --good:#22c55e;
+
+    /* Default theme = Dark */
     color-scheme: dark;
-    --bg:#0b1220; --text:#e5e7eb; --muted:#94a3b8;
-    --primary:#3b82f6; --primary-disabled:#1f3b70; --btn-text:#e5e7eb;
-    --header-bg:#0f172a; --card:#0f172a; --card2:#0b152e;
-    --border:#1f2a44; --line:#223056;
-    --advert-bg:#17203a; --advert-border:#273759; --advert-text:#e5e7eb;
-    --modal-bg:#0f172a; --danger:#ef4444; --good:#22c55e;
+    --bg:#0b1220;
+    --header-bg:#0b1220;
+    --panel:#0f172a;
+    --panel-2:#0b152e;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --border:#1f2a44;
+    --line:#223056;
+
+    --btn-bg:rgba(255,255,255,.04);
+    --btn-hover:rgba(255,255,255,.07);
+
+    --advert-bg:#17203a;
+    --advert-border:#273759;
+    --advert-text:#e5e7eb;
+
+    --modal-bg:#0f172a;
   }
+
+  :root[data-theme="light"]{
+    color-scheme: light;
+    --bg:#f6f7fb;
+    --header-bg:#ffffff;
+    --panel:#ffffff;
+    --panel-2:#f3f4f6;
+    --text:#0f172a;
+    --muted:#475569;
+    --border:#e2e8f0;
+    --line:#cbd5e1;
+
+    --btn-bg:rgba(2,6,23,.05);
+    --btn-hover:rgba(2,6,23,.09);
+
+    --advert-bg:#ffffff;
+    --advert-border:#e2e8f0;
+    --advert-text:#0f172a;
+
+    --modal-bg:#ffffff;
+  }
+
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text);line-height:1.5;}
-  .hide{display:none}
-  .section-title{font-weight:600;margin:24px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);font-size:.98rem;color:var(--muted);}
-  .green{color:var(--good)} .red{color:var(--danger)}
-  input,select{
-    width:100%;font-size:1rem;border-radius:10px;padding:12px 12px;border:1px solid var(--border);
-    background:linear-gradient(180deg, var(--card), var(--card2));color:var(--text);
-    margin-top:6px;margin-bottom:14px;appearance:none;
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.45;
   }
-  select:focus,input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(59,130,246,.35);}
-  select option{background:var(--card);color:var(--text);}
-  @-moz-document url-prefix(){select{color:var(--text);background:var(--card);}}
-  label{display:block;font-size:.9rem;color:var(--muted)}
-  header{background:var(--header-bg);padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--border);}
-  header h1{margin:0;font-size:1.1rem;flex:1;text-align:center;color:var(--text);letter-spacing:.2px}
-  .help-kbd{border:1px solid var(--border);padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;}
-  .container{padding:16px;max-width:min(1400px,96vw);margin:0 auto;}
-  .layout{display:grid;gap:20px}
-  .left,.right{background:transparent}
-  @media (min-width:980px){.layout{grid-template-columns:1fr 1fr;align-items:start}}
-  #plot{width:100%;height:100%;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.015),rgba(0,0,0,0.15));}
-  .canvas-wrap{width:100%;height:clamp(360px,62vh,820px)}
-  .advert-bar{background:var(--advert-bg);color:var(--advert-text);padding:10px 12px;text-align:center;font-size:.9rem;border:1px solid var(--advert-border);border-radius:10px;margin-bottom:16px}
-  .advert-bar a{color:inherit;text-decoration:none;font-weight:600}
-  .responsive{width:100%;height:auto}
-  .err{font-size:.82rem;margin-top:-10px;margin-bottom:10px;color:var(--danger)}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:5000}
-  .modal-content{background:var(--modal-bg);color:var(--text);padding:24px;border-radius:14px;max-width:840px;max-height:84vh;overflow:auto;box-shadow:0 15px 40px rgba(0,0,0,.5);border:1px solid var(--border);}
-  .modal.hide{display:none}.modal-content h2{margin:0 0 8px}.modal-content h3{margin:18px 0 8px;color:var(--muted)}
+
+  .hide{display:none}
+  .green{color:var(--good)} .red{color:var(--danger)}
+
+  header{
+    background:var(--header-bg);
+    padding:12px var(--page-pad);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    position:sticky;
+    top:0;
+    z-index:2;
+    border-bottom:1px solid var(--border);
+    backdrop-filter:saturate(180%) blur(8px);
+  }
+  header h1{
+    margin:0;
+    font-size:1.05rem;
+    flex:1;
+    text-align:center;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+
+  .container{
+    padding:var(--page-pad);
+    max-width:min(1600px, 96vw);
+    margin:0 auto;
+  }
+
+  .advert-bar{
+    background:var(--advert-bg);
+    color:var(--advert-text);
+    padding:10px 12px;
+    text-align:center;
+    font-size:.92rem;
+    border:1px solid var(--advert-border);
+    border-radius:12px;
+    margin-bottom:14px;
+  }
+  .advert-bar a{color:inherit;text-decoration:none;font-weight:850}
+
+  .layout{display:grid;gap:14px}
+  @media (min-width:980px){
+    .layout{
+      grid-template-columns: clamp(320px, 34vw, 540px) 1fr;
+      align-items:start;
+    }
+  }
+
+  .card{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:var(--card-pad);
+    overflow:hidden;
+  }
+
+  .section-title{
+    font-weight:800;
+    margin:18px 0 10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--border);
+    font-size:.92rem;
+    color:var(--muted);
+    letter-spacing:.25px;
+    text-transform:uppercase;
+  }
+
+  /* =========================
+     Compact inputs + responsive grids
+     ========================= */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(var(--grid-min), 1fr));
+    gap:10px 12px;
+    align-items:end;
+  }
+  .full{grid-column:1/-1}
+
+  label{
+    display:block;
+    font-size:.86rem;
+    color:var(--muted);
+    margin:0;
+  }
+
+  input,select{
+    width:100%;
+    font-size:var(--control-font);
+    border-radius:12px;
+    padding:var(--control-pad-y) var(--control-pad-x);
+    border:1px solid var(--border);
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    color:var(--text);
+    margin-top:6px;
+    margin-bottom:0;
+    appearance:none;
+  }
+  select option{background:var(--panel);color:var(--text);}
+  @-moz-document url-prefix(){select{color:var(--text);background:var(--panel);} }
+  select:focus,input:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(59,130,246,.22);
+  }
+
+  .err{
+    font-size:.78rem;
+    margin-top:6px;
+    color:var(--danger);
+  }
+
+  .btn{
+    border:1px solid var(--border);
+    padding:8px 10px;
+    border-radius:12px;
+    background:var(--btn-bg);
+    color:var(--text);
+    cursor:pointer;
+    font-weight:750;
+    transition: background .15s ease, transform .06s ease;
+    user-select:none;
+    white-space:nowrap;
+  }
+  .btn:hover{background:var(--btn-hover)}
+  .btn:active{transform:translateY(1px)}
+
+  .toolbar{display:flex;gap:8px;align-items:center}
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 10px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:var(--btn-bg);
+    color:var(--muted);
+    font-size:.88rem;
+  }
+
+  /* Checkbox styling */
+  input[type="checkbox"]{
+    width:auto;
+    margin:0;
+    padding:0;
+    border-radius:6px;
+    accent-color: var(--primary);
+    appearance:auto;
+  }
+  .inline-check{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    color:var(--text);
+  }
+  .inline-check span{color:var(--text); font-size:.95rem}
+
+  /* =========================
+     Diagram + canvas
+     ========================= */
+  .responsive{
+    width:100%;
+    height:auto;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--panel);
+  }
+  .canvas-wrap{width:100%;height:clamp(300px, 52vh, 900px)}
+  #plot{
+    width:100%;
+    height:100%;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.08));
+  }
+
+  /* =========================
+     Results
+     ========================= */
+  .result-block{
+    padding:12px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    margin-bottom:12px;
+  }
+  .result-title{
+    font-weight:900;
+    letter-spacing:.2px;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .tiny{font-size:.85rem;color:var(--muted)}
+
+  /* =========================
+     Modal
+     ========================= */
+  .modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:5000
+  }
+  :root[data-theme="light"] .modal{background:rgba(2,6,23,.45)}
+  .modal.hide{display:none}
+  .modal-content{
+    background:var(--modal-bg);
+    color:var(--text);
+    padding:22px;
+    border-radius:16px;
+    max-width:980px;
+    max-height:84vh;
+    overflow:auto;
+    box-shadow:0 18px 50px rgba(0,0,0,.35);
+    border:1px solid var(--border);
+  }
+  .modal-content h2{margin:0 0 8px}
+  .modal-content h3{margin:18px 0 8px;color:var(--muted)}
   .modal-content table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:.95rem}
   .modal-content th,.modal-content td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)}
   .modal-content tr:nth-child(even){background:rgba(255,255,255,.03)}
+  :root[data-theme="light"] .modal-content tr:nth-child(even){background:rgba(2,6,23,.03)}
+  code,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:.92em}
+  .math{
+    background:var(--btn-bg);
+    border:1px solid var(--border);
+    padding:10px 12px;
+    border-radius:12px;
+    overflow:auto;
+  }
+
+  /* Small screens: tighten further */
+  @media (max-width:420px){
+    :root{ --grid-min: 180px; --control-pad-y: 8px; --control-pad-x: 10px; }
+    header h1{font-size:1rem}
+  }
 </style>
 </head>
 <body>
 
 <div id="calc-screen">
   <header>
+    <div class="toolbar">
+      <button id="theme-btn" class="btn" title="Toggle light/dark">Theme</button>
+      <span class="badge" id="theme-badge">Dark</span>
+    </div>
+
     <h1>Loadspreader Calculator</h1>
-    <button id="help-btn" title="Help" class="help-kbd">Help</button>
+
+    <button id="help-btn" title="Help" class="btn">Help</button>
   </header>
 
   <div class="container">
@@ -62,103 +347,204 @@
 
     <div class="layout">
       <!-- LEFT: inputs & diagram -->
-      <div class="left">
+      <div class="card">
         <img id="diagram" src="LSP.png" class="responsive" alt="Loadspreader schematic diagram">
 
         <div class="section-title">Input Parameters</div>
 
-        <!-- ⬇️ Material moved to the top ⬇️ -->
-        <label>Material
-          <select id="material">
-            <option value="Azobe">Azobe (timber)</option>
-            <option value="S235">S235 (steel)</option>
-            <option value="S355">S355 (steel)</option>
-          </select>
-        </label>
+        <div class="grid">
+          <label>Material
+            <select id="material">
+              <option value="Azobe">Azobe (timber)</option>
+              <option value="S235">S235 (steel)</option>
+              <option value="S355">S355 (steel)</option>
+            </select>
+          </label>
 
-        <label>Top Contact Type
-          <select id="top_type">
-            <option value="mat">Steel Mat</option>
-            <option value="crawler">Crawler Tracks</option>
-          </select>
-        </label>
+          <label>Top Contact Type
+            <select id="top_type">
+              <option value="mat">Steel Mat</option>
+              <option value="crawler">Crawler Tracks</option>
+            </select>
+          </label>
 
-        <label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>
-          <input id="Lw" type="number" step="0.01" value="2">
-          <div id="err_Lw" class="err hide"></div>
-        </label>
-        <label id="label_Lr"><span class="label-text">Top Steel Mat Width L<sub>r</sub> (m)</span>
-          <input id="Lr" type="number" step="0.01" value="1">
-          <div id="err_Lr" class="err hide"></div>
-        </label>
+          <label id="label_Lw"><span class="label-text">Top Steel Mat Length L<sub>w</sub> (m)</span>
+            <input id="Lw" type="number" step="0.01" value="2">
+            <div id="err_Lw" class="err hide"></div>
+          </label>
 
-        <!-- CHANGED: q_max is now a number input -->
-        <label id="label_qmax">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
-          <input id="q_max" type="number" step="0.1" min="0" value="40">
-          <div id="err_qmax" class="err hide"></div>
-        </label>
+          <label id="label_Lr"><span class="label-text">Top Steel Mat Width L<sub>r</sub> (m)</span>
+            <input id="Lr" type="number" step="0.01" value="1">
+            <div id="err_Lr" class="err hide"></div>
+          </label>
 
-        <label id="label_Pmax" class="hide">Point Load Force P<sub>max</sub> (t)
-          <input id="p_max" type="number" step="0.1" value="100">
-        </label>
-        <label id="label_Wmat" class="hide">Steel Mat Self-Weight W<sub>m</sub> (t)
-          <input id="w_mat" type="number" step="0.1" value="0">
-        </label>
+          <!-- CRAWLER MODE: q_max -->
+          <label id="label_qmax" class="full">Applied Outrigger Pressure q<sub>max</sub> (t/m²)
+            <input id="q_max" type="number" step="0.1" min="0" value="40">
+            <div id="err_qmax" class="err hide"></div>
+          </label>
+        </div>
 
-        <label>Loadspreader Length L<sub>sl</sub> (m)
-          <input id="Lsl" type="number" step="0.01" value="3">
-        </label>
-        <label>Loadspreader Width L<sub>sb</sub> (m)
-          <input id="Lsb" type="number" step="0.01" value="1">
-        </label>
-        <label>Loadspreader Thickness h (m)
-          <input id="Lsh" type="number" step="0.01" value="0.4">
-        </label>
-        <label>Number of Base Layers
-          <input id="layers" type="number" step="1" value="1">
-        </label>
-        <label>Allowable Ground Pressure (t/m²)
-          <input id="GBP_allow" type="number" step="0.1" value="20">
-        </label>
-        <label>Decimal Precision
-          <input id="precision" type="number" step="1" value="2">
-        </label>
+        <!-- STEEL MAT MODE -->
+        <div id="steel-loads" class="hide">
+          <div class="section-title">Steel Mat Loads</div>
+          <div class="grid">
+            <label>Outrigger Load A (t)
+              <input id="P_A" type="number" step="0.1" placeholder="Leave blank if unused">
+              <div id="err_PA" class="err hide"></div>
+            </label>
+
+            <label>Outrigger Load B (t)
+              <input id="P_B" type="number" step="0.1" placeholder="Leave blank if unused">
+              <div id="err_PB" class="err hide"></div>
+            </label>
+
+            <label>Outrigger Load C (t)
+              <input id="P_C" type="number" step="0.1" placeholder="Leave blank if unused">
+              <div id="err_PC" class="err hide"></div>
+            </label>
+
+            <label>Outrigger Load D (t)
+              <input id="P_D" type="number" step="0.1" placeholder="Leave blank if unused">
+              <div id="err_PD" class="err hide"></div>
+            </label>
+
+            <label class="full">Steel Mat Self-Weight W<sub>m</sub> (t)
+              <input id="w_mat" type="number" step="0.001" value="0.226">
+              <div id="err_wmat" class="err hide"></div>
+            </label>
+
+            <div class="full">
+              <div class="inline-check">
+                <input id="single_base" type="checkbox">
+                <span>Single base mat (allow top mat overhang)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">Base Mats</div>
+
+        <div class="grid">
+          <label>Loadspreader Length L<sub>sl</sub> (m)
+            <input id="Lsl" type="number" step="0.01" value="3">
+            <div id="err_Lsl" class="err hide"></div>
+          </label>
+
+          <label>Loadspreader Width L<sub>sb</sub> (m)
+            <input id="Lsb" type="number" step="0.01" value="1">
+            <div id="err_Lsb" class="err hide"></div>
+          </label>
+
+          <label>Loadspreader Thickness h (m)
+            <input id="Lsh" type="number" step="0.01" value="0.4">
+            <div id="err_Lsh" class="err hide"></div>
+          </label>
+
+          <label>Number of Base Layers
+            <input id="layers" type="number" step="1" value="1">
+            <div id="err_layers" class="err hide"></div>
+          </label>
+
+          <label>Allowable Ground Pressure (t/m²)
+            <input id="GBP_allow" type="number" step="0.1" value="20">
+            <div id="err_GBP" class="err hide"></div>
+          </label>
+
+          <label>Decimal Precision
+            <input id="precision" type="number" step="1" value="2">
+            <div id="err_precision" class="err hide"></div>
+          </label>
+        </div>
       </div>
 
       <!-- RIGHT: results & canvas -->
-      <div class="right">
+      <div class="card">
         <div class="section-title">Results</div>
         <div id="results"></div>
-        <div id="verdict" style="font-weight:600"></div>
+        <div id="verdict" style="font-weight:900;margin-top:10px"></div>
 
-        <div class="section-title">3-D View (schematic)</div>
+        <div class="section-title">3‑D View (schematic)</div>
         <div class="canvas-wrap"><canvas id="plot"></canvas></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Help modal (unchanged content) -->
+<!-- Help modal -->
 <div id="help-modal" class="modal hide">
   <div class="modal-content">
-    <button id="help-close" style="float:right;font-size:1.05rem;border:1px solid var(--border);background:transparent;color:var(--text);padding:2px 8px;border-radius:8px;cursor:pointer">✕</button>
+    <button id="help-close" class="btn" style="float:right">✕</button>
     <h2>Loadspreader Calculator – Help Guide</h2>
-    <p><strong>Version:</strong> 2025-07-13 (rev 37.2)</p>
+    <p class="tiny"><strong>Version:</strong> 2026-02-12 (rev 38.1) • Dark/Light theme • Steel Mat outriggers A/B/C/D • GBP in t/m² and kN/m²</p>
+
     <h3>1) Purpose</h3>
-    <p>Checks bending, shear, bearing stress of timber/steel load-spreaders and estimates ground bearing pressure (GBP). Suitable for outriggers, bogies, and crawler tracks.</p>
-    <h3>2) Quick Workflow</h3>
-    <ol>
-      <li>Select <em>Steel Mat</em> (enter <strong>P<sub>max</strong></sub> and <strong>W<sub>m</sub></strong>) or <em>Crawler</em> (enter <strong>q<sub>max</sub></strong>).</li>
-      <li>Set top footprint <strong>L<sub>w</sub></strong> (width) and <strong>L<sub>r</sub></strong> (length).</li>
-      <li>Set base geometry <strong>L<sub>sl</sub></strong>, <strong>L<sub>sb</sub></strong>, thickness <strong>h</strong>, layers, and material.</li>
-      <li>Results update live; failed checks are red.</li>
-    </ol>
-    <h3>3) Units</h3>
-    <ul><li>Geometry m; P/W in t; pressures t/m²; stresses MPa (N/mm²).</li></ul>
-    <h3>4) Outputs</h3>
+    <p>
+      Checks bending, shear, and bearing stress of timber/steel base mats and estimates Ground Bearing Pressure (GBP).
+      Suitable for outriggers, bogies, and crawler tracks. Results update live; failed checks highlight in red.
+    </p>
+
+    <h3>2) Units</h3>
     <ul>
-      <li>σ<sub>B</sub> (bending), τ<sub>S</sub> (shear), σ<sub>C</sub> (bearing) in MPa; GBP in t/m²; Q<sub>S</sub> and q<sub>B</sub> for reference.</li>
+      <li>Geometry: m</li>
+      <li>Loads: tonnes (t)</li>
+      <li>Pressures: t/m² and kN/m²</li>
+      <li>Stresses: MPa (N/mm²)</li>
     </ul>
+    <p class="tiny"><strong>Disclaimer:</strong> g = 9.81 m/s² is used for force conversions. 1 t/m² ≈ 9.81 kN/m².</p>
+
+    <h3>3) How to use</h3>
+    <ol>
+      <li>Select <strong>Top Contact Type</strong>:
+        <ul>
+          <li><strong>Crawler Tracks</strong>: enter q<sub>max</sub> directly.</li>
+          <li><strong>Steel Mat</strong>: enter one or more point loads (A/B/C/D) and W<sub>m</sub>.</li>
+        </ul>
+      </li>
+      <li>Enter top footprint sizes (<strong>L<sub>r</sub></strong>, <strong>L<sub>w</sub></strong>).</li>
+      <li>Enter base mat geometry (<strong>L<sub>sl</sub></strong>, <strong>L<sub>sb</sub></strong>, thickness <strong>h</strong>, layers).</li>
+      <li>Enter allowable ground pressure (GBP Allow).</li>
+    </ol>
+
+    <h3>4) Calculation model (workflow)</h3>
+    <div class="math">
+      <div><strong>Steel Mat (per outrigger):</strong></div>
+      <div>W<sub>top</sub> = P + W<sub>m</sub></div>
+      <div>q<sub>max</sub> = W<sub>top</sub> / (L<sub>r</sub> · L<sub>w,eff</sub>)</div>
+      <div class="tiny" style="margin-top:6px">
+        If “Single base mat (overhang)” is enabled and L<sub>w</sub> &gt; L<sub>sl</sub>, then L<sub>w,eff</sub> = min(L<sub>w</sub>, L<sub>sl</sub>).
+      </div>
+
+      <hr style="border:0;border-top:1px solid var(--border);margin:10px 0">
+
+      <div><strong>Shear reference:</strong></div>
+      <div>Q<sub>S</sub> = q<sub>max</sub> · L<sub>w,eff</sub> · L<sub>sb</sub></div>
+      <div>q<sub>B</sub> = Q<sub>S</sub> / L<sub>sl</sub></div>
+      <div>L<sub>b</sub> = (L<sub>sl</sub> − L<sub>w,eff</sub>)/2</div>
+
+      <hr style="border:0;border-top:1px solid var(--border);margin:10px 0">
+
+      <div><strong>Stress checks (as implemented):</strong></div>
+      <div>A<sub>b</sub> = L<sub>sb</sub>·1000 · h·1000</div>
+      <div>S<sub>x</sub> = A<sub>b</sub> · h·1000 / 6</div>
+      <div>M<sub>x</sub> = 0.5 · q<sub>B</sub> · L<sub>b</sub><sup>2</sup> · g · 10<sup>6</sup></div>
+      <div>σ<sub>B</sub> = M<sub>x</sub> / (layers · S<sub>x</sub>)</div>
+      <div>τ<sub>S</sub> = (q<sub>B</sub> · L<sub>b</sub> · g · 10<sup>3</sup>) / (layers · A<sub>b</sub>)</div>
+      <div>σ<sub>C</sub> = q<sub>max</sub> · g / 10<sup>3</sup></div>
+
+      <hr style="border:0;border-top:1px solid var(--border);margin:10px 0">
+
+      <div><strong>Ground Bearing Pressure (GBP):</strong></div>
+      <div>n<sub>len</sub> = floor(L<sub>w,eff</sub>/L<sub>sl</sub>) + 1</div>
+      <div>n<sub>wid</sub> = floor(L<sub>r</sub>/L<sub>sb</sub>) + 1</div>
+      <div class="tiny">If “Single base mat (overhang)” is enabled: n<sub>len</sub> = n<sub>wid</sub> = 1.</div>
+      <div>A<sub>base</sub> = (n<sub>len</sub>·L<sub>sl</sub>) · (n<sub>wid</sub>·L<sub>sb</sub>)</div>
+      <div>W<sub>base</sub> = ρ · h · layers · A<sub>base</sub></div>
+      <div>W<sub>total</sub> = W<sub>top</sub> + W<sub>base</sub></div>
+      <div><strong>GBP (t/m²) = W<sub>total</sub> / A<sub>base</sub></strong></div>
+      <div><strong>GBP (kN/m²) = GBP (t/m²) · 9.81</strong></div>
+    </div>
+
     <h3>5) Material limits (MPa)</h3>
     <table>
       <tr><th>Material</th><th>σ<sub>max</sub></th><th>τ<sub>max</sub></th><th>σ<sub>c,max</sub></th></tr>
@@ -166,159 +552,388 @@
       <tr><td>S235</td><td>235</td><td>135.7</td><td>≈319</td></tr>
       <tr><td>S355</td><td>355</td><td>205</td><td>≈480</td></tr>
     </table>
-    <h3>6) Assumptions</h3>
-    <ol>
-      <li>Compliant support enabling redistribution; full contact (no voids).</li>
-      <li>Uniform/predictable pressure beneath footprint; layers act compositely.</li>
-      <li>Serviceability deflection not checked; verify separately if needed.</li>
-    </ol>
-    <h3>7) Sanity checks</h3>
-    <ul>
-      <li>L<sub>w</sub> &lt; L<sub>sl</sub> (geometry check).</li>
-      <li>GBP ≤ GBP<sub>allow</sub>.</li>
-    </ul>
+
+    <h3>6) Eccentricity & stiffness (idea for an advanced mode)</h3>
+    <p>
+      Current results assume uniform pressure over the footprint and perfect contact. Real mats can warp slightly and eccentric loading can
+      increase peak pressure and bending. A validated “advanced mode” could add (e<sub>x</sub>, e<sub>y</sub>) eccentricity inputs and a top‑mat stiffness
+      factor to estimate non‑uniform contact.
+    </p>
   </div>
 </div>
 
 <script>
-/* Materials */
-const materials={Azobe:{rho:1.05,sigma_max:25,tau_max:2,sigma_c_max:8},
-                 S235:{rho:7.85,sigma_max:235,tau_max:135.7,sigma_c_max:319},
-                 S355:{rho:7.85,sigma_max:355,tau_max:205,sigma_c_max:480}};
-const g=9.81,$=id=>document.getElementById(id);
+/* =========================
+   Theme toggle (dark/light)
+   ========================= */
+const THEME_KEY='lsp_theme_v2';
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  document.documentElement.style.colorScheme = (t==='light'?'light':'dark');
+  document.getElementById('theme-badge').textContent = t==='light' ? 'Light' : 'Dark';
+}
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const t = saved || (prefersLight ? 'light' : 'dark');
+  applyTheme(t);
+}
+document.getElementById('theme-btn').addEventListener('click', ()=>{
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current==='dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
+initTheme();
+
+/* =========================
+   Materials + helpers
+   ========================= */
+const materials={
+  Azobe:{rho:1.05,sigma_max:25,tau_max:2,sigma_c_max:8},
+  S235:{rho:7.85,sigma_max:235,tau_max:135.7,sigma_c_max:319},
+  S355:{rho:7.85,sigma_max:355,tau_max:205,sigma_c_max:480}
+};
+const g=9.81;
+const $=id=>document.getElementById(id);
 const round=(v,p)=>(!isFinite(v)||isNaN(v))?v:Number(Math.round(`${v}e${p}`)+`e-${p}`);
 const diagramSrc={mat:'LSP.png',crawler:'crawler.png'};
 
-/* Labels */
+function clearErrs(){
+  [
+    'err_Lw','err_Lr','err_qmax','err_Lsl','err_Lsb','err_Lsh','err_layers','err_GBP','err_precision',
+    'err_PA','err_PB','err_PC','err_PD','err_wmat'
+  ].forEach(id=>{
+    const el=$(id);
+    if(!el) return;
+    el.classList.add('hide');
+    el.textContent='';
+  });
+}
+function showErr(id,msg){
+  const el=$(id);
+  if(!el) return;
+  el.textContent=msg;
+  el.classList.remove('hide');
+}
+function parseOptNumber(id){
+  const raw=($(id).value||'').trim();
+  if(raw==='') return null;
+  const v=+raw;
+  if(!isFinite(v) || isNaN(v)) return NaN;
+  return v;
+}
+
+/* =========================
+   Labels + mode switches
+   ========================= */
 function updateTopLabels(){
+  const isCrawler = $('top_type').value==='crawler';
   $('label_Lw').querySelector('.label-text').innerHTML=
-    $('top_type').value==='crawler' ? 'Crawler Track Length L<sub>r</sub> (m)' : 'Top Steel Mat Length L<sub>r</sub> (m)';
+    isCrawler ? 'Crawler Track Length L<sub>r</sub> (m)' : 'Top Steel Mat Length L<sub>r</sub> (m)';
   $('label_Lr').querySelector('.label-text').innerHTML=
-    $('top_type').value==='crawler' ? 'Crawler Track Width L<sub>w</sub> (m)'  : 'Top Steel Mat Width L<sub>w</sub> (m)';
+    isCrawler ? 'Crawler Track Width L<sub>w</sub> (m)'  : 'Top Steel Mat Width L<sub>w</sub> (m)';
+
   const isMat=$('top_type').value==='mat';
   $('label_qmax').classList.toggle('hide',isMat);
-  $('label_Pmax').classList.toggle('hide',!isMat);
-  $('label_Wmat').classList.toggle('hide',!isMat);
-  $('diagram').src=diagramSrc[$('top_type').value];
+  $('steel-loads').classList.toggle('hide',!isMat);
+  if(!isMat) $('single_base').checked=false;
+
+  $('diagram').src = diagramSrc[$('top_type').value];
 }
-$('top_type').addEventListener('change',()=>{updateTopLabels();runCalc();});
+$('top_type').addEventListener('change', ()=>{ updateTopLabels(); runCalc(); });
 updateTopLabels();
 
-/* Modal */
+/* =========================
+   Help modal
+   ========================= */
 $('help-btn').onclick=()=>$('help-modal').classList.remove('hide');
 $('help-close').onclick=()=>$('help-modal').classList.add('hide');
-$('help-modal').addEventListener('click',e=>{if(e.target.id==='help-modal')$('help-modal').classList.add('hide');});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('help-modal').classList.contains('hide'))$('help-modal').classList.add('hide');});
+$('help-modal').addEventListener('click',e=>{ if(e.target.id==='help-modal') $('help-modal').classList.add('hide'); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('help-modal').classList.contains('hide')) $('help-modal').classList.add('hide'); });
 
-/* Solver */
+/* =========================
+   Solver (core stress equations unchanged)
+   GBP uses combined base-mat area and shows both t/m² and kN/m²
+   ========================= */
 function solve(p){
   const Qs=p.q_max*p.Lw*p.Lsb;
   const qb=Qs/p.Lsl;
   const Lb=(p.Lsl-p.Lw)/2;
+
   const Ab=p.Lsb*1000*p.Lsh*1000;
   const Sx=Ab*p.Lsh*1000/6;
+
   const Mx=0.5*qb*Lb*Lb*g*1e6;
   const sB= Mx/(p.layers*Sx);
   const tS= (qb*Lb*g*1e3)/(p.layers*Ab);
   const sC= p.q_max*g/1e3;
-  const GBP= p.q_max*p.Lw/p.Lsl + p.material.rho*p.Lsh*p.layers;
-  return {Qs:round(Qs,p.precision),qb:round(qb,p.precision),Lb:round(Lb,p.precision),
-          sB:round(sB,p.precision),tS:round(tS,p.precision),sC:round(sC,p.precision),
-          GBP:round(GBP,p.precision),
-          passB:Math.abs(sB)<p.material.sigma_max,
-          passS:Math.abs(tS)<p.material.tau_max,
-          passC:sC<p.material.sigma_c_max,
-          passGBP:GBP<p.GBP_allow};
+
+  const nLen = (p.singleBase ? 1 : (Math.floor(p.Lw/p.Lsl)+1));
+  const nWid = (p.singleBase ? 1 : (Math.floor(p.Lr/p.Lsb)+1));
+  const A_base = (nLen*p.Lsl) * (nWid*p.Lsb);                // m²
+  const W_base = p.material.rho * p.Lsh * p.layers * A_base; // t
+  const W_total = (p.totalLoad||0) + W_base;                 // t
+  const GBP_t = W_total / A_base;                            // t/m²
+  const GBP_kN = GBP_t * 9.81;                               // kN/m²
+
+  return {
+    Qs:round(Qs,p.precision),
+    qb:round(qb,p.precision),
+    Lb:round(Lb,p.precision),
+
+    sB:round(sB,p.precision),
+    tS:round(tS,p.precision),
+    sC:round(sC,p.precision),
+
+    nLen, nWid,
+    A_base:round(A_base,p.precision),
+    W_base:round(W_base,p.precision),
+    W_total:round(W_total,p.precision),
+
+    GBP_t:round(GBP_t,p.precision),
+    GBP_kN:round(GBP_kN,p.precision),
+
+    passB:Math.abs(sB)<p.material.sigma_max,
+    passS:Math.abs(tS)<p.material.tau_max,
+    passC:sC<p.material.sigma_c_max,
+    passGBP:GBP_t<p.GBP_allow
+  };
+}
+
+/* =========================
+   Main calc
+   ========================= */
+function runCalc(){
+  clearErrs();
+  const topType=$('top_type').value;
+
+  const p={
+    // Preserve your existing mapping (to avoid breaking your established workflow):
+    // p.Lw comes from input #Lr and p.Lr comes from input #Lw
+    Lw:+$('Lr').value,
+    Lr:+$('Lw').value,
+
+    Lsl:+$('Lsl').value,
+    Lsb:+$('Lsb').value,
+    Lsh:+$('Lsh').value,
+    layers:+$('layers').value,
+
+    GBP_allow:+$('GBP_allow').value,
+    precision:+$('precision').value,
+    material:materials[$('material').value]
+  };
+
+  // Basic validation
+  if(!(p.Lw>0)) return showErr('err_Lr','Enter a valid value (>0).');
+  if(!(p.Lr>0)) return showErr('err_Lw','Enter a valid value (>0).');
+  if(!(p.Lsl>0)) return showErr('err_Lsl','Enter a valid value (>0).');
+  if(!(p.Lsb>0)) return showErr('err_Lsb','Enter a valid value (>0).');
+  if(!(p.Lsh>0)) return showErr('err_Lsh','Enter a valid value (>0).');
+  if(!(p.layers>=1)) return showErr('err_layers','Layers must be ≥ 1.');
+  if(!(p.GBP_allow>=0)) return showErr('err_GBP','Allowable GBP must be ≥ 0.');
+  if(!(Number.isFinite(p.precision) && p.precision>=0 && p.precision<=6)) return showErr('err_precision','Precision should be 0–6.');
+
+  const out=$('results');
+  out.innerHTML='';
+
+  const block=(title, passAll)=>{
+    const wrap=document.createElement('div');
+    wrap.className='result-block';
+    const h=document.createElement('div');
+    h.className='result-title';
+    const left=document.createElement('div'); left.textContent=title;
+    const right=document.createElement('div');
+    right.textContent=passAll?'✅ PASS':'❌ FAIL';
+    right.className=passAll?'green':'red';
+    h.appendChild(left); h.appendChild(right);
+    wrap.appendChild(h);
+    out.appendChild(wrap);
+    return wrap;
+  };
+
+  const lineIn=(wrap, lab, val, ok)=>{
+    const d=document.createElement('div');
+    d.textContent=`${lab}: ${val}`;
+    if(ok!==undefined) d.className=ok?'green':'red';
+    wrap.appendChild(d);
+  };
+
+  const allowSingleBase = (topType==='mat' && $('single_base').checked);
+
+  const Lw_raw = p.Lw;
+  const Lw_eff = allowSingleBase ? Math.min(p.Lw, p.Lsl) : p.Lw;
+
+  // Geometry guard (unless you explicitly enable overhang mode)
+  if(!allowSingleBase && p.Lw>=p.Lsl){
+    showErr('err_Lr','Top-contact width (Lw) must be less than base length (Lsl).');
+    return;
+  }
+
+  if(topType==='crawler'){
+    p.q_max=+($('q_max').value || 0);
+    if(!(p.q_max>0)) return showErr('err_qmax','Enter a valid qmax (>0).');
+
+    const totalLoad = p.q_max * p.Lr * p.Lw; // t
+    const r = solve({...p, q_max:p.q_max, Lw:Lw_eff, singleBase:allowSingleBase, totalLoad});
+
+    const passAll = r.passB && r.passS && r.passC && r.passGBP;
+    const wrap = block('Crawler case', passAll);
+
+    lineIn(wrap,'Applied Pressure qmax [t/m²]', round(p.q_max,p.precision));
+    lineIn(wrap,'Total Load [t]', round(totalLoad,p.precision));
+    if(allowSingleBase && Lw_raw>p.Lsl){
+      lineIn(wrap,'Single base overhang mode',`ON (effective Lw used = ${round(Lw_eff,p.precision)} m)`);
+    }
+
+    lineIn(wrap,'Shear Force QS [t]', r.Qs);
+    lineIn(wrap,'Shear per metre QB [t/m]', r.qb);
+
+    lineIn(wrap,'Bending Stress σB [N/mm²]', r.sB, r.passB);
+    lineIn(wrap,'Shear Stress τS [N/mm²]', r.tS, r.passS);
+    lineIn(wrap,'Compression Stress σC [N/mm²]', r.sC, r.passC);
+
+    lineIn(wrap,'Base mats (count)', `${r.nLen} × ${r.nWid} = ${r.nLen*r.nWid}`);
+    lineIn(wrap,'Base area (all mats) [m²]', r.A_base);
+    lineIn(wrap,'Base self‑weight [t]', r.W_base);
+    lineIn(wrap,'Total vertical load to ground [t]', r.W_total);
+
+    lineIn(wrap,'GBP [t/m²]', r.GBP_t, r.passGBP);
+    lineIn(wrap,'GBP [kN/m²]', r.GBP_kN);
+
+    const note=document.createElement('div');
+    note.className='tiny';
+    note.style.marginTop='10px';
+    note.textContent='Disclaimer: g = 9.81 m/s² used for force conversions (1 t/m² ≈ 9.81 kN/m²).';
+    out.appendChild(note);
+
+    $('verdict').textContent = passAll ? '✅ All checks passed' : '❌ Fails – see red items';
+    $('verdict').className = passAll ? 'green' : 'red';
+
+    render3D({...p,q_max:p.q_max, singleBase: allowSingleBase, Lw_raw, Lw_eff});
+    return;
+  }
+
+  // STEEL MAT MODE (A/B/C/D)
+  const Wm = +($('w_mat').value || 0);
+  if(!(Wm>=0)) return showErr('err_wmat','Enter a valid Wm (≥0).');
+
+  const loads = [
+    {k:'A', id:'P_A', err:'err_PA'},
+    {k:'B', id:'P_B', err:'err_PB'},
+    {k:'C', id:'P_C', err:'err_PC'},
+    {k:'D', id:'P_D', err:'err_PD'}
+  ].map(o=>({ ...o, v: parseOptNumber(o.id) }));
+
+  for(const L of loads){
+    if(L.v===null) continue;
+    if(!isFinite(L.v) || isNaN(L.v)) return showErr(L.err,'Enter a valid number.');
+    if(!(L.v>=0)) return showErr(L.err,'Load must be ≥ 0.');
+  }
+
+  const active = loads.filter(L=>L.v!=null && L.v>0);
+  if(active.length===0){
+    showErr('err_wmat','Enter at least one outrigger load (A/B/C/D).');
+    return;
+  }
+
+  let allPass=true;
+  for(const L of active){
+    const totalLoad = L.v + Wm;                 // t
+    const qmax = totalLoad / (p.Lr * Lw_eff);   // t/m²
+    const r = solve({...p, q_max:qmax, Lw:Lw_eff, singleBase:allowSingleBase, totalLoad});
+
+    const passAll = r.passB && r.passS && r.passC && r.passGBP;
+    allPass = allPass && passAll;
+
+    const wrap = block(`Outrigger ${L.k}`, passAll);
+
+    lineIn(wrap,'Point Load P [t]', round(L.v,p.precision));
+    lineIn(wrap,'Steel Mat Self‑Weight Wm [t]', round(Wm,p.precision));
+    lineIn(wrap,'Total Load (P+Wm) [t]', round(totalLoad,p.precision));
+    lineIn(wrap,'Applied Pressure qmax [t/m²]', round(qmax,p.precision));
+
+    if(allowSingleBase && Lw_raw>p.Lsl){
+      lineIn(wrap,'Single base overhang mode',`ON (effective Lw used = ${round(Lw_eff,p.precision)} m)`);
+    }
+
+    lineIn(wrap,'Shear Force QS [t]', r.Qs);
+    lineIn(wrap,'Shear per metre QB [t/m]', r.qb);
+
+    lineIn(wrap,'Bending Stress σB [N/mm²]', r.sB, r.passB);
+    lineIn(wrap,'Shear Stress τS [N/mm²]', r.tS, r.passS);
+    lineIn(wrap,'Compression Stress σC [N/mm²]', r.sC, r.passC);
+
+    lineIn(wrap,'Base mats (count)', `${r.nLen} × ${r.nWid} = ${r.nLen*r.nWid}`);
+    lineIn(wrap,'Base area (all mats) [m²]', r.A_base);
+    lineIn(wrap,'Base self‑weight [t]', r.W_base);
+    lineIn(wrap,'Total vertical load to ground [t]', r.W_total);
+
+    lineIn(wrap,'GBP [t/m²]', r.GBP_t, r.passGBP);
+    lineIn(wrap,'GBP [kN/m²]', r.GBP_kN);
+  }
+
+  const note=document.createElement('div');
+  note.className='tiny';
+  note.style.marginTop='10px';
+  note.textContent='Disclaimer: g = 9.81 m/s² used for force conversions (1 t/m² ≈ 9.81 kN/m²).';
+  out.appendChild(note);
+
+  $('verdict').textContent = allPass ? '✅ All active outriggers passed' : '❌ One or more outriggers failed – see red items';
+  $('verdict').className = allPass ? 'green' : 'red';
+
+  render3D({...p, q_max:(active[0].v+Wm)/(p.Lr*Lw_eff), singleBase: allowSingleBase, Lw_raw, Lw_eff});
 }
 
 /* Live calc */
-function runCalc(){
-  const topType=$('top_type').value;
-  ['err_Lw','err_Lr','err_qmax'].forEach(id=>$(id).classList.add('hide'));
-
-  const p={
-    Lw:+$('Lr').value, Lr:+$('Lw').value, Lsl:+$('Lsl').value, Lsb:+$('Lsb').value,
-    Lsh:+$('Lsh').value, layers:+$('layers').value, GBP_allow:+$('GBP_allow').value,
-    precision:+$('precision').value, material:materials[$('material').value]
-  };
-
-  let totalLoad=0;
-  if(topType==='mat'){
-    p.p_max=+$('p_max').value; p.w_mat=+$('w_mat').value;
-    if(!(p.p_max>0)){showErr('err_qmax','Enter a valid Pmax (>0).');return;}
-    if(!(p.w_mat>=0)){showErr('err_qmax','Enter a valid self-weight (≥0).');return;}
-    totalLoad=p.p_max+p.w_mat;
-    p.q_max=totalLoad/(p.Lr*p.Lw);
-    syncQmaxDisplay(round(p.q_max,p.precision)); // updates hidden input for info
-  }else{
-    p.q_max=+($('q_max').value || 0);
-    if(!(p.q_max>0)){showErr('err_qmax','Enter a valid qmax (>0).');return;}
-    totalLoad=p.q_max*p.Lr*p.Lw;
-  }
-
-  if(p.Lw>=p.Lsl){showErr('err_Lw','Top-contact width (Lw) must be less than base length (Lsl).');return;}
-
-  const r=solve(p);
-  const out=$('results'); out.innerHTML='';
-  const heading=t=>{const d=document.createElement('div');d.textContent=t;d.style.fontWeight='600';d.style.marginTop='6px';out.appendChild(d);};
-  const line=(lab,val,ok)=>{const d=document.createElement('div');d.textContent=`${lab}: ${val}`;if(ok!==undefined)d.className=ok?'green':'red';out.appendChild(d);};
-
-  heading('=== Load Results ===');
-  if(topType==='mat'){
-    line('Point Load (Pmax) [ton]',round(p.p_max,p.precision));
-    line('Mat Self-Weight (Wm) [ton]',round(p.w_mat,p.precision));
-    line('Total Load (P+W) [ton]',round(totalLoad,p.precision));
-  }
-  line('Applied Pressure (qmax) [ton/m2]',round(p.q_max,p.precision));
-  line('Shear Force Top Contact (QS) [ton]',r.Qs);
-  line('Shear per Metre (QB) [ton/m]',r.qb); out.appendChild(document.createElement('br'));
-
-  heading('=== Stress Checks ===');
-  line('Bending Stress (σB) [N/mm2]',r.sB,r.passB);
-  line('Shear Stress (τS) [N/mm2]',r.tS,r.passS);
-  line('Compression Stress (σC) [N/mm2]',r.sC,r.passC); out.appendChild(document.createElement('br'));
-
-  heading('=== Ground Pressure ===');
-  line('Ground Bearing Pressure (GBP) [ton/m2]',r.GBP,r.passGBP);
-
-  $('verdict').textContent=r.passB&&r.passS&&r.passC&&r.passGBP?'✅ All checks passed':'❌ Fails – see red items';
-  $('verdict').className=r.passB&&r.passS&&r.passC&&r.passGBP?'green':'red';
-
-  render3D({...p,q_max:p.q_max});
-}
-
-function syncQmaxDisplay(val){
-  // now that q_max is an <input>, just write the value (it’s hidden in MAT mode)
-  $('q_max').value = String(val);
-}
-
-function showErr(id,msg){const el=$(id);el.textContent=msg;el.classList.remove('hide');}
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn.apply(this,a),ms);};}
 const liveRun=debounce(runCalc,120);
 document.querySelectorAll('#calc-screen input,#calc-screen select').forEach(el=>{
-  el.addEventListener('input',liveRun); el.addEventListener('change',liveRun);
+  el.addEventListener('input',liveRun);
+  el.addEventListener('change',liveRun);
 });
 window.addEventListener('resize',debounce(runCalc,150));
+$('single_base').addEventListener('change',liveRun);
 runCalc();
 
-/* Renderer */
+/* Renderer (schematic) */
 function render3D(p){
   const c=$('plot'),ctx=c.getContext('2d');
   c.width=c.clientWidth; c.height=c.clientHeight;
-  const w=c.width,h=c.height; ctx.clearRect(0,0,w,h);
-  const nLen=Math.floor(p.Lw/p.Lsl)+1, nWid=Math.floor(p.Lr/p.Lsb)+1;
+  const w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+
+  let nLen=Math.floor(p.Lw/p.Lsl)+1, nWid=Math.floor(p.Lr/p.Lsb)+1;
+  if(p.singleBase){ nLen=1; nWid=1; }
+
   const totalLen=nLen*p.Lsl, totalWid=nWid*p.Lsb;
-  const sc=0.9*Math.min(w/((totalLen+totalWid)*Math.cos(Math.PI/6)*100),
-                        h/((totalLen+totalWid)*Math.sin(Math.PI/6)*100+p.layers*p.Lsh*100+p.Lsh*10));
-  const iso=(x,y,z)=>{const xr=x*Math.cos(Math.PI/2)-y*Math.sin(Math.PI/2),
-                            yr=x*Math.sin(Math.PI/2)+y*Math.cos(Math.PI/2),
-                            ix=(xr-yr)*Math.cos(Math.PI/6),
-                            iy=(xr+yr)*Math.sin(Math.PI/6)-z;
+  const sc=0.9*Math.min(
+    w/Math.max(1,((totalLen+totalWid)*Math.cos(Math.PI/6)*100)),
+    h/Math.max(1,((totalLen+totalWid)*Math.sin(Math.PI/6)*100+p.layers*p.Lsh*100+p.Lsh*10))
+  );
+
+  const iso=(x,y,z)=>{
+    const xr=x*Math.cos(Math.PI/2)-y*Math.sin(Math.PI/2);
+    const yr=x*Math.sin(Math.PI/2)+y*Math.cos(Math.PI/2);
+    const ix=(xr-yr)*Math.cos(Math.PI/6);
+    const iy=(xr+yr)*Math.sin(Math.PI/6)-z;
     return [w/2+ix*sc,h*0.6+iy*sc];
   };
-  const poly=pts=>{ctx.beginPath();ctx.moveTo(...pts[0]);pts.slice(1).forEach(pt=>ctx.lineTo(...pt));ctx.closePath();ctx.fill();ctx.stroke();};
+
+  const poly=pts=>{
+    ctx.beginPath();
+    ctx.moveTo(...pts[0]);
+    pts.slice(1).forEach(pt=>ctx.lineTo(...pt));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  };
+
   const box=(x,y,z,dx,dy,dz,col,a)=>{
-    ctx.fillStyle=col;ctx.globalAlpha=a;
+    ctx.fillStyle=col;
+    ctx.strokeStyle='rgba(255,255,255,0.10)';
+    ctx.lineWidth=1;
+    ctx.globalAlpha=a;
     poly([iso(x,    y+dy,z),iso(x+dx,y+dy,z),iso(x+dx,y+dy,z+dz),iso(x,    y+dy,z+dz)]);
     poly([iso(x+dx,y,z),    iso(x+dx,y+dy,z),iso(x+dx,y+dy,z+dz),iso(x+dx,y,z+dz)]);
     poly([iso(x,y,z),       iso(x,y+dy,z),    iso(x,y+dy,z+dz),   iso(x,y,z+dz)]);
@@ -326,15 +941,19 @@ function render3D(p){
     poly([iso(x,y,z+dz),    iso(x+dx,y,z+dz), iso(x+dx,y+dy,z+dz),iso(x,y+dy,z+dz)]);
     ctx.globalAlpha=1;
   };
+
   for(let k=0;k<p.layers;k++){
     const z=k*p.Lsh*100;
     for(let i=0;i<nLen;i++){
       for(let j=0;j<nWid;j++){
-        box((-totalLen/2+i*p.Lsl)*100,(-totalWid/2+j*p.Lsb)*100,z,p.Lsl*100,p.Lsb*100,p.Lsh*100,'#8B4513',0.7);
+        box((-totalLen/2+i*p.Lsl)*100,(-totalWid/2+j*p.Lsb)*100,z,p.Lsl*100,p.Lsb*100,p.Lsh*100,'#8B4513',0.74);
       }
     }
   }
-  box(-p.Lw*50,-p.Lr*50,p.layers*p.Lsh*100,p.Lw*100,p.Lr*100,p.Lsh*10,'#707070',0.85);
+
+  // Top mat visual (raw size so any overhang is visible)
+  const topLw = (p.Lw_raw!=null ? p.Lw_raw : p.Lw);
+  box(-topLw*50,-p.Lr*50,p.layers*p.Lsh*100,topLw*100,p.Lr*100,p.Lsh*10,'#707070',0.88);
 }
 </script>
 </body>
