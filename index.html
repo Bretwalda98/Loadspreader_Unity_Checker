@@ -143,6 +143,109 @@
   }
   :root[data-theme="light"] .tooltip{background:rgba(2,6,23,.75)}
 
+
+  /* Interactive input 3D viewer (top-left replacement) */
+  .viewer3d-wrap{
+    position:relative;
+    width:100%;
+    height:clamp(260px, 34vh, 420px);
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:
+      radial-gradient(120% 100% at 20% 10%, rgba(59,130,246,.10), transparent 55%),
+      linear-gradient(180deg, rgba(2,6,23,.35), rgba(2,6,23,.08));
+    overflow:hidden;
+    margin-bottom:8px;
+  }
+  .viewer3d-canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    cursor:grab;
+  }
+  .viewer3d-canvas.dragging{cursor:grabbing}
+  .viewer3d-nav{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:min(250px, calc(100% - 16px));
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:rgba(10,20,45,.72);
+    backdrop-filter: blur(8px);
+    padding:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+  }
+  :root[data-theme="light"] .viewer3d-nav{
+    background:rgba(255,255,255,.85);
+  }
+  .viewer3d-nav-title{
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+    font-weight:800;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .viewer3d-nav-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:6px;
+    margin-bottom:6px;
+  }
+  .viewer3d-nav-grid .vbtn,
+  .viewer3d-row .vbtn{
+    padding:5px 8px;
+    border-radius:8px;
+    font-size:.76rem;
+    line-height:1;
+  }
+  .viewer3d-row{
+    display:grid;
+    grid-template-columns: 28px 1fr 28px;
+    gap:6px;
+    align-items:center;
+  }
+  .viewer3d-stat{
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--btn-bg);
+    padding:5px 8px;
+    font-size:.70rem;
+    color:var(--muted);
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .viewer3d-dims{
+    position:absolute;
+    left:8px;
+    bottom:8px;
+    max-width:min(420px, calc(100% - 16px));
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:rgba(10,20,45,.72);
+    backdrop-filter: blur(8px);
+    padding:8px 10px;
+    font-size:.76rem;
+    color:var(--text);
+    white-space:pre-line;
+    box-shadow:0 8px 24px rgba(0,0,0,.22);
+  }
+  :root[data-theme="light"] .viewer3d-dims{
+    background:rgba(255,255,255,.85);
+  }
+  .data-warning{
+    margin:8px 0 12px;
+    padding:10px 12px;
+    border:1px solid #b45309;
+    color:#fbbf24;
+    background:rgba(180,83,9,.10);
+    border-radius:12px;
+    font-size:.9rem;
+  }
+
   @media (max-width:420px){
     :root{--grid-min:180px;--control-pad-y:8px;--control-pad-x:10px}
     header h1{font-size:1rem}
@@ -164,11 +267,36 @@
 
   <div class="container">
     <div class="advert-bar"><a href="#" target="_blank" rel="noopener">Advert here</a></div>
+    <div id="data_warning" class="data-warning hide">Section database file is missing. Load <code>sections_data_rev50_2.js</code> in the same folder as this HTML.</div>
 
     <div class="layout">
       <!-- LEFT -->
       <div class="card">
-        <img id="diagram" src="LSP.png" class="responsive" alt="Loadspreader schematic diagram">
+        
+        <div class="viewer3d-wrap">
+          <canvas id="input3d_canvas" class="viewer3d-canvas" aria-label="Interactive 3D view"></canvas>
+
+          <div class="viewer3d-nav" id="input3d_nav">
+            <div class="viewer3d-nav-title">View Navigation</div>
+            <div class="viewer3d-nav-grid">
+              <button type="button" class="btn vbtn" data-view="leftiso">Left ISO</button>
+              <button type="button" class="btn vbtn" data-view="rightiso">Right ISO</button>
+              <button type="button" class="btn vbtn" data-view="top">Top</button>
+              <button type="button" class="btn vbtn" data-view="front">Front</button>
+              <button type="button" class="btn vbtn" data-view="side">Side</button>
+              <button type="button" class="btn vbtn" data-view="reset">Reset</button>
+            </div>
+            <div class="viewer3d-row">
+              <button type="button" class="btn vbtn" id="input3d_zoom_out">−</button>
+              <div class="viewer3d-stat" id="input3d_info">Yaw --° • Pitch --° • Zoom --</div>
+              <button type="button" class="btn vbtn" id="input3d_zoom_in">+</button>
+            </div>
+          </div>
+
+          <div class="viewer3d-dims" id="input3d_dims">Waiting for inputs…</div>
+          <img id="diagram" src="LSP.png" alt="" class="hide" aria-hidden="true">
+        </div>
+
 
         <div class="section-title">Input Parameters</div>
         <div class="grid">
@@ -421,7 +549,14 @@
   </div>
 </div>
 
-<script src="sections_data_rev48.js"></script>
+<script>
+// Auto-generated from ArcelorMittal 'Sections and Merchant Bars' Excel (V2024-1).
+// Source: https://sections.arcelormittal.com/repo/Sections/Sections%20and%20Merchant%20Bars-ArcelorMittal_V2024-1.xlsx
+/* eslint-disable */
+const PROFILE_DB = {"IPE":[{"name":"IPE 80","h_mm":80.0,"b_mm":46.0,"mass_kg_m":6.0,"Wel_y_mm3":20030.0,"Wpl_y_mm3":23210.0,"Avz_mm2":357.7,"Iy_mm4":801300.0},{"name":"IPE A 80","h_mm":78.0,"b_mm":46.0,"mass_kg_m":5.0,"Wel_y_mm3":16500.0,"Wpl_y_mm3":18970.0,"Avz_mm2":307.0,"Iy_mm4":643700.0},{"name":"IPE AA 80","h_mm":78.0,"b_mm":46.0,"mass_kg_m":4.9,"Wel_y_mm3":16430.0,"Wpl_y_mm3":18850.0,"Avz_mm2":299.6,"Iy_mm4":640900.0},{"name":"IPE 100","h_mm":100.0,"b_mm":55.0,"mass_kg_m":8.1,"Wel_y_mm3":34200.0,"Wpl_y_mm3":39400.0,"Avz_mm2":508.4,"Iy_mm4":1710000.0},{"name":"IPE A 100","h_mm":98.0,"b_mm":55.0,"mass_kg_m":6.9,"Wel_y_mm3":28800.0,"Wpl_y_mm3":32980.0,"Avz_mm2":443.70000000000005,"Iy_mm4":1411000.0},{"name":"IPE AA 100","h_mm":97.6,"b_mm":55.0,"mass_kg_m":6.7,"Wel_y_mm3":27840.0,"Wpl_y_mm3":31900.0,"Avz_mm2":440.2,"Iy_mm4":1358000.0},{"name":"IPE 120","h_mm":120.0,"b_mm":64.0,"mass_kg_m":10.4,"Wel_y_mm3":52950.0,"Wpl_y_mm3":60720.0,"Avz_mm2":630.5,"Iy_mm4":3177000.0},{"name":"IPE A 120","h_mm":117.6,"b_mm":64.0,"mass_kg_m":8.7,"Wel_y_mm3":43760.0,"Wpl_y_mm3":49870.0,"Avz_mm2":540.9,"Iy_mm4":2573000.0},{"name":"IPE AA 120","h_mm":117.0,"b_mm":64.0,"mass_kg_m":8.4,"Wel_y_mm3":41730.0,"Wpl_y_mm3":47610.0,"Avz_mm2":535.6,"Iy_mm4":2441000.0},{"name":"IPE 140","h_mm":140.0,"b_mm":73.0,"mass_kg_m":12.9,"Wel_y_mm3":77310.0,"Wpl_y_mm3":88340.0,"Avz_mm2":764.2,"Iy_mm4":5412000.0},{"name":"IPE A 140","h_mm":137.4,"b_mm":73.0,"mass_kg_m":10.5,"Wel_y_mm3":63290.0,"Wpl_y_mm3":71590.0,"Avz_mm2":621.3,"Iy_mm4":4348000.0},{"name":"IPE AA 140","h_mm":136.6,"b_mm":73.0,"mass_kg_m":10.1,"Wel_y_mm3":59650.0,"Wpl_y_mm3":67590.0,"Avz_mm2":614.1,"Iy_mm4":4074000.0},{"name":"IPE 160","h_mm":160.0,"b_mm":82.0,"mass_kg_m":15.8,"Wel_y_mm3":108600.0,"Wpl_y_mm3":123800.0,"Avz_mm2":965.7,"Iy_mm4":8692000.0},{"name":"IPE A 160","h_mm":157.0,"b_mm":82.0,"mass_kg_m":12.7,"Wel_y_mm3":87800.0,"Wpl_y_mm3":99090.0,"Avz_mm2":780.1,"Iy_mm4":6892000.0},{"name":"IPE AA 160","h_mm":156.4,"b_mm":82.0,"mass_kg_m":12.3,"Wel_y_mm3":84280.0,"Wpl_y_mm3":95230.0,"Avz_mm2":773.5,"Iy_mm4":6590000.0},{"name":"IPE O 180","h_mm":182.0,"b_mm":92.0,"mass_kg_m":21.3,"Wel_y_mm3":165400.0,"Wpl_y_mm3":189100.0,"Avz_mm2":1269.0,"Iy_mm4":15050000.0},{"name":"IPE 180","h_mm":180.0,"b_mm":91.0,"mass_kg_m":18.8,"Wel_y_mm3":146300.0,"Wpl_y_mm3":166400.0,"Avz_mm2":1125.0,"Iy_mm4":13160000.0},{"name":"IPE A 180","h_mm":177.0,"b_mm":91.0,"mass_kg_m":15.4,"Wel_y_mm3":120000.0,"Wpl_y_mm3":135300.0,"Avz_mm2":919.6,"Iy_mm4":10620000.0},{"name":"IPE AA 180","h_mm":176.4,"b_mm":91.0,"mass_kg_m":14.9,"Wel_y_mm3":115600.0,"Wpl_y_mm3":130500.0,"Avz_mm2":912.9,"Iy_mm4":10200000.0},{"name":"IPE O 200","h_mm":202.0,"b_mm":102.0,"mass_kg_m":25.1,"Wel_y_mm3":218900.0,"Wpl_y_mm3":249400.0,"Avz_mm2":1545.0,"Iy_mm4":22110000.0},{"name":"IPE 200","h_mm":200.0,"b_mm":100.0,"mass_kg_m":22.4,"Wel_y_mm3":194300.0,"Wpl_y_mm3":220600.0,"Avz_mm2":1400.0,"Iy_mm4":19430000.0},{"name":"IPE A 200","h_mm":197.0,"b_mm":100.0,"mass_kg_m":18.4,"Wel_y_mm3":161500.0,"Wpl_y_mm3":181600.0,"Avz_mm2":1146.0,"Iy_mm4":15910000.0},{"name":"IPE AA 200","h_mm":196.4,"b_mm":100.0,"mass_kg_m":18.0,"Wel_y_mm3":156100.0,"Wpl_y_mm3":175700.0,"Avz_mm2":1138.0,"Iy_mm4":15330000.0},{"name":"IPE O 220","h_mm":222.0,"b_mm":112.0,"mass_kg_m":29.4,"Wel_y_mm3":282300.0,"Wpl_y_mm3":321100.0,"Avz_mm2":1766.0,"Iy_mm4":31340000.0},{"name":"IPE 220","h_mm":220.0,"b_mm":110.0,"mass_kg_m":26.2,"Wel_y_mm3":251900.0,"Wpl_y_mm3":285400.0,"Avz_mm2":1588.0,"Iy_mm4":27710000.0},{"name":"IPE A 220","h_mm":217.0,"b_mm":110.0,"mass_kg_m":22.2,"Wel_y_mm3":213500.0,"Wpl_y_mm3":240200.0,"Avz_mm2":1354.0,"Iy_mm4":23160000.0},{"name":"IPE AA 220","h_mm":216.4,"b_mm":110.0,"mass_kg_m":21.2,"Wel_y_mm3":205000.0,"Wpl_y_mm3":230000.0,"Avz_mm2":1283.0,"Iy_mm4":22180000.0},{"name":"IPE O 240","h_mm":242.0,"b_mm":122.0,"mass_kg_m":34.3,"Wel_y_mm3":361000.0,"Wpl_y_mm3":410200.0,"Avz_mm2":2135.0,"Iy_mm4":43690000.0},{"name":"IPE 240","h_mm":240.0,"b_mm":120.0,"mass_kg_m":30.7,"Wel_y_mm3":324300.0,"Wpl_y_mm3":366600.0,"Avz_mm2":1914.0,"Iy_mm4":38910000.0},{"name":"IPE A 240","h_mm":237.0,"b_mm":120.0,"mass_kg_m":26.2,"Wel_y_mm3":277600.0,"Wpl_y_mm3":311500.0,"Avz_mm2":1630.9999999999998,"Iy_mm4":32900000.0},{"name":"IPE AA 240","h_mm":236.4,"b_mm":120.0,"mass_kg_m":24.9,"Wel_y_mm3":266800.0,"Wpl_y_mm3":298100.0,"Avz_mm2":1529.0,"Iy_mm4":31530000.0},{"name":"IPE O 270","h_mm":274.0,"b_mm":136.0,"mass_kg_m":42.3,"Wel_y_mm3":507000.0,"Wpl_y_mm3":574600.0,"Avz_mm2":2522.0,"Iy_mm4":69470000.0},{"name":"IPE 270","h_mm":270.0,"b_mm":135.0,"mass_kg_m":36.1,"Wel_y_mm3":428800.0,"Wpl_y_mm3":483900.0,"Avz_mm2":2213.0,"Iy_mm4":57890000.0},{"name":"IPE A 270","h_mm":267.0,"b_mm":135.0,"mass_kg_m":30.7,"Wel_y_mm3":368300.0,"Wpl_y_mm3":412400.0,"Avz_mm2":1873.9999999999998,"Iy_mm4":49170000.0},{"name":"IPE O 300","h_mm":304.0,"b_mm":152.0,"mass_kg_m":49.3,"Wel_y_mm3":657500.0,"Wpl_y_mm3":743800.0,"Avz_mm2":2904.0,"Iy_mm4":99940000.0},{"name":"IPE 300","h_mm":300.0,"b_mm":150.0,"mass_kg_m":42.2,"Wel_y_mm3":557000.0,"Wpl_y_mm3":628300.0,"Avz_mm2":2568.0,"Iy_mm4":83560000.0},{"name":"IPE A 300","h_mm":297.0,"b_mm":150.0,"mass_kg_m":36.5,"Wel_y_mm3":483000.0,"Wpl_y_mm3":541700.0,"Avz_mm2":2224.0,"Iy_mm4":71730000.0},{"name":"IPE O 330","h_mm":334.0,"b_mm":162.0,"mass_kg_m":57.0,"Wel_y_mm3":832900.0,"Wpl_y_mm3":942700.0,"Avz_mm2":3488.0000000000005,"Iy_mm4":139100000.0},{"name":"IPE 330","h_mm":330.0,"b_mm":160.0,"mass_kg_m":49.1,"Wel_y_mm3":713100.0,"Wpl_y_mm3":804300.0,"Avz_mm2":3080.0,"Iy_mm4":117600000.0},{"name":"IPE A 330","h_mm":327.0,"b_mm":160.0,"mass_kg_m":43.0,"Wel_y_mm3":625700.0,"Wpl_y_mm3":701900.0,"Avz_mm2":2698.0,"Iy_mm4":102300000.0},{"name":"IPE O 360","h_mm":364.0,"b_mm":172.0,"mass_kg_m":66.0,"Wel_y_mm3":1046000.0,"Wpl_y_mm3":1186000.0,"Avz_mm2":4020.0000000000005,"Iy_mm4":190400000.0},{"name":"IPE 360","h_mm":360.0,"b_mm":170.0,"mass_kg_m":57.1,"Wel_y_mm3":903600.0,"Wpl_y_mm3":1019000.0,"Avz_mm2":3513.0000000000005,"Iy_mm4":162600000.0},{"name":"IPE A 360","h_mm":357.6,"b_mm":170.0,"mass_kg_m":50.2,"Wel_y_mm3":811800.0,"Wpl_y_mm3":906700.0,"Avz_mm2":2976.0,"Iy_mm4":145100000.0},{"name":"IPE AA 360","h_mm":356.4,"b_mm":170.0,"mass_kg_m":47.0,"Wel_y_mm3":767500.0,"Wpl_y_mm3":853500.0,"Avz_mm2":2743.0,"Iy_mm4":136700000.0},{"name":"IPE V 400","h_mm":408.0,"b_mm":182.0,"mass_kg_m":84.0,"Wel_y_mm3":1477000.0,"Wpl_y_mm3":1681000.0,"Avz_mm2":5252.0,"Iy_mm4":301300000.0},{"name":"IPE O 400","h_mm":404.0,"b_mm":182.0,"mass_kg_m":75.7,"Wel_y_mm3":1324000.0,"Wpl_y_mm3":1502000.0,"Avz_mm2":4798.0,"Iy_mm4":267400000.0},{"name":"IPE 400","h_mm":400.0,"b_mm":180.0,"mass_kg_m":66.3,"Wel_y_mm3":1156000.0,"Wpl_y_mm3":1307000.0,"Avz_mm2":4269.0,"Iy_mm4":231200000.0},{"name":"IPE A 400","h_mm":397.0,"b_mm":180.0,"mass_kg_m":57.4,"Wel_y_mm3":1022000.0,"Wpl_y_mm3":1143000.0,"Avz_mm2":3577.0000000000005,"Iy_mm4":202900000.0},{"name":"IPE AA 400","h_mm":395.6,"b_mm":180.0,"mass_kg_m":53.4,"Wel_y_mm3":960500.0,"Wpl_y_mm3":1069000.0,"Avz_mm2":3274.0,"Iy_mm4":190000000.0},{"name":"IPE V 450","h_mm":460.0,"b_mm":194.0,"mass_kg_m":107.0,"Wel_y_mm3":2008000.0,"Wpl_y_mm3":2301000.0,"Avz_mm2":6662.0,"Iy_mm4":462000000.0},{"name":"IPE O 450","h_mm":456.0,"b_mm":192.0,"mass_kg_m":92.4,"Wel_y_mm3":1794000.0,"Wpl_y_mm3":2046000.0,"Avz_mm2":5940.0,"Iy_mm4":409200000.0},{"name":"IPE 450","h_mm":450.0,"b_mm":190.0,"mass_kg_m":77.6,"Wel_y_mm3":1499000.0,"Wpl_y_mm3":1701000.0,"Avz_mm2":5084.0,"Iy_mm4":337400000.0},{"name":"IPE A 450","h_mm":447.0,"b_mm":190.0,"mass_kg_m":67.2,"Wel_y_mm3":1331000.0,"Wpl_y_mm3":1494000.0,"Avz_mm2":4226.0,"Iy_mm4":297500000.0},{"name":"IPE AA 450","h_mm":445.4,"b_mm":190.0,"mass_kg_m":62.1,"Wel_y_mm3":1246000.0,"Wpl_y_mm3":1391000.0,"Avz_mm2":3840.0,"Iy_mm4":277400000.0},{"name":"IPE V 500","h_mm":514.0,"b_mm":204.0,"mass_kg_m":129.0,"Wel_y_mm3":2751000.0,"Wpl_y_mm3":3168000.0,"Avz_mm2":8316.0,"Iy_mm4":707100000.0},{"name":"IPE O 500","h_mm":506.0,"b_mm":202.0,"mass_kg_m":107.0,"Wel_y_mm3":2283000.0,"Wpl_y_mm3":2612000.0,"Avz_mm2":7020.0,"Iy_mm4":577700000.0},{"name":"IPE 500","h_mm":500.0,"b_mm":200.0,"mass_kg_m":90.7,"Wel_y_mm3":1927000.0,"Wpl_y_mm3":2194000.0,"Avz_mm2":5987.0,"Iy_mm4":481900000.0},{"name":"IPE A 500","h_mm":497.0,"b_mm":200.0,"mass_kg_m":79.4,"Wel_y_mm3":1727000.0,"Wpl_y_mm3":1946000.0,"Avz_mm2":5040.0,"Iy_mm4":429300000.0},{"name":"IPE AA 500","h_mm":495.2,"b_mm":200.0,"mass_kg_m":73.2,"Wel_y_mm3":1613000.0,"Wpl_y_mm3":1807000.0,"Avz_mm2":4561.0,"Iy_mm4":399400000.0},{"name":"IPE O 550","h_mm":556.0,"b_mm":212.0,"mass_kg_m":123.0,"Wel_y_mm3":2847000.0,"Wpl_y_mm3":3263000.0,"Avz_mm2":8268.0,"Iy_mm4":791500000.0},{"name":"IPE 550","h_mm":550.0,"b_mm":210.0,"mass_kg_m":106.0,"Wel_y_mm3":2440000.0,"Wpl_y_mm3":2787000.0,"Avz_mm2":7234.0,"Iy_mm4":671100000.0},{"name":"IPE A 550","h_mm":547.0,"b_mm":210.0,"mass_kg_m":92.1,"Wel_y_mm3":2193000.0,"Wpl_y_mm3":2474000.0,"Avz_mm2":6029.0,"Iy_mm4":599700000.0},{"name":"IPE AA 550","h_mm":541.0,"b_mm":210.0,"mass_kg_m":79.5,"Wel_y_mm3":1831000.0,"Wpl_y_mm3":2078000.0,"Avz_mm2":5586.0,"Iy_mm4":495500000.0},{"name":"IPE V 600","h_mm":618.0,"b_mm":228.0,"mass_kg_m":184.0,"Wel_y_mm3":4581000.0,"Wpl_y_mm3":5324000.0,"Avz_mm2":12450.0,"Iy_mm4":1415800000.0},{"name":"IPE O 600","h_mm":610.0,"b_mm":224.0,"mass_kg_m":154.0,"Wel_y_mm3":3878000.0,"Wpl_y_mm3":4471000.0,"Avz_mm2":10430.0,"Iy_mm4":1183000000.0},{"name":"IPE 600","h_mm":600.0,"b_mm":220.0,"mass_kg_m":122.0,"Wel_y_mm3":3069000.0,"Wpl_y_mm3":3512000.0,"Avz_mm2":8378.0,"Iy_mm4":920800000.0},{"name":"IPE A 600","h_mm":597.0,"b_mm":220.0,"mass_kg_m":108.0,"Wel_y_mm3":2777000.0,"Wpl_y_mm3":3141000.0,"Avz_mm2":7013.0,"Iy_mm4":829100000.0},{"name":"IPE 750 x 220","h_mm":779.0,"b_mm":266.0,"mass_kg_m":220.0,"Wel_y_mm3":7173000.0,"Wpl_y_mm3":8231000.0,"Avz_mm2":13900.0,"Iy_mm4":2793900000.0},{"name":"IPE 750 x 196","h_mm":770.0,"b_mm":268.0,"mass_kg_m":196.0,"Wel_y_mm3":6271000.0,"Wpl_y_mm3":7207000.0,"Avz_mm2":12969.999999999998,"Iy_mm4":2414700000.0},{"name":"IPE 750 x 173","h_mm":762.0,"b_mm":267.0,"mass_kg_m":173.0,"Wel_y_mm3":5433000.0,"Wpl_y_mm3":6251000.0,"Avz_mm2":11860.0,"Iy_mm4":2070100000.0},{"name":"IPE 750 x 147","h_mm":753.0,"b_mm":265.0,"mass_kg_m":147.0,"Wel_y_mm3":4442000.0,"Wpl_y_mm3":5143000.0,"Avz_mm2":10730.0,"Iy_mm4":1672500000.0},{"name":"IPE 750 x 134","h_mm":750.0,"b_mm":264.0,"mass_kg_m":134.0,"Wel_y_mm3":4050000.0,"Wpl_y_mm3":4678000.0,"Avz_mm2":9777.0,"Iy_mm4":1518900000.0}],"HEM":[{"name":"HE 100 M","h_mm":120.0,"b_mm":106.0,"mass_kg_m":41.8,"Wel_y_mm3":190400.0,"Wpl_y_mm3":235800.0,"Avz_mm2":1803.0,"Iy_mm4":11420000.0},{"name":"HE 120 M","h_mm":140.0,"b_mm":126.0,"mass_kg_m":52.1,"Wel_y_mm3":288200.0,"Wpl_y_mm3":350600.0,"Avz_mm2":2115.0,"Iy_mm4":20170000.0},{"name":"HE 140 M","h_mm":160.0,"b_mm":146.0,"mass_kg_m":63.2,"Wel_y_mm3":411400.0,"Wpl_y_mm3":493800.0,"Avz_mm2":2445.0,"Iy_mm4":32910000.0},{"name":"HE 160 M","h_mm":180.0,"b_mm":166.0,"mass_kg_m":76.2,"Wel_y_mm3":566400.0,"Wpl_y_mm3":674500.0,"Avz_mm2":3081.0,"Iy_mm4":50980000.0},{"name":"HE 180 M","h_mm":200.0,"b_mm":186.0,"mass_kg_m":88.9,"Wel_y_mm3":748300.0,"Wpl_y_mm3":883400.0,"Avz_mm2":3465.0,"Iy_mm4":74830000.0},{"name":"HE 200 M","h_mm":220.0,"b_mm":206.0,"mass_kg_m":103.0,"Wel_y_mm3":967400.0,"Wpl_y_mm3":1135000.0,"Avz_mm2":4103.0,"Iy_mm4":106400000.0},{"name":"HE 220 M","h_mm":240.0,"b_mm":226.0,"mass_kg_m":117.0,"Wel_y_mm3":1217000.0,"Wpl_y_mm3":1419000.0,"Avz_mm2":4531.0,"Iy_mm4":146000000.0},{"name":"HE 240 M","h_mm":270.0,"b_mm":248.0,"mass_kg_m":157.0,"Wel_y_mm3":1799000.0,"Wpl_y_mm3":2116000.0,"Avz_mm2":6006.0,"Iy_mm4":242800000.0},{"name":"HE 260 M","h_mm":290.0,"b_mm":268.0,"mass_kg_m":172.0,"Wel_y_mm3":2159000.0,"Wpl_y_mm3":2523000.0,"Avz_mm2":6689.0,"Iy_mm4":313000000.0},{"name":"HE 280 M","h_mm":310.0,"b_mm":288.0,"mass_kg_m":189.0,"Wel_y_mm3":2551000.0,"Wpl_y_mm3":2965000.0,"Avz_mm2":7202.0,"Iy_mm4":395400000.0},{"name":"HE 300 M","h_mm":340.0,"b_mm":310.0,"mass_kg_m":238.0,"Wel_y_mm3":3482000.0,"Wpl_y_mm3":4077000.0,"Avz_mm2":9052.0,"Iy_mm4":592000000.0},{"name":"HE 320 M","h_mm":359.0,"b_mm":309.0,"mass_kg_m":245.0,"Wel_y_mm3":3795000.0,"Wpl_y_mm3":4435000.0,"Avz_mm2":9484.0,"Iy_mm4":681300000.0},{"name":"HE 340 M","h_mm":377.0,"b_mm":309.0,"mass_kg_m":248.0,"Wel_y_mm3":4051000.0,"Wpl_y_mm3":4717000.0,"Avz_mm2":9862.0,"Iy_mm4":763700000.0},{"name":"HE 360 M","h_mm":395.0,"b_mm":308.0,"mass_kg_m":250.0,"Wel_y_mm3":4297000.0,"Wpl_y_mm3":4989000.0,"Avz_mm2":10240.0,"Iy_mm4":848600000.0},{"name":"HE 400 M","h_mm":432.0,"b_mm":307.0,"mass_kg_m":256.0,"Wel_y_mm3":4820000.0,"Wpl_y_mm3":5570000.0,"Avz_mm2":11010.0,"Iy_mm4":1041100000.0},{"name":"HE 450 M","h_mm":478.0,"b_mm":307.0,"mass_kg_m":263.0,"Wel_y_mm3":5501000.0,"Wpl_y_mm3":6331000.0,"Avz_mm2":11980.0,"Iy_mm4":1314800000.0},{"name":"HE 500 M","h_mm":524.0,"b_mm":306.0,"mass_kg_m":270.0,"Wel_y_mm3":6180000.0,"Wpl_y_mm3":7094000.0,"Avz_mm2":12940.0,"Iy_mm4":1619200000.0},{"name":"HE 550 M","h_mm":572.0,"b_mm":306.0,"mass_kg_m":278.0,"Wel_y_mm3":6922000.0,"Wpl_y_mm3":7932000.0,"Avz_mm2":13950.0,"Iy_mm4":1979800000.0},{"name":"HE 600 M","h_mm":620.0,"b_mm":305.0,"mass_kg_m":285.0,"Wel_y_mm3":7659000.0,"Wpl_y_mm3":8772000.0,"Avz_mm2":14960.0,"Iy_mm4":2374400000.0},{"name":"HE 650 M","h_mm":668.0,"b_mm":305.0,"mass_kg_m":293.0,"Wel_y_mm3":8433000.0,"Wpl_y_mm3":9656000.0,"Avz_mm2":15969.999999999998,"Iy_mm4":2816600000.0},{"name":"HE 700 M","h_mm":716.0,"b_mm":304.0,"mass_kg_m":301.0,"Wel_y_mm3":9197000.0,"Wpl_y_mm3":10530000.0,"Avz_mm2":16980.0,"Iy_mm4":3292700000.0},{"name":"HE 800 M","h_mm":814.0,"b_mm":303.0,"mass_kg_m":317.0,"Wel_y_mm3":10870000.0,"Wpl_y_mm3":12480000.0,"Avz_mm2":19420.0,"Iy_mm4":4425900000.0},{"name":"HE 900 M","h_mm":910.0,"b_mm":302.0,"mass_kg_m":333.0,"Wel_y_mm3":12530000.0,"Wpl_y_mm3":14440000.0,"Avz_mm2":21440.0,"Iy_mm4":5704300000.0},{"name":"HE 1000 M","h_mm":1008.0,"b_mm":302.0,"mass_kg_m":349.0,"Wel_y_mm3":14330000.0,"Wpl_y_mm3":16560000.0,"Avz_mm2":23500.0,"Iy_mm4":7222900000.0}],"HEB":[{"name":"HE 100 B","h_mm":100.0,"b_mm":100.0,"mass_kg_m":20.4,"Wel_y_mm3":89900.0,"Wpl_y_mm3":104200.0,"Avz_mm2":903.5999999999999,"Iy_mm4":4495000.0},{"name":"HE 120 B","h_mm":120.0,"b_mm":120.0,"mass_kg_m":26.7,"Wel_y_mm3":144000.0,"Wpl_y_mm3":165200.0,"Avz_mm2":1096.0,"Iy_mm4":8643000.0},{"name":"HE 140 B","h_mm":140.0,"b_mm":140.0,"mass_kg_m":33.7,"Wel_y_mm3":215600.0,"Wpl_y_mm3":245400.0,"Avz_mm2":1307.0,"Iy_mm4":15090000.0},{"name":"HE 160 B","h_mm":160.0,"b_mm":160.0,"mass_kg_m":42.6,"Wel_y_mm3":311400.0,"Wpl_y_mm3":353900.0,"Avz_mm2":1759.0,"Iy_mm4":24910000.0},{"name":"HE 180 B","h_mm":180.0,"b_mm":180.0,"mass_kg_m":51.2,"Wel_y_mm3":425600.0,"Wpl_y_mm3":481400.0,"Avz_mm2":2023.9999999999998,"Iy_mm4":38310000.0},{"name":"HE 200 B","h_mm":200.0,"b_mm":200.0,"mass_kg_m":61.3,"Wel_y_mm3":569600.0,"Wpl_y_mm3":642500.0,"Avz_mm2":2483.0,"Iy_mm4":56960000.0},{"name":"HE 220 B","h_mm":220.0,"b_mm":220.0,"mass_kg_m":71.5,"Wel_y_mm3":735500.0,"Wpl_y_mm3":827000.0,"Avz_mm2":2792.0,"Iy_mm4":80900000.0},{"name":"HE 240 B","h_mm":240.0,"b_mm":240.0,"mass_kg_m":83.2,"Wel_y_mm3":938200.0,"Wpl_y_mm3":1053000.0,"Avz_mm2":3322.0,"Iy_mm4":112500000.0},{"name":"HE 260 B","h_mm":260.0,"b_mm":260.0,"mass_kg_m":93.0,"Wel_y_mm3":1147000.0,"Wpl_y_mm3":1282000.0,"Avz_mm2":3759.0000000000005,"Iy_mm4":149100000.0},{"name":"HE 280 B","h_mm":280.0,"b_mm":280.0,"mass_kg_m":103.0,"Wel_y_mm3":1376000.0,"Wpl_y_mm3":1534000.0,"Avz_mm2":4109.0,"Iy_mm4":192700000.0},{"name":"HE 300 B","h_mm":300.0,"b_mm":300.0,"mass_kg_m":117.0,"Wel_y_mm3":1677000.0,"Wpl_y_mm3":1868000.0,"Avz_mm2":4742.0,"Iy_mm4":251600000.0},{"name":"HE 320 B","h_mm":320.0,"b_mm":300.0,"mass_kg_m":127.0,"Wel_y_mm3":1926000.0,"Wpl_y_mm3":2149000.0,"Avz_mm2":5177.0,"Iy_mm4":308200000.0},{"name":"HE 340 B","h_mm":340.0,"b_mm":300.0,"mass_kg_m":134.0,"Wel_y_mm3":2156000.0,"Wpl_y_mm3":2408000.0,"Avz_mm2":5608.0,"Iy_mm4":366500000.0},{"name":"HE 360 B","h_mm":360.0,"b_mm":300.0,"mass_kg_m":142.0,"Wel_y_mm3":2399000.0,"Wpl_y_mm3":2682000.0,"Avz_mm2":6059.0,"Iy_mm4":431900000.0},{"name":"HE 400 B","h_mm":400.0,"b_mm":300.0,"mass_kg_m":155.0,"Wel_y_mm3":2884000.0,"Wpl_y_mm3":3231000.0,"Avz_mm2":6997.0,"Iy_mm4":576800000.0},{"name":"HE 450 B","h_mm":450.0,"b_mm":300.0,"mass_kg_m":171.0,"Wel_y_mm3":3550000.0,"Wpl_y_mm3":3982000.0,"Avz_mm2":7965.000000000001,"Iy_mm4":798800000.0},{"name":"HE 500 B","h_mm":500.0,"b_mm":300.0,"mass_kg_m":187.0,"Wel_y_mm3":4287000.0,"Wpl_y_mm3":4814000.0,"Avz_mm2":8981.0,"Iy_mm4":1071700000.0},{"name":"HE 550 B","h_mm":550.0,"b_mm":300.0,"mass_kg_m":199.0,"Wel_y_mm3":4970000.0,"Wpl_y_mm3":5590000.0,"Avz_mm2":10000.0,"Iy_mm4":1366900000.0},{"name":"HE 600 B","h_mm":600.0,"b_mm":300.0,"mass_kg_m":212.0,"Wel_y_mm3":5701000.0,"Wpl_y_mm3":6425000.0,"Avz_mm2":11080.0,"Iy_mm4":1710400000.0},{"name":"HE 650 B","h_mm":650.0,"b_mm":300.0,"mass_kg_m":225.0,"Wel_y_mm3":6480000.0,"Wpl_y_mm3":7319000.0,"Avz_mm2":12200.0,"Iy_mm4":2106100000.0},{"name":"HE 700 B","h_mm":700.0,"b_mm":300.0,"mass_kg_m":241.0,"Wel_y_mm3":7339000.0,"Wpl_y_mm3":8327000.0,"Avz_mm2":13700.0,"Iy_mm4":2568800000.0},{"name":"HE 800 B","h_mm":800.0,"b_mm":300.0,"mass_kg_m":262.0,"Wel_y_mm3":8977000.0,"Wpl_y_mm3":10220000.0,"Avz_mm2":16169.999999999998,"Iy_mm4":3590800000.0},{"name":"HE 900 B","h_mm":900.0,"b_mm":300.0,"mass_kg_m":291.0,"Wel_y_mm3":10970000.0,"Wpl_y_mm3":12580000.0,"Avz_mm2":18870.0,"Iy_mm4":4940600000.0},{"name":"HE 1000 B","h_mm":1000.0,"b_mm":300.0,"mass_kg_m":314.0,"Wel_y_mm3":12890000.0,"Wpl_y_mm3":14850000.0,"Avz_mm2":21240.0,"Iy_mm4":6447400000.0}],"HEA":[{"name":"HE 100 A","h_mm":96.0,"b_mm":100.0,"mass_kg_m":16.7,"Wel_y_mm3":72750.0,"Wpl_y_mm3":83010.0,"Avz_mm2":755.6,"Iy_mm4":3492000.0},{"name":"HE 120 A","h_mm":114.0,"b_mm":120.0,"mass_kg_m":19.9,"Wel_y_mm3":106300.0,"Wpl_y_mm3":119400.0,"Avz_mm2":845.5999999999999,"Iy_mm4":6061000.0},{"name":"HE 140 A","h_mm":133.0,"b_mm":140.0,"mass_kg_m":24.7,"Wel_y_mm3":155300.0,"Wpl_y_mm3":173400.0,"Avz_mm2":1011.9999999999999,"Iy_mm4":10330000.0},{"name":"HE 160 A","h_mm":152.0,"b_mm":160.0,"mass_kg_m":30.4,"Wel_y_mm3":220100.0,"Wpl_y_mm3":245100.0,"Avz_mm2":1321.0,"Iy_mm4":16720000.0},{"name":"HE 180 A","h_mm":171.0,"b_mm":180.0,"mass_kg_m":35.5,"Wel_y_mm3":293600.0,"Wpl_y_mm3":324800.0,"Avz_mm2":1447.0,"Iy_mm4":25100000.0},{"name":"HE 200 A","h_mm":190.0,"b_mm":200.0,"mass_kg_m":42.3,"Wel_y_mm3":388600.0,"Wpl_y_mm3":429400.0,"Avz_mm2":1807.9999999999998,"Iy_mm4":36920000.0},{"name":"HE 220 A","h_mm":210.0,"b_mm":220.0,"mass_kg_m":50.5,"Wel_y_mm3":515200.00000000006,"Wpl_y_mm3":568400.0,"Avz_mm2":2067.0,"Iy_mm4":54090000.0},{"name":"HE 240 A","h_mm":230.0,"b_mm":240.0,"mass_kg_m":60.3,"Wel_y_mm3":675000.0,"Wpl_y_mm3":744600.0,"Avz_mm2":2517.0,"Iy_mm4":77630000.0},{"name":"HE 260 A","h_mm":250.0,"b_mm":260.0,"mass_kg_m":68.2,"Wel_y_mm3":836300.0,"Wpl_y_mm3":919700.0,"Avz_mm2":2875.0,"Iy_mm4":104500000.0},{"name":"HE 280 A","h_mm":270.0,"b_mm":280.0,"mass_kg_m":76.4,"Wel_y_mm3":1012000.0,"Wpl_y_mm3":1112000.0,"Avz_mm2":3174.0,"Iy_mm4":136700000.0},{"name":"HE 300 A","h_mm":290.0,"b_mm":300.0,"mass_kg_m":88.3,"Wel_y_mm3":1259000.0,"Wpl_y_mm3":1383000.0,"Avz_mm2":3727.0000000000005,"Iy_mm4":182600000.0},{"name":"HE 320 A","h_mm":310.0,"b_mm":300.0,"mass_kg_m":97.6,"Wel_y_mm3":1479000.0,"Wpl_y_mm3":1628000.0,"Avz_mm2":4113.0,"Iy_mm4":229200000.0},{"name":"HE 340 A","h_mm":330.0,"b_mm":300.0,"mass_kg_m":105.0,"Wel_y_mm3":1678000.0,"Wpl_y_mm3":1850000.0,"Avz_mm2":4495.0,"Iy_mm4":276900000.0},{"name":"HE 360 A","h_mm":350.0,"b_mm":300.0,"mass_kg_m":112.0,"Wel_y_mm3":1890000.0,"Wpl_y_mm3":2088000.0,"Avz_mm2":4895.0,"Iy_mm4":330800000.0},{"name":"HE 400 A","h_mm":390.0,"b_mm":300.0,"mass_kg_m":125.0,"Wel_y_mm3":2311000.0,"Wpl_y_mm3":2561000.0,"Avz_mm2":5732.0,"Iy_mm4":450600000.0},{"name":"HE 450 A","h_mm":440.0,"b_mm":300.0,"mass_kg_m":140.0,"Wel_y_mm3":2896000.0,"Wpl_y_mm3":3215000.0,"Avz_mm2":6578.0,"Iy_mm4":637200000.0},{"name":"HE 500 A","h_mm":490.0,"b_mm":300.0,"mass_kg_m":155.0,"Wel_y_mm3":3549000.0,"Wpl_y_mm3":3948000.0,"Avz_mm2":7470.999999999999,"Iy_mm4":869700000.0},{"name":"HE 550 A","h_mm":540.0,"b_mm":300.0,"mass_kg_m":166.0,"Wel_y_mm3":4145000.0,"Wpl_y_mm3":4621000.0,"Avz_mm2":8371.0,"Iy_mm4":1119300000.0},{"name":"HE 600 A","h_mm":590.0,"b_mm":300.0,"mass_kg_m":178.0,"Wel_y_mm3":4786000.0,"Wpl_y_mm3":5350000.0,"Avz_mm2":9320.0,"Iy_mm4":1412000000.0},{"name":"HE 650 A","h_mm":640.0,"b_mm":300.0,"mass_kg_m":190.0,"Wel_y_mm3":5474000.0,"Wpl_y_mm3":6136000.0,"Avz_mm2":10310.0,"Iy_mm4":1751700000.0},{"name":"HE 700 A","h_mm":690.0,"b_mm":300.0,"mass_kg_m":204.0,"Wel_y_mm3":6240000.0,"Wpl_y_mm3":7031000.0,"Avz_mm2":11690.0,"Iy_mm4":2153000000.0},{"name":"HE 800 A","h_mm":790.0,"b_mm":300.0,"mass_kg_m":224.0,"Wel_y_mm3":7682000.0,"Wpl_y_mm3":8699000.0,"Avz_mm2":13880.000000000002,"Iy_mm4":3034400000.0},{"name":"HE 900 A","h_mm":890.0,"b_mm":300.0,"mass_kg_m":252.0,"Wel_y_mm3":9484000.0,"Wpl_y_mm3":10810000.0,"Avz_mm2":16330.000000000002,"Iy_mm4":4220700000.0},{"name":"HE 1000 A","h_mm":990.0,"b_mm":300.0,"mass_kg_m":272.0,"Wel_y_mm3":11180000.0,"Wpl_y_mm3":12820000.0,"Avz_mm2":18450.0,"Iy_mm4":5538400000.0}],"HEAA":[{"name":"HE 100 AA","h_mm":91.0,"b_mm":100.0,"mass_kg_m":12.2,"Wel_y_mm3":51970.0,"Wpl_y_mm3":58350.0,"Avz_mm2":614.7,"Iy_mm4":2365000.0},{"name":"HE 120 AA","h_mm":109.0,"b_mm":120.0,"mass_kg_m":14.6,"Wel_y_mm3":75840.0,"Wpl_y_mm3":84110.0,"Avz_mm2":690.3,"Iy_mm4":4133000.0},{"name":"HE 140 AA","h_mm":128.0,"b_mm":140.0,"mass_kg_m":18.1,"Wel_y_mm3":112400.0,"Wpl_y_mm3":123700.0,"Avz_mm2":792.1999999999999,"Iy_mm4":7194000.0},{"name":"HE 160 AA","h_mm":148.0,"b_mm":160.0,"mass_kg_m":23.8,"Wel_y_mm3":173300.0,"Wpl_y_mm3":190400.0,"Avz_mm2":1037.0,"Iy_mm4":12820000.0},{"name":"HE 180 AA","h_mm":167.0,"b_mm":180.0,"mass_kg_m":28.7,"Wel_y_mm3":235500.0,"Wpl_y_mm3":258200.0,"Avz_mm2":1215.0,"Iy_mm4":19660000.0},{"name":"HE 200 AA","h_mm":186.0,"b_mm":200.0,"mass_kg_m":34.6,"Wel_y_mm3":316500.0,"Wpl_y_mm3":347000.0,"Avz_mm2":1545.0,"Iy_mm4":29440000.0},{"name":"HE 220 AA","h_mm":205.0,"b_mm":220.0,"mass_kg_m":40.4,"Wel_y_mm3":406800.0,"Wpl_y_mm3":445400.0,"Avz_mm2":1763.0,"Iy_mm4":41700000.0},{"name":"HE 240 AA","h_mm":224.0,"b_mm":240.0,"mass_kg_m":47.4,"Wel_y_mm3":520900.0,"Wpl_y_mm3":570500.0,"Avz_mm2":2154.0,"Iy_mm4":58350000.0},{"name":"HE 260 AA","h_mm":244.0,"b_mm":260.0,"mass_kg_m":54.1,"Wel_y_mm3":654100.0,"Wpl_y_mm3":714400.0,"Avz_mm2":2474.0,"Iy_mm4":79800000.0},{"name":"HE 280 AA","h_mm":264.0,"b_mm":280.0,"mass_kg_m":61.2,"Wel_y_mm3":799800.0,"Wpl_y_mm3":873000.0,"Avz_mm2":2752.0,"Iy_mm4":105500000.0},{"name":"HE 300 AA","h_mm":283.0,"b_mm":300.0,"mass_kg_m":69.8,"Wel_y_mm3":975500.0,"Wpl_y_mm3":1065000.0,"Avz_mm2":3236.0,"Iy_mm4":138000000.0},{"name":"HE 320 AA","h_mm":301.0,"b_mm":300.0,"mass_kg_m":74.2,"Wel_y_mm3":1092000.0,"Wpl_y_mm3":1196000.0,"Avz_mm2":3539.0,"Iy_mm4":164400000.0},{"name":"HE 340 AA","h_mm":320.0,"b_mm":300.0,"mass_kg_m":78.9,"Wel_y_mm3":1222000.0,"Wpl_y_mm3":1340000.0,"Avz_mm2":3869.0,"Iy_mm4":195500000.0},{"name":"HE 360 AA","h_mm":339.0,"b_mm":300.0,"mass_kg_m":83.7,"Wel_y_mm3":1359000.0,"Wpl_y_mm3":1495000.0,"Avz_mm2":4216.0,"Iy_mm4":230300000.0},{"name":"HE 400 AA","h_mm":378.0,"b_mm":300.0,"mass_kg_m":92.4,"Wel_y_mm3":1653000.0,"Wpl_y_mm3":1824000.0,"Avz_mm2":4795.0,"Iy_mm4":312500000.0},{"name":"HE 450 AA","h_mm":425.0,"b_mm":300.0,"mass_kg_m":99.7,"Wel_y_mm3":1971000.0,"Wpl_y_mm3":2183000.0,"Avz_mm2":5469.0,"Iy_mm4":418800000.0},{"name":"HE 500 AA","h_mm":472.0,"b_mm":300.0,"mass_kg_m":107.0,"Wel_y_mm3":2315000.0,"Wpl_y_mm3":2576000.0,"Avz_mm2":6190.0,"Iy_mm4":546400000.0},{"name":"HE 550 AA","h_mm":522.0,"b_mm":300.0,"mass_kg_m":120.0,"Wel_y_mm3":2792000.0,"Wpl_y_mm3":3127000.0,"Avz_mm2":7266.0,"Iy_mm4":728700000.0},{"name":"HE 600 AA","h_mm":571.0,"b_mm":300.0,"mass_kg_m":129.0,"Wel_y_mm3":3217000.0,"Wpl_y_mm3":3623000.0,"Avz_mm2":8128.0,"Iy_mm4":918700000.0},{"name":"HE 650 AA","h_mm":620.0,"b_mm":300.0,"mass_kg_m":138.0,"Wel_y_mm3":3675000.0,"Wpl_y_mm3":4159000.0,"Avz_mm2":9039.0,"Iy_mm4":1139400000.0},{"name":"HE 700 AA","h_mm":670.0,"b_mm":300.0,"mass_kg_m":150.0,"Wel_y_mm3":4260000.0,"Wpl_y_mm3":4840000.0,"Avz_mm2":10030.0,"Iy_mm4":1427200000.0},{"name":"HE 800 AA","h_mm":770.0,"b_mm":300.0,"mass_kg_m":172.0,"Wel_y_mm3":5425000.0,"Wpl_y_mm3":6224000.0,"Avz_mm2":12380.0,"Iy_mm4":2088800000.0},{"name":"HE 900 AA","h_mm":870.0,"b_mm":300.0,"mass_kg_m":198.0,"Wel_y_mm3":6922000.0,"Wpl_y_mm3":7998000.0,"Avz_mm2":14719.999999999998,"Iy_mm4":3011400000.0},{"name":"HE 1000 AA","h_mm":970.0,"b_mm":300.0,"mass_kg_m":222.0,"Wel_y_mm3":8380000.0,"Wpl_y_mm3":9776000.0,"Avz_mm2":17210.0,"Iy_mm4":4064500000.0}],"UPE":[{"name":"UPE 80","h_mm":80.0,"b_mm":50.0,"mass_kg_m":7.9,"Wel_y_mm3":26800.0,"Wpl_y_mm3":31200.0,"Avz_mm2":405.0,"Iy_mm4":1070000.0},{"name":"UPE 100","h_mm":100.0,"b_mm":55.0,"mass_kg_m":9.8,"Wel_y_mm3":41400.0,"Wpl_y_mm3":48000.0,"Avz_mm2":534.0,"Iy_mm4":2070000.0},{"name":"UPE 120","h_mm":120.0,"b_mm":60.0,"mass_kg_m":12.1,"Wel_y_mm3":60600.0,"Wpl_y_mm3":70300.0,"Avz_mm2":718.0,"Iy_mm4":3640000.0},{"name":"UPE 140","h_mm":140.0,"b_mm":65.0,"mass_kg_m":14.5,"Wel_y_mm3":85600.0,"Wpl_y_mm3":98800.0,"Avz_mm2":825.0,"Iy_mm4":6000000.0},{"name":"UPE 160","h_mm":160.0,"b_mm":70.0,"mass_kg_m":17.0,"Wel_y_mm3":114000.0,"Wpl_y_mm3":132000.0,"Avz_mm2":1000.0,"Iy_mm4":9110000.0},{"name":"UPE 180","h_mm":180.0,"b_mm":75.0,"mass_kg_m":19.7,"Wel_y_mm3":150000.0,"Wpl_y_mm3":173000.0,"Avz_mm2":1120.0,"Iy_mm4":13500000.0},{"name":"UPE 200","h_mm":200.0,"b_mm":80.0,"mass_kg_m":22.8,"Wel_y_mm3":191000.0,"Wpl_y_mm3":220000.0,"Avz_mm2":1350.0,"Iy_mm4":19100000.0},{"name":"UPE 220","h_mm":220.0,"b_mm":85.0,"mass_kg_m":26.6,"Wel_y_mm3":244000.0,"Wpl_y_mm3":281000.0,"Avz_mm2":1580.0,"Iy_mm4":26800000.0},{"name":"UPE 240","h_mm":240.0,"b_mm":90.0,"mass_kg_m":30.2,"Wel_y_mm3":300000.0,"Wpl_y_mm3":347000.0,"Avz_mm2":1880.0,"Iy_mm4":36000000.0},{"name":"UPE 270","h_mm":270.0,"b_mm":95.0,"mass_kg_m":35.2,"Wel_y_mm3":389000.0,"Wpl_y_mm3":451000.0,"Avz_mm2":2220.0,"Iy_mm4":52500000.0},{"name":"UPE 300","h_mm":300.0,"b_mm":100.0,"mass_kg_m":44.4,"Wel_y_mm3":522000.0,"Wpl_y_mm3":613000.0,"Avz_mm2":3030.0,"Iy_mm4":78200000.0},{"name":"UPE 330","h_mm":330.0,"b_mm":105.0,"mass_kg_m":53.2,"Wel_y_mm3":667000.0,"Wpl_y_mm3":792000.0,"Avz_mm2":3879.9999999999995,"Iy_mm4":110100000.0},{"name":"UPE 360","h_mm":360.0,"b_mm":110.0,"mass_kg_m":61.2,"Wel_y_mm3":824000.0,"Wpl_y_mm3":982000.0,"Avz_mm2":4560.0,"Iy_mm4":148300000.0},{"name":"UPE 400","h_mm":400.0,"b_mm":115.0,"mass_kg_m":72.2,"Wel_y_mm3":1050000.0,"Wpl_y_mm3":1260000.0,"Avz_mm2":5620.0,"Iy_mm4":209800000.0}],"UPN":[{"name":"UPN 50","h_mm":50.0,"b_mm":38.0,"mass_kg_m":5.6,"Wel_y_mm3":10600.0,"Wpl_y_mm3":13100.0,"Avz_mm2":277.0,"Iy_mm4":264000.0},{"name":"UPN 65","h_mm":65.0,"b_mm":42.0,"mass_kg_m":7.1,"Wel_y_mm3":17700.0,"Wpl_y_mm3":21700.0,"Avz_mm2":368.0,"Iy_mm4":575000.0},{"name":"UPN 80","h_mm":80.0,"b_mm":45.0,"mass_kg_m":8.6,"Wel_y_mm3":26500.0,"Wpl_y_mm3":32299.999999999996,"Avz_mm2":490.00000000000006,"Iy_mm4":1060000.0},{"name":"UPN 100","h_mm":100.0,"b_mm":50.0,"mass_kg_m":10.6,"Wel_y_mm3":41200.0,"Wpl_y_mm3":49000.0,"Avz_mm2":646.0,"Iy_mm4":2060000.0},{"name":"UPN 120","h_mm":120.0,"b_mm":55.0,"mass_kg_m":13.4,"Wel_y_mm3":60700.0,"Wpl_y_mm3":72600.0,"Avz_mm2":880.0000000000001,"Iy_mm4":3640000.0},{"name":"UPN 140","h_mm":140.0,"b_mm":60.0,"mass_kg_m":16.0,"Wel_y_mm3":86400.0,"Wpl_y_mm3":103000.0,"Avz_mm2":1040.0,"Iy_mm4":6050000.0},{"name":"UPN 160","h_mm":160.0,"b_mm":65.0,"mass_kg_m":18.8,"Wel_y_mm3":116000.0,"Wpl_y_mm3":138000.0,"Avz_mm2":1260.0,"Iy_mm4":9250000.0},{"name":"UPN 180","h_mm":180.0,"b_mm":70.0,"mass_kg_m":22.0,"Wel_y_mm3":150000.0,"Wpl_y_mm3":179000.0,"Avz_mm2":1510.0,"Iy_mm4":13500000.0},{"name":"UPN 200","h_mm":200.0,"b_mm":75.0,"mass_kg_m":25.3,"Wel_y_mm3":191000.0,"Wpl_y_mm3":228000.0,"Avz_mm2":1770.0,"Iy_mm4":19100000.0},{"name":"UPN 220","h_mm":220.0,"b_mm":80.0,"mass_kg_m":29.4,"Wel_y_mm3":245000.0,"Wpl_y_mm3":292000.0,"Avz_mm2":2060.0,"Iy_mm4":26900000.0},{"name":"UPN 240","h_mm":240.0,"b_mm":85.0,"mass_kg_m":33.2,"Wel_y_mm3":300000.0,"Wpl_y_mm3":358000.0,"Avz_mm2":2370.0,"Iy_mm4":36000000.0},{"name":"UPN 260","h_mm":260.0,"b_mm":90.0,"mass_kg_m":37.9,"Wel_y_mm3":371000.0,"Wpl_y_mm3":442000.0,"Avz_mm2":2710.0,"Iy_mm4":48200000.0},{"name":"UPN 280","h_mm":280.0,"b_mm":95.0,"mass_kg_m":41.8,"Wel_y_mm3":448000.0,"Wpl_y_mm3":532000.0,"Avz_mm2":2930.0,"Iy_mm4":62800000.0},{"name":"UPN 300","h_mm":300.0,"b_mm":100.0,"mass_kg_m":46.2,"Wel_y_mm3":535000.0,"Wpl_y_mm3":632000.0,"Avz_mm2":3180.0,"Iy_mm4":80300000.0},{"name":"UPN 320","h_mm":320.0,"b_mm":100.0,"mass_kg_m":59.5,"Wel_y_mm3":679000.0,"Wpl_y_mm3":826000.0,"Avz_mm2":4710.0,"Iy_mm4":108700000.0},{"name":"UPN 350","h_mm":350.0,"b_mm":100.0,"mass_kg_m":60.6,"Wel_y_mm3":734000.0,"Wpl_y_mm3":918000.0,"Avz_mm2":5080.0,"Iy_mm4":128400000.0},{"name":"UPN 380","h_mm":380.0,"b_mm":102.0,"mass_kg_m":63.1,"Wel_y_mm3":829000.0,"Wpl_y_mm3":1010000.0,"Avz_mm2":5320.0,"Iy_mm4":157600000.0},{"name":"UPN 400","h_mm":400.0,"b_mm":110.0,"mass_kg_m":71.8,"Wel_y_mm3":1020000.0,"Wpl_y_mm3":1240000.0,"Avz_mm2":5860.0,"Iy_mm4":203500000.0}]};
+window.PROFILE_DB = PROFILE_DB;
+
+</script>
 <script>
 "use strict";
 
@@ -1329,6 +1464,267 @@ function renderIso3D(p, sec, layout){
     `Tiling: nL=${layout.nLen}, nW=${layout.nWid} • Total sections: ${layout.beams.length} • Loaded sections: ${layout.loadedCount}`;
 }
 
+
+/* =========================
+   Interactive input 3D viewer (top-left)
+   Drag = orbit, Wheel = zoom
+   ========================= */
+const input3DState = {
+  yaw: -35,      // left-hand iso style
+  pitch: 28,
+  zoom: 1.0,
+  dragging:false,
+  lastX:0,lastY:0
+};
+
+function setInput3DViewPreset(name){
+  if(name==='leftiso'){ input3DState.yaw=-35; input3DState.pitch=28; input3DState.zoom=1.0; }
+  else if(name==='rightiso'){ input3DState.yaw=35; input3DState.pitch=28; input3DState.zoom=1.0; }
+  else if(name==='top'){ input3DState.yaw=0; input3DState.pitch=88; input3DState.zoom=1.0; }
+  else if(name==='front'){ input3DState.yaw=0; input3DState.pitch=8; input3DState.zoom=1.0; }
+  else if(name==='side'){ input3DState.yaw=90; input3DState.pitch=8; input3DState.zoom=1.0; }
+  else if(name==='reset'){ input3DState.yaw=-35; input3DState.pitch=28; input3DState.zoom=1.0; }
+  if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
+}
+
+function initInput3DViewer(){
+  const c=$('input3d_canvas');
+  if(!c) return;
+
+  c.addEventListener('mousedown', e=>{
+    input3DState.dragging=true;
+    c.classList.add('dragging');
+    input3DState.lastX=e.clientX;
+    input3DState.lastY=e.clientY;
+  });
+  window.addEventListener('mouseup', ()=>{
+    input3DState.dragging=false;
+    c.classList.remove('dragging');
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!input3DState.dragging) return;
+    const dx=e.clientX-input3DState.lastX;
+    const dy=e.clientY-input3DState.lastY;
+    input3DState.lastX=e.clientX;
+    input3DState.lastY=e.clientY;
+    input3DState.yaw += dx*0.45;
+    input3DState.pitch = Math.max(-89, Math.min(89, input3DState.pitch + dy*0.35));
+    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
+  });
+  c.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const f = Math.exp(-e.deltaY*0.0012);
+    input3DState.zoom = Math.max(0.35, Math.min(3.5, input3DState.zoom*f));
+    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
+  }, {passive:false});
+
+  document.querySelectorAll('#input3d_nav [data-view]').forEach(btn=>{
+    btn.addEventListener('click', ()=> setInput3DViewPreset(btn.getAttribute('data-view')));
+  });
+  $('input3d_zoom_in')?.addEventListener('click', ()=>{
+    input3DState.zoom=Math.min(3.5, input3DState.zoom*1.12);
+    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
+  });
+  $('input3d_zoom_out')?.addEventListener('click', ()=>{
+    input3DState.zoom=Math.max(0.35, input3DState.zoom/1.12);
+    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
+  });
+}
+
+function renderInput3D(p, sec, layout){
+  const c=$('input3d_canvas');
+  if(!c || !layout) return;
+  const ctx=c.getContext('2d');
+  c.width = Math.max(10, Math.floor(c.clientWidth));
+  c.height = Math.max(10, Math.floor(c.clientHeight));
+  const W=c.width, H=c.height;
+  ctx.clearRect(0,0,W,H);
+
+  window.__last3dPayload = {p, sec, layout};
+
+  const baseCol = (p.material.matKind==='wood') ? '#8B4513' : '#7a7f87';
+  const loadedCol = (p.material.matKind==='wood') ? '#9a5b1c' : '#9aa4b2';
+  const topCol = '#9aa0aa';
+
+  // Rotation helpers (yaw about global Z, pitch about local X after yaw)
+  const yaw = input3DState.yaw*Math.PI/180;
+  const pit = input3DState.pitch*Math.PI/180;
+  const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pit), sp=Math.sin(pit);
+
+  function rotPt(x,y,z){
+    const x1 = x*cy - y*sy;
+    const y1 = x*sy + y*cy;
+    const z1 = z;
+    const x2 = x1;
+    const y2 = y1*cp - z1*sp;
+    const z2 = y1*sp + z1*cp;
+    return [x2,y2,z2];
+  }
+
+  const pts=[];
+  const addBoxPts=(x,y,z,dx,dy,dz)=>{
+    for(const X of [x,x+dx]) for(const Y of [y,y+dy]) for(const Z of [z,z+dz]) pts.push(rotPt(X,Y,Z));
+  };
+  for(let layer=0; layer<p.layers; layer++){
+    const z=layout.baseZ + layer*layout.beamH;
+    for(const b of layout.beams) addBoxPts(b.xLeft,b.yLeft,z,b.L,b.W,layout.beamH);
+  }
+  addBoxPts(layout.top.xLeft,layout.top.yLeft,0,layout.top.L,layout.top.W,layout.top.T);
+
+  let minx=Infinity,maxx=-Infinity,miny=Infinity,maxy=-Infinity;
+  for(const q of pts){
+    minx=Math.min(minx,q[0]); maxx=Math.max(maxx,q[0]);
+    miny=Math.min(miny,q[1]); maxy=Math.max(maxy,q[1]);
+  }
+  if(!isFinite(minx)){ minx=-1; maxx=1; miny=-1; maxy=1; }
+
+  const margin=28;
+  const sx=(W-2*margin)/Math.max(1e-6,(maxx-minx));
+  const sy2=(H-2*margin)/Math.max(1e-6,(maxy-miny));
+  const sc=Math.max(1, 0.92*Math.min(sx,sy2)*input3DState.zoom);
+  const cx0=(minx+maxx)/2, cy0=(miny+maxy)/2;
+
+  function proj(x,y,z){
+    const r=rotPt(x,y,z);
+    return [W/2 + (r[0]-cx0)*sc, H/2 + (r[1]-cy0)*sc, r[2]];
+  }
+
+  function boxFaces(x,y,z,dx,dy,dz){
+    const P = [
+      [x,y,z],[x+dx,y,z],[x+dx,y+dy,z],[x,y+dy,z],
+      [x,y,z+dz],[x+dx,y,z+dz],[x+dx,y+dy,z+dz],[x,y+dy,z+dz]
+    ];
+    const Q = P.map(v=>proj(v[0],v[1],v[2]));
+    const faces = [
+      [0,1,2,3], [4,5,6,7], [0,1,5,4], [1,2,6,5], [2,3,7,6], [3,0,4,7]
+    ];
+    return faces.map(idxs=>{
+      const pts2=idxs.map(i=>Q[i]);
+      const depth=pts2.reduce((a,b)=>a+b[2],0)/pts2.length;
+      return {pts:pts2, depth};
+    });
+  }
+
+  const primitives=[];
+
+  for(let layer=0; layer<p.layers; layer++){
+    const z=layout.baseZ + layer*layout.beamH;
+    for(const b of layout.beams){
+      const faces=boxFaces(b.xLeft,b.yLeft,z,b.L,b.W,layout.beamH);
+      const col = (b.contact && b.contact.A>0)? loadedCol : baseCol;
+      for(const f of faces) primitives.push({type:'face', pts:f.pts, depth:f.depth, fill:col, stroke:'rgba(255,255,255,.12)', alpha:0.82});
+    }
+  }
+  for(const f of boxFaces(layout.top.xLeft,layout.top.yLeft,0,layout.top.L,layout.top.W,layout.top.T)){
+    primitives.push({type:'face', pts:f.pts, depth:f.depth, fill:topCol, stroke:'rgba(255,255,255,.18)', alpha:0.80});
+  }
+
+  // Section end markers (small I/C glyphs on beam ends for top layer)
+  const fam = $('sec_series')?.value || 'HEA';
+  const glyph = fam.startsWith('UP') || fam.startsWith('UNP') ? 'C' : 'I';
+  if(p.baseModel==='sections' && $('show_end_profiles')?.checked && layout.beams.length<=120){
+    for(const b of layout.beams){
+      const z0=layout.baseZ + (p.layers-1)*layout.beamH + layout.beamH*0.5;
+      for(const xf of [b.xLeft, b.xRight]){
+        const m=proj(xf, b.cy, z0);
+        primitives.push({type:'glyph', x:m[0], y:m[1], depth:m[2], glyph, size:Math.max(6, Math.min(14, b.W*sc*0.45))});
+      }
+    }
+  }
+
+  primitives.sort((a,b)=>a.depth-b.depth);
+  for(const pr of primitives){
+    if(pr.type==='face'){
+      ctx.save();
+      ctx.globalAlpha=pr.alpha ?? 1;
+      ctx.fillStyle=pr.fill; ctx.strokeStyle=pr.stroke; ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(pr.pts[0][0], pr.pts[0][1]);
+      for(let i=1;i<pr.pts.length;i++) ctx.lineTo(pr.pts[i][0], pr.pts[i][1]);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    } else if(pr.type==='glyph'){
+      ctx.save();
+      ctx.translate(pr.x, pr.y);
+      ctx.strokeStyle='rgba(0,0,0,.55)';
+      ctx.lineWidth=1.4;
+      const s=pr.size;
+      if(pr.glyph==='I'){
+        ctx.beginPath();
+        ctx.moveTo(-s*0.5,-s*0.38); ctx.lineTo(s*0.5,-s*0.38);
+        ctx.moveTo(0,-s*0.38); ctx.lineTo(0,s*0.38);
+        ctx.moveTo(-s*0.5,s*0.38); ctx.lineTo(s*0.5,s*0.38);
+        ctx.stroke();
+      }else{
+        ctx.beginPath();
+        ctx.moveTo(s*0.45,-s*0.38); ctx.lineTo(-s*0.35,-s*0.38);
+        ctx.lineTo(-s*0.35,s*0.38); ctx.lineTo(s*0.45,s*0.38);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // Simple dimension leader overlays (text + arrows) for top and base extents
+  function dimLine(a,b,label,off=0){
+    const ax=proj(...a), bx=proj(...b);
+    const dx=bx[0]-ax[0], dy=bx[1]-ax[1];
+    const len=Math.hypot(dx,dy)||1;
+    const nx=-(dy/len), ny=(dx/len);
+    const ox=nx*off, oy=ny*off;
+    const p1=[ax[0]+ox, ax[1]+oy], p2=[bx[0]+ox, bx[1]+oy];
+
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,.65)';
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]); ctx.stroke();
+    // arrowheads
+    const ah=6;
+    for(const [tx,ty,sx,sy] of [[p1[0],p1[1],dx,dy],[p2[0],p2[1],-dx,-dy]]){
+      const l=Math.hypot(sx,sy)||1; const ux=sx/l, uy=sy/l;
+      ctx.beginPath();
+      ctx.moveTo(tx,ty);
+      ctx.lineTo(tx+(-ux*ah + -uy*ah*0.45), ty+(-uy*ah + ux*ah*0.45));
+      ctx.moveTo(tx,ty);
+      ctx.lineTo(tx+(-ux*ah + uy*ah*0.45), ty+(-uy*ah + -ux*ah*0.45));
+      ctx.stroke();
+    }
+    const mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
+    ctx.font='11px system-ui, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText(label, mx, my-4);
+    ctx.restore();
+  }
+
+  // top L and W (use top top-face edges)
+  dimLine([layout.top.xLeft, layout.top.yLeft, layout.top.T],[layout.top.xRight, layout.top.yLeft, layout.top.T], `Top L ${layout.top.L.toFixed(2)} m`, 14);
+  dimLine([layout.top.xRight, layout.top.yLeft, layout.top.T],[layout.top.xRight, layout.top.yRight, layout.top.T], `Top W ${layout.top.W.toFixed(2)} m`, 14);
+  // base overall L/W/H
+  const x0 = p.base_x - layout.baseLenTotal/2;
+  const x1 = p.base_x + layout.baseLenTotal/2;
+  const y0 = p.base_y - layout.baseWidTotal/2;
+  const y1 = p.base_y + layout.baseWidTotal/2;
+  const z0 = layout.baseZ;
+  const z1 = layout.baseZ + p.layers*layout.beamH;
+  dimLine([x0,y0,z0],[x1,y0,z0], `Base L ${layout.baseLenTotal.toFixed(2)} m`, -16);
+  dimLine([x1,y0,z0],[x1,y1,z0], `Base W ${layout.baseWidTotal.toFixed(2)} m`, -16);
+  dimLine([x1,y1,z0],[x1,y1,z1], `H ${((z1-z0)).toFixed(3)} m`, 18);
+
+  // HUD text
+  $('input3d_info').textContent = `Yaw ${input3DState.yaw.toFixed(0)}° • Pitch ${input3DState.pitch.toFixed(0)}° • Zoom ${input3DState.zoom.toFixed(2)}x`;
+  const secName = sec?.name || (p.baseModel==='sections' ? 'Section' : 'Block');
+  const baseHeight = (p.layers*layout.beamH).toFixed(3);
+  $('input3d_dims').textContent =
+    `3-D Dimensions\n` +
+    `Top mat (L×W×T): ${layout.top.L.toFixed(2)} × ${layout.top.W.toFixed(2)} × ${layout.top.T.toFixed(3)} m\n` +
+    `Base assembly (L×W×H): ${layout.baseLenTotal.toFixed(2)} × ${layout.baseWidTotal.toFixed(2)} × ${baseHeight} m\n` +
+    `Base layers: ${p.layers} × ${(layout.beamH).toFixed(3)} m\n` +
+    `Base mats: ${layout.nLen} × ${layout.nWid}  |  Sections/mat: ${layout.secPerMat}\n` +
+    `${p.baseModel==='sections' ? `Section: ${secName}` : 'Base model: solid block mats'}`;
+}
+
+
 /* =========================
    Main calculation
    ========================= */
@@ -1412,6 +1808,7 @@ function runCalc(){
     $('verdict').textContent='❌ No contact';
     $('verdict').className='red';
     renderIso3D(p, sec, layout);
+    renderInput3D(p, sec, layout);
     return;
   }
 
@@ -1681,6 +2078,7 @@ function runCalc(){
 
   // Render 3D
   renderIso3D(p, sec, layout);
+  renderInput3D(p, sec, layout);
 }
 
 /* =========================
@@ -1726,6 +2124,17 @@ $('auto_tile').addEventListener('change', ()=>{ updateTileUI(); runCalc(); });
 window.addEventListener('resize', debounce(runCalc,180));
 
 /* init */
+if(typeof PROFILE_DB==='undefined'){
+  globalThis.PROFILE_DB = {
+    HEA:[{name:'HE 200 A', h_mm:190, b_mm:200, mass_kg_m:42.3, Wel_y_mm3:388600, Wpl_y_mm3:429500, Av_z_mm2:1808, Iy_mm4:36920000}],
+    HEB:[{name:'HE 200 B', h_mm:200, b_mm:200, mass_kg_m:61.3, Wel_y_mm3:569000, Wpl_y_mm3:651000, Av_z_mm2:2400, Iy_mm4:56900000}],
+    HEM:[{name:'HE 200 M', h_mm:220, b_mm:206, mass_kg_m:103.0, Wel_y_mm3:924000, Wpl_y_mm3:1080000, Av_z_mm2:3600, Iy_mm4:101600000}]
+  };
+  $('data_warning')?.classList.remove('hide');
+}else{
+  $('data_warning')?.classList.add('hide');
+}
+initInput3DViewer();
 initProfileDropdowns();
 updateModeUI();
 updateLCPreview();
