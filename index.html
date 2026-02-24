@@ -1,2146 +1,1491 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Loadspreader Calculator</title>
+<title>Loadspreader Calculator - Multi Top Mats</title>
 <style>
-  :root{
-    --radius:14px; --shadow: 0 14px 40px rgba(0,0,0,.35);
-    --control-font: clamp(.92rem, .9rem + .15vw, 1rem);
-    --control-pad-y: 9px; --control-pad-x: 10px;
-    --page-pad: clamp(10px, 1.4vw, 16px);
-    --card-pad: clamp(12px, 1.6vw, 16px);
-    --grid-min: 220px;
-    --primary:#3b82f6; --danger:#ef4444; --good:#22c55e;
-    color-scheme: dark;
-    --bg:#0b1220; --header-bg:#0b1220; --panel:#0f172a; --panel-2:#0b152e;
-    --text:#e5e7eb; --muted:#94a3b8; --border:#1f2a44; --line:#223056;
-    --btn-bg:rgba(255,255,255,.04); --btn-hover:rgba(255,255,255,.07);
-    --advert-bg:#17203a; --advert-border:#273759; --advert-text:#e5e7eb;
-    --modal-bg:#0f172a;
-  }
-  :root[data-theme="light"]{
-    color-scheme: light;
-    --bg:#f6f7fb; --header-bg:#ffffff; --panel:#ffffff; --panel-2:#f3f4f6;
-    --text:#0f172a; --muted:#475569; --border:#e2e8f0; --line:#cbd5e1;
-    --btn-bg:rgba(2,6,23,.05); --btn-hover:rgba(2,6,23,.09);
-    --advert-bg:#ffffff; --advert-border:#e2e8f0; --advert-text:#0f172a;
-    --modal-bg:#ffffff;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text);line-height:1.45}
-  .hide{display:none}
-  .green{color:var(--good)} .red{color:var(--danger)}
-  .muted{color:var(--muted)}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
-
-  header{
-    background:var(--header-bg);
-    padding:12px var(--page-pad);
-    display:flex; align-items:center; gap:10px;
-    position:sticky; top:0; z-index:2;
-    border-bottom:1px solid var(--border);
-    backdrop-filter:saturate(180%) blur(8px);
-  }
-  header h1{margin:0;font-size:1.05rem;flex:1;text-align:center;font-weight:800;letter-spacing:.2px}
-
-  .container{padding:var(--page-pad);max-width:min(1800px, 96vw);margin:0 auto}
-  .advert-bar{background:var(--advert-bg);color:var(--advert-text);padding:10px 12px;text-align:center;font-size:.92rem;border:1px solid var(--advert-border);border-radius:12px;margin-bottom:14px}
-  .advert-bar a{color:inherit;text-decoration:none;font-weight:850}
-
-  .layout{display:grid;gap:14px}
-  @media (min-width:980px){ .layout{grid-template-columns:clamp(340px,36vw,660px) 1fr;align-items:start} }
-
-  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:var(--card-pad);overflow:hidden}
-  .section-title{font-weight:800;margin:18px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:.92rem;color:var(--muted);letter-spacing:.25px;text-transform:uppercase}
-
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--grid-min),1fr));gap:10px 12px;align-items:end}
-  .full{grid-column:1/-1}
-  label{display:block;font-size:.86rem;color:var(--muted);margin:0}
-  input,select,textarea{
-    width:100%;
-    font-size:var(--control-font);
-    border-radius:12px;
-    padding:var(--control-pad-y) var(--control-pad-x);
-    border:1px solid var(--border);
-    background:linear-gradient(180deg,var(--panel),var(--panel-2));
-    color:var(--text);
-    margin-top:6px;
-    appearance:none;
-  }
-  textarea{min-height:64px;resize:vertical}
-  select option{background:var(--panel);color:var(--text)}
-  select:focus,input:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.22)}
-  input:disabled,select:disabled{opacity:.65;cursor:not-allowed}
-  .err{font-size:.78rem;margin-top:6px;color:var(--danger)}
-
-  .btn{border:1px solid var(--border);padding:8px 10px;border-radius:12px;background:var(--btn-bg);color:var(--text);cursor:pointer;font-weight:750;transition:background .15s ease,transform .06s ease;user-select:none;white-space:nowrap}
-  .btn:hover{background:var(--btn-hover)} .btn:active{transform:translateY(1px)}
-  .toolbar{display:flex;gap:8px;align-items:center}
-  .badge{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:var(--btn-bg);color:var(--muted);font-size:.88rem}
-  input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);appearance:auto}
-  .inline-check{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel-2));color:var(--text)}
-  .inline-check span{color:var(--text);font-size:.95rem}
-  .responsive{width:100%;height:auto;border-radius:12px;border:1px solid var(--border);background:var(--panel)}
-
-  .result-block{padding:12px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel-2));margin-bottom:12px}
-  .result-title{font-weight:900;letter-spacing:.2px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .tiny{font-size:.85rem;color:var(--muted)}
-  .panel{border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.03);padding:10px 12px;margin-top:10px}
-  :root[data-theme="light"] .panel{background:rgba(2,6,23,0.03)}
-
-  .chart-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
-  @media (min-width:980px){ .chart-grid{grid-template-columns:repeat(3, minmax(260px, 1fr));} }
-  .chart-wrap{display:flex;flex-direction:column;gap:8px}
-  .chart{width:100%;height:240px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.08));cursor:zoom-in}
-  .chart-cap{font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
-  .chart-cap .capR{white-space:normal; text-align:right; line-height:1.2}
-
-  .canvas-wrap{width:100%;height:clamp(320px, 52vh, 960px)}
-  #plot{width:100%;height:100%;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.08))}
-
-  details{margin-top:10px}
-  details summary{cursor:pointer;color:var(--text);font-weight:900}
-  .mathml{margin-top:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.03);overflow:auto}
-  :root[data-theme="light"] .mathml{background:rgba(2,6,23,0.03)}
-  math{font-size:1.02rem}
-  .math-note{margin-top:8px}
-  .fallback{display:none}
-  /* if MathML unsupported, show fallback text */
-  @supports not (math-style: normal){
-    .fallback{display:block}
-  }
-
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:5000}
-  :root[data-theme="light"] .modal{background:rgba(2,6,23,.45)}
-  .modal.hide{display:none}
-  .modal-content{
-    background:var(--modal-bg);
-    color:var(--text);
-    padding:18px;
-    border-radius:16px;
-    width:min(1200px, 94vw);
-    max-height:90vh;
-    overflow:auto;
-    box-shadow:0 18px 50px rgba(0,0,0,.35);
-    border:1px solid var(--border);
-  }
-  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-  .modal-title{font-weight:900}
-  .modal-canvas{width:100%;height:min(72vh, 680px);border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.08))}
-  .tooltip{
-    position:absolute;
-    pointer-events:none;
-    padding:6px 8px;
-    border-radius:10px;
-    background:rgba(0,0,0,.65);
-    color:#fff;
-    font-size:12px;
-    border:1px solid rgba(255,255,255,.12);
-    transform:translate(10px, -12px);
-    white-space:nowrap;
-  }
-  :root[data-theme="light"] .tooltip{background:rgba(2,6,23,.75)}
-
-
-  /* Interactive input 3D viewer (top-left replacement) */
-  .viewer3d-wrap{
-    position:relative;
-    width:100%;
-    height:clamp(260px, 34vh, 420px);
-    border-radius:12px;
-    border:1px solid var(--border);
-    background:
-      radial-gradient(120% 100% at 20% 10%, rgba(59,130,246,.10), transparent 55%),
-      linear-gradient(180deg, rgba(2,6,23,.35), rgba(2,6,23,.08));
-    overflow:hidden;
-    margin-bottom:8px;
-  }
-  .viewer3d-canvas{
-    width:100%;
-    height:100%;
-    display:block;
-    cursor:grab;
-  }
-  .viewer3d-canvas.dragging{cursor:grabbing}
-  .viewer3d-nav{
-    position:absolute;
-    top:8px;
-    right:8px;
-    width:min(250px, calc(100% - 16px));
-    border:1px solid var(--border);
-    border-radius:12px;
-    background:rgba(10,20,45,.72);
-    backdrop-filter: blur(8px);
-    padding:8px;
-    box-shadow:0 8px 24px rgba(0,0,0,.25);
-  }
-  :root[data-theme="light"] .viewer3d-nav{
-    background:rgba(255,255,255,.85);
-  }
-  .viewer3d-nav-title{
-    font-size:.72rem;
-    text-transform:uppercase;
-    letter-spacing:.3px;
-    font-weight:800;
-    color:var(--muted);
-    margin-bottom:6px;
-  }
-  .viewer3d-nav-grid{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:6px;
-    margin-bottom:6px;
-  }
-  .viewer3d-nav-grid .vbtn,
-  .viewer3d-row .vbtn{
-    padding:5px 8px;
-    border-radius:8px;
-    font-size:.76rem;
-    line-height:1;
-  }
-  .viewer3d-row{
-    display:grid;
-    grid-template-columns: 28px 1fr 28px;
-    gap:6px;
-    align-items:center;
-  }
-  .viewer3d-stat{
-    border:1px solid var(--border);
-    border-radius:8px;
-    background:var(--btn-bg);
-    padding:5px 8px;
-    font-size:.70rem;
-    color:var(--muted);
-    text-align:center;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .viewer3d-dims{
-    position:absolute;
-    left:8px;
-    bottom:8px;
-    max-width:min(420px, calc(100% - 16px));
-    border:1px solid var(--border);
-    border-radius:10px;
-    background:rgba(10,20,45,.72);
-    backdrop-filter: blur(8px);
-    padding:8px 10px;
-    font-size:.76rem;
-    color:var(--text);
-    white-space:pre-line;
-    box-shadow:0 8px 24px rgba(0,0,0,.22);
-  }
-  :root[data-theme="light"] .viewer3d-dims{
-    background:rgba(255,255,255,.85);
-  }
-  .data-warning{
-    margin:8px 0 12px;
-    padding:10px 12px;
-    border:1px solid #b45309;
-    color:#fbbf24;
-    background:rgba(180,83,9,.10);
-    border-radius:12px;
-    font-size:.9rem;
-  }
-
-  @media (max-width:420px){
-    :root{--grid-min:180px;--control-pad-y:8px;--control-pad-x:10px}
-    header h1{font-size:1rem}
-    .chart{height:210px}
-  }
+:root{
+  --bg:#050b18; --bg2:#08122a; --panel:#0b1733; --panel2:#0a1430; --line:#1c2b4f;
+  --text:#e7edf9; --muted:#9fb0d2; --accent:#4da3ff; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+  --shadow:0 18px 40px rgba(0,0,0,.28); --rad:14px;
+  --font:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  --inp-y:6px; --inp-x:8px; --fs:.9rem;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:var(--font); color:var(--text);
+  background:
+    radial-gradient(1100px 600px at 10% -10%, #0f2149 0%, transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, #122046 0%, transparent 55%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+  overflow:hidden;
+}
+.hide{display:none!important}
+.green{color:var(--good)} .red{color:var(--bad)} .muted{color:var(--muted)}
+.small{font-size:.82rem}
+header{
+  height:54px; display:flex; align-items:center; gap:10px;
+  padding:0 12px; border-bottom:1px solid var(--line);
+  background:rgba(8,14,30,.75); backdrop-filter: blur(10px) saturate(140%);
+}
+header h1{margin:0 auto 0 0; font-size:1rem; letter-spacing:.2px}
+.badge{border:1px solid var(--line); border-radius:999px; padding:4px 10px; color:var(--muted); font-size:.8rem; background:rgba(255,255,255,.02)}
+.btn{
+  border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.03); color:var(--text);
+  padding:7px 10px; font-weight:700; cursor:pointer; font-size:.85rem;
+}
+.btn:hover{background:rgba(255,255,255,.06)}
+.btn.danger{border-color:#4a1e26;background:#2a1015;color:#ffd5dc}
+.app{
+  height:calc(100vh - 54px);
+  display:grid;
+  grid-template-columns:minmax(390px, 28vw) minmax(0,1fr);
+  gap:10px;
+  padding:10px;
+}
+@media (max-width: 1100px){
+  body{overflow:auto}
+  .app{height:auto; min-height:calc(100vh - 54px); grid-template-columns:1fr; overflow:visible}
+}
+.panel{
+  border:1px solid var(--line); border-radius:16px; background:linear-gradient(180deg,var(--panel),var(--panel2));
+  box-shadow:var(--shadow); min-height:0;
+}
+.sidebar{
+  display:flex; flex-direction:column; overflow:auto; padding:10px;
+}
+.sidebar .section-label{
+  margin:6px 0 8px; color:var(--muted); font-size:.8rem; font-weight:800; text-transform:uppercase; letter-spacing:.35px;
+}
+.accordion{display:flex; flex-direction:column; gap:8px}
+.acc-item{
+  border:1px solid var(--line); border-radius:12px; overflow:hidden; background:rgba(255,255,255,.015)
+}
+.acc-head{
+  display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+  padding:9px 10px; background:rgba(255,255,255,.02); color:var(--text); border:0; cursor:pointer; font-weight:800;
+}
+.acc-head .chev{margin-left:auto; transition:transform .15s}
+.acc-item[data-open="0"] .chev{transform:rotate(-90deg)}
+.acc-body{padding:10px; border-top:1px solid var(--line)}
+.acc-item[data-open="0"] .acc-body{display:none}
+.grid{display:grid; gap:8px 10px}
+.grid.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.cols4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width: 520px){
+  .grid.cols2,.grid.cols3,.grid.cols4{grid-template-columns:1fr}
+}
+label{display:block; font-size:.78rem; color:var(--muted)}
+input,select,textarea{
+  width:100%; margin-top:4px; padding:var(--inp-y) var(--inp-x); font-size:var(--fs);
+  border-radius:10px; border:1px solid var(--line); color:var(--text);
+  background:linear-gradient(180deg,#091427,#081222);
+}
+textarea{resize:vertical; min-height:52px}
+input[type="checkbox"]{width:auto; margin:0; accent-color:var(--accent)}
+.inline{display:flex; align-items:center; gap:8px}
+.row{display:flex; gap:8px; align-items:center}
+.spread{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.hr{height:1px; background:var(--line); margin:8px 0}
+.pill{
+  display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:999px;
+  padding:4px 9px; font-size:.8rem; color:var(--muted); background:rgba(255,255,255,.02)
+}
+.mats-list{display:flex; flex-direction:column; gap:8px}
+.mat-card{
+  border:1px solid #22345f; border-radius:12px; padding:8px; background:rgba(255,255,255,.015)
+}
+.mat-card .title{font-weight:800; display:flex; align-items:center; gap:8px}
+.mat-card .title .grow{flex:1}
+.mat-card .mini{font-size:.76rem; color:var(--muted)}
+.main{
+  display:grid; grid-template-rows:minmax(420px, 62vh) minmax(260px, 1fr);
+  gap:10px; min-height:0;
+}
+@media (min-width: 1800px){
+  .main{grid-template-rows:minmax(520px, 66vh) minmax(260px, 1fr)}
+}
+.viewer-wrap{position:relative; overflow:hidden; padding:0}
+.viewer-canvas{
+  width:100%; height:100%; display:block; background:
+    radial-gradient(circle at 25% 15%, rgba(43,76,154,.22), transparent 45%),
+    linear-gradient(180deg,#06102a,#040a1a 60%,#030714);
+  border-radius:16px;
+}
+.viewer-overlay{
+  position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:8px; width:min(340px, 46%);
+  pointer-events:none;
+}
+.nav-card,.dims-card,.info-card{
+  pointer-events:auto; border:1px solid var(--line); border-radius:12px;
+  background:rgba(7,14,30,.8); backdrop-filter:blur(8px);
+}
+.nav-card{padding:8px}
+.nav-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+.nav-grid button{
+  padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text);
+  font-size:.78rem; font-weight:700; cursor:pointer
+}
+.nav-grid button:hover{background:rgba(255,255,255,.08)}
+.nav-row{display:flex; gap:6px; align-items:center; margin-top:6px}
+.nav-row button{width:28px; height:28px; padding:0; border-radius:8px; border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text); cursor:pointer}
+.nav-readout{flex:1; text-align:center; color:var(--muted); font-size:.75rem; border:1px solid var(--line); border-radius:8px; padding:4px 6px}
+.dims-card,.info-card{padding:8px 10px}
+.dims-card h4,.info-card h4{margin:0 0 6px; font-size:.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:.25px}
+.dims-list{display:grid; gap:5px}
+.dims-list div{font-size:.8rem}
+.results{padding:10px; overflow:auto}
+.results-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px}
+.results-head h2{margin:0; font-size:.95rem}
+.summary-cards{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:8px 0 10px}
+@media (max-width:1500px){.summary-cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:700px){.summary-cards{grid-template-columns:1fr;}}
+.summary{
+  border:1px solid var(--line); border-radius:12px; padding:8px 10px; background:rgba(255,255,255,.015)
+}
+.summary .k{font-size:.76rem; color:var(--muted)} .summary .v{font-size:1rem; font-weight:800}
+.base-results{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:10px; align-items:start}
+.base-card{
+  border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.015); padding:10px
+}
+.base-card h3{margin:0 0 6px; font-size:.9rem}
+.kv{display:grid; grid-template-columns:1fr auto; gap:4px 10px; font-size:.83rem}
+.kv div:nth-child(odd){color:var(--muted)}
+.kv div:nth-child(even){font-weight:700}
+.math{
+  margin-top:8px; border:1px solid var(--line); border-radius:10px; padding:8px; background:rgba(255,255,255,.02); overflow:auto
+}
+.math math{font-size:.92rem}
+.section-control{
+  margin-top:8px; border:1px solid var(--line); border-radius:10px; padding:8px; background:rgba(22,32,58,.4)
+}
+.section-control .line{font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.82rem}
+.table{
+  width:100%; border-collapse:collapse; font-size:.82rem; margin-top:6px
+}
+.table th,.table td{border-bottom:1px solid var(--line); padding:5px 6px; text-align:left; vertical-align:top}
+.table th{color:var(--muted); font-weight:700; position:sticky; top:0; background:linear-gradient(180deg,var(--panel),var(--panel2))}
+.scroll-x{overflow:auto}
+.err{color:var(--bad); font-size:.76rem; margin-top:4px}
+footer.note{padding:8px 10px; color:var(--muted); font-size:.76rem}
 </style>
 </head>
 <body>
+<header>
+  <button class="btn" id="themeBtn" type="button">Theme</button>
+  <span class="badge" id="themeBadge">Dark</span>
+  <h1>Loadspreader Calculator • Multi‑Top‑Mat • Base Mat Bending</h1>
+  <button class="btn" id="btnRecalc" type="button">Recalculate</button>
+</header>
 
-<div id="calc-screen">
-  <header>
-    <div class="toolbar">
-      <button id="theme-btn" class="btn" title="Toggle light/dark">Theme</button>
-      <span class="badge" id="theme-badge">Dark</span>
+<div class="app">
+  <aside class="panel sidebar" id="sidebar">
+    <div class="section-label">Inputs</div>
+    <div class="accordion" id="accordion">
+
+      <section class="acc-item" data-open="1">
+        <button class="acc-head" type="button"><span>Load Combinations</span><span class="chev">▾</span></button>
+        <div class="acc-body">
+          <div class="grid cols2">
+            <label>Material grade
+              <select id="steel_grade">
+                <option value="S235">S235</option>
+                <option value="S355" selected>S355</option>
+              </select>
+            </label>
+            <label>Load combination (selected)
+              <select id="lc_mode">
+                <option value="basic">Basic loads</option>
+                <option value="eq610" selected>EN 1990 Eq 6.10</option>
+                <option value="eq610a">EN 1990 Eq 6.10a</option>
+                <option value="eq610b">EN 1990 Eq 6.10b</option>
+                <option value="eq610ab">EN 1990 Eq 6.10a/b (envelope)</option>
+                <option value="ulssls">ULS/SLS (legacy)</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid cols2">
+            <label>ψ factor Q1 (Main)
+              <input id="psi_q1" type="number" step="0.01" value="0.7">
+            </label>
+            <label>ψ factor Q2 (Secondary)
+              <input id="psi_q2" type="number" step="0.01" value="0.7">
+            </label>
+          </div>
+          <label>Combination preview
+            <textarea id="combo_preview" readonly></textarea>
+          </label>
+          <div class="small muted">
+            G = permanent load (outrigger + selected permanent top-mat self-weight, and optional base self-weight if enabled). Q1/Q2 = variable loads.
+          </div>
+        </div>
+      </section>
+
+      <section class="acc-item" data-open="1">
+        <button class="acc-head" type="button"><span>Top Mats & Outrigger Loads</span><span class="chev">▾</span></button>
+        <div class="acc-body">
+          <div class="spread">
+            <div class="pill"><span id="matCountPill">1</span> top mat(s)</div>
+            <div class="row">
+              <button class="btn" type="button" id="addTopMat">+ Add mat</button>
+              <button class="btn" type="button" id="resetTopMats">Reset</button>
+            </div>
+          </div>
+          <div class="hr"></div>
+          <div id="topMatsList" class="mats-list"></div>
+        </div>
+      </section>
+
+      <section class="acc-item" data-open="1">
+        <button class="acc-head" type="button"><span>Base Mat Assembly (Sections)</span><span class="chev">▾</span></button>
+        <div class="acc-body">
+          <div class="grid cols2">
+            <label>Profile type
+              <select id="sec_series"></select>
+            </label>
+            <label>Profile size
+              <select id="sec_size"></select>
+            </label>
+          </div>
+          <div class="grid cols2">
+            <label>Section class (EC3)
+              <select id="sec_class">
+                <option value="12" selected>Class 1–2 (plastic)</option>
+                <option value="3">Class 3 (elastic)</option>
+                <option value="4">Class 4 (effective = 0.9·Wel)</option>
+              </select>
+            </label>
+            <label>γM0
+              <input id="gamma_M0" type="number" step="0.01" value="1.00">
+            </label>
+          </div>
+
+          <div class="grid cols2">
+            <label>Base beam span Lx (m)
+              <input id="Lx" type="number" step="0.01" value="5.0">
+            </label>
+            <label>Gap between sections (mm)
+              <input id="gap_section_mm" type="number" step="1" value="0">
+            </label>
+          </div>
+
+          <div class="grid cols2">
+            <label>Sections per base mat (across width)
+              <input id="n_sec_per_mat" type="number" step="1" value="5">
+            </label>
+            <label>Base mats along Y (across total width)
+              <input id="n_mat_y" type="number" step="1" value="1">
+            </label>
+          </div>
+
+          <div class="grid cols2">
+            <label>Base mats along X (tiling along span)
+              <input id="n_mat_x" type="number" step="1" value="1">
+            </label>
+            <label>Gap between base mats Y (m)
+              <input id="gap_mat_y" type="number" step="0.001" value="0">
+            </label>
+          </div>
+
+          <div class="grid cols2">
+            <label>Gap between base mats X (m)
+              <input id="gap_mat_x" type="number" step="0.001" value="0">
+            </label>
+            <label>Base layers stacked
+              <input id="base_layers" type="number" step="1" value="1">
+            </label>
+          </div>
+
+          <div class="grid cols3">
+            <label>Base assembly centre X (m)
+              <input id="base_x" type="number" step="0.01" value="0">
+            </label>
+            <label>Base assembly centre Y (m)
+              <input id="base_y" type="number" step="0.01" value="0">
+            </label>
+            <label>Base assembly bottom Z (m)
+              <input id="base_z" type="number" step="0.01" value="-0.19">
+            </label>
+          </div>
+
+          <div class="inline" style="margin-top:8px">
+            <input id="include_base_sw" type="checkbox">
+            <label for="include_base_sw" style="margin:0;color:var(--text)">Include base section self‑weight as full-span UDL (G)</label>
+          </div>
+          <div class="small muted" id="secSummary"></div>
+        </div>
+      </section>
+
+      <section class="acc-item" data-open="1">
+        <button class="acc-head" type="button"><span>Ground Bearing & Analysis</span><span class="chev">▾</span></button>
+        <div class="acc-body">
+          <div class="grid cols2">
+            <label>Allowable GBP (t/m²)
+              <input id="gbp_allow" type="number" step="0.1" value="20">
+            </label>
+            <label>E (MPa)
+              <input id="E_mpa" type="number" step="1" value="200000">
+            </label>
+          </div>
+          <div class="grid cols2">
+            <label>Graph / analysis points
+              <input id="n_points" type="number" step="1" value="401">
+            </label>
+            <label>Decimal precision
+              <input id="precision" type="number" step="1" value="2">
+            </label>
+          </div>
+          <div class="inline" style="margin-top:8px">
+            <input id="show_dims" type="checkbox" checked>
+            <label for="show_dims" style="margin:0;color:var(--text)">Show dimension overlays in 3D view</label>
+          </div>
+          <div class="inline" style="margin-top:8px">
+            <input id="show_section_ends" type="checkbox" checked>
+            <label for="show_section_ends" style="margin:0;color:var(--text)">Show section end face depiction</label>
+          </div>
+          <div class="inline" style="margin-top:8px">
+            <input id="show_individual_sections" type="checkbox" checked>
+            <label for="show_individual_sections" style="margin:0;color:var(--text)">Render individual steel sections in 3D</label>
+          </div>
+          <div id="globalErr" class="err hide"></div>
+        </div>
+      </section>
+
     </div>
-    <h1>Loadspreader Calculator</h1>
-    <button id="help-btn" title="Help" class="btn">Help</button>
-  </header>
+    <footer class="note">Accordion / side-tab layout. Inputs are compact and grouped. Top mats support independent coordinates and G/Q1/Q2 loads.</footer>
+  </aside>
 
-  <div class="container">
-    <div class="advert-bar"><a href="#" target="_blank" rel="noopener">Advert here</a></div>
-    <div id="data_warning" class="data-warning hide">Section database file is missing. Load <code>sections_data_rev50_2.js</code> in the same folder as this HTML.</div>
+  <main class="main">
+    <section class="panel viewer-wrap">
+      <canvas id="viewerCanvas" class="viewer-canvas"></canvas>
 
-    <div class="layout">
-      <!-- LEFT -->
-      <div class="card">
-        
-        <div class="viewer3d-wrap">
-          <canvas id="input3d_canvas" class="viewer3d-canvas" aria-label="Interactive 3D view"></canvas>
-
-          <div class="viewer3d-nav" id="input3d_nav">
-            <div class="viewer3d-nav-title">View Navigation</div>
-            <div class="viewer3d-nav-grid">
-              <button type="button" class="btn vbtn" data-view="leftiso">Left ISO</button>
-              <button type="button" class="btn vbtn" data-view="rightiso">Right ISO</button>
-              <button type="button" class="btn vbtn" data-view="top">Top</button>
-              <button type="button" class="btn vbtn" data-view="front">Front</button>
-              <button type="button" class="btn vbtn" data-view="side">Side</button>
-              <button type="button" class="btn vbtn" data-view="reset">Reset</button>
-            </div>
-            <div class="viewer3d-row">
-              <button type="button" class="btn vbtn" id="input3d_zoom_out">−</button>
-              <div class="viewer3d-stat" id="input3d_info">Yaw --° • Pitch --° • Zoom --</div>
-              <button type="button" class="btn vbtn" id="input3d_zoom_in">+</button>
-            </div>
+      <div class="viewer-overlay">
+        <div class="nav-card">
+          <div class="small muted" style="font-weight:700;margin-bottom:6px">View Navigation</div>
+          <div class="nav-grid">
+            <button type="button" data-view="leftiso">Left ISO</button>
+            <button type="button" data-view="rightiso">Right ISO</button>
+            <button type="button" data-view="top">Top</button>
+            <button type="button" data-view="front">Front</button>
+            <button type="button" data-view="side">Side</button>
+            <button type="button" data-view="reset">Reset</button>
           </div>
-
-          <div class="viewer3d-dims" id="input3d_dims">Waiting for inputs…</div>
-          <img id="diagram" src="LSP.png" alt="" class="hide" aria-hidden="true">
-        </div>
-
-
-        <div class="section-title">Input Parameters</div>
-        <div class="grid">
-          <label>Material
-            <select id="material">
-              <option value="Azobe">Azobe (timber)</option>
-              <option value="S235">S235 (steel)</option>
-              <option value="S355" selected>S355 (steel)</option>
-            </select>
-          </label>
-
-          <label>Top Contact Type
-            <select id="top_type">
-              <option value="mat" selected>Steel Mat</option>
-              <option value="crawler">Crawler Tracks</option>
-            </select>
-          </label>
-
-          <label>Load Combinations (LC)
-            <select id="load_combo">
-              <option value="basic">Basic loads</option>
-              <option value="uls_sls">ULS/SLS</option>
-              <option value="en1990_610" selected>EN 1990 Eq 6.10</option>
-              <option value="en1990_610a">EN 1990 Eq 6.10a</option>
-              <option value="en1990_610b">EN 1990 Eq 6.10b</option>
-              <option value="en1990_610ab">EN 1990 Eq 6.10a/b</option>
-            </select>
-          </label>
-
-          <label class="full">Combination preview
-            <textarea id="lc_preview" class="mono" readonly></textarea>
-          </label>
-
-          <label>ψ factors • Q1 (Main)
-            <input id="psi_q1" type="number" step="0.05" min="0" max="1" value="0.7">
-          </label>
-
-          <label>ψ factors • Q2 (Secondary)
-            <input id="psi_q2" type="number" step="0.05" min="0" max="1" value="0.7">
-          </label>
-
-          <label>Top Mat WIDTH (along beam span) a<sub>top</sub> (m)
-            <input id="top_wid" type="number" step="0.01" value="1">
-            <div id="err_top_wid" class="err hide"></div>
-          </label>
-
-          <label>Top Mat LENGTH (across base mats) b<sub>top</sub> (m)
-            <input id="top_len" type="number" step="0.01" value="2">
-            <div id="err_top_len" class="err hide"></div>
-          </label>
-
-          <label id="label_qmax" class="full">Applied Track Pressure q<sub>max</sub> (t/m²)
-            <input id="q_max" type="number" step="0.1" min="0" value="40">
-            <div id="err_qmax" class="err hide"></div>
-          </label>
-        </div>
-
-        <div id="steel-loads">
-          <div class="section-title">Steel Mat Loads</div>
-          <div class="grid">
-            <label>Outrigger Load A (G) [t]
-              <input id="P_A" type="number" step="0.1" value="100">
-              <div id="err_PA" class="err hide"></div>
-            </label>
-            <label>Outrigger Load B (G) [t]
-              <input id="P_B" type="number" step="0.1" placeholder="Leave blank if unused">
-              <div id="err_PB" class="err hide"></div>
-            </label>
-            <label>Outrigger Load C (G) [t]
-              <input id="P_C" type="number" step="0.1" placeholder="Leave blank if unused">
-              <div id="err_PC" class="err hide"></div>
-            </label>
-            <label>Outrigger Load D (G) [t]
-              <input id="P_D" type="number" step="0.1" placeholder="Leave blank if unused">
-              <div id="err_PD" class="err hide"></div>
-            </label>
-
-            <label class="full">Main variable load Q1 (applied with each active outrigger) [t]
-              <input id="Q1_add" type="number" step="0.1" value="0">
-            </label>
-
-            <label class="full">Secondary variable load Q2 (applied with each active outrigger) [t]
-              <input id="Q2_add" type="number" step="0.1" value="0">
-            </label>
-
-            <label class="full">Steel Mat Self-Weight W<sub>m</sub> (G) [t]
-              <input id="w_mat" type="number" step="0.001" value="0">
-              <div id="err_wmat" class="err hide"></div>
-            </label>
-
-            <div class="full">
-              <div class="inline-check">
-                <input id="overhang" type="checkbox">
-                <span>Overhang enabled (single base mat only; contact-limited)</span>
-              </div>
-            </div>
+          <div class="nav-row">
+            <button type="button" id="zoomOut">−</button>
+            <div class="nav-readout" id="viewReadout">Yaw 35° • Pitch 28° • Zoom 1.0×</div>
+            <button type="button" id="zoomIn">+</button>
           </div>
         </div>
-
-        <div class="section-title">Base Mats</div>
-        <div class="grid">
-          <label class="full">Base Mat Model
-            <select id="base_model">
-              <option value="block">Solid block (manual b & h)</option>
-              <option value="sections" selected>Built‑up sections (EU profiles)</option>
-            </select>
-          </label>
-
-          <label>Profile Type
-            <select id="sec_series"></select>
-          </label>
-
-          <label>Profile Size
-            <select id="sec_size"></select>
-          </label>
-
-          <label>Section class (EC3)
-            <select id="sec_class">
-              <option value="12" selected>Class 1–2 (plastic)</option>
-              <option value="3">Class 3 (elastic)</option>
-              <option value="4">Class 4 (effective)</option>
-            </select>
-          </label>
-
-          <label>γ<sub>M0</sub> (Eurocode 3)
-            <input id="gammaM0" type="number" step="0.05" min="0.8" max="1.2" value="1.00">
-          </label>
-
-          <label>No. of parallel sections per base mat (across width)
-            <input id="sec_n" type="number" step="1" min="1" value="5">
-            <div id="err_secn" class="err hide"></div>
-          </label>
-
-          <label>Gap between sections (mm)
-            <input id="sec_gap" type="number" step="1" min="0" value="0">
-            <div id="err_secgap" class="err hide"></div>
-          </label>
-
-          <div id="sec_summary" class="tiny full"></div>
-
-          <label>Base mat length L<sub>sl</sub> (m)
-            <input id="Lsl" type="number" step="0.01" value="5">
-            <div id="err_Lsl" class="err hide"></div>
-          </label>
-
-          <label>Number of base layers
-            <input id="layers" type="number" step="1" value="1">
-            <div id="err_layers" class="err hide"></div>
-          </label>
-
-          <div class="full">
-            <div class="inline-check">
-              <input id="auto_tile" type="checkbox" checked>
-              <span>Auto tile base mats under top mat (when overhang OFF)</span>
-            </div>
-          </div>
-
-          <label>Base mats across width n<sub>W</sub> <span class="tiny">(auto when enabled)</span>
-            <input id="nMatWid" type="number" step="1" min="1" value="2" disabled>
-          </label>
-
-          <label>Base mats along length n<sub>L</sub> <span class="tiny">(auto when enabled)</span>
-            <input id="nMatLen" type="number" step="1" min="1" value="1" disabled>
-          </label>
-
-          <div class="full">
-            <div class="inline-check">
-              <input id="include_base_sw" type="checkbox">
-              <span>Include base section self‑weight as full-span UDL (G)</span>
-            </div>
-          </div>
-
-          <div class="full">
-            <div class="inline-check">
-              <input id="show_end_profiles" type="checkbox" checked>
-              <span>3‑D view: show section profile on both ends of every section</span>
-            </div>
-          </div>
-
-          <div class="section-title full" style="margin-top:6px">3‑D Positioning</div>
-
-          <div class="full tiny">
-            Coordinate system: <span class="mono">(0,0,0)</span> is the <strong>centre of the base of the TOP mat</strong>.
-            Base mat origins are at the <strong>centre of each base mat bottom face</strong>. Set the base mat assembly offset below.
-          </div>
-
-          <label>Base mat assembly centre X (m)
-            <input id="base_x" type="number" step="0.01" value="0">
-          </label>
-          <label>Base mat assembly centre Y (m)
-            <input id="base_y" type="number" step="0.01" value="0">
-          </label>
-          <label>Base mat assembly bottom Z (m) <span class="tiny">(negative puts base below top)</span>
-            <input id="base_z" type="number" step="0.01" value="-0.19">
-          </label>
-
-          <label>Allowable Ground Pressure (t/m²)
-            <input id="GBP_allow" type="number" step="0.1" value="20">
-            <div id="err_GBP" class="err hide"></div>
-          </label>
-
-          <label>Decimal Precision
-            <input id="precision" type="number" step="1" value="2">
-            <div id="err_precision" class="err hide"></div>
-          </label>
+        <div class="dims-card">
+          <h4>Dimensions</h4>
+          <div class="dims-list" id="dimsList"></div>
+        </div>
+        <div class="info-card">
+          <h4>Viewer</h4>
+          <div class="small muted">Drag to orbit • Wheel to zoom • Double-click = reset</div>
+          <div class="small muted" id="viewerInfo"></div>
         </div>
       </div>
+    </section>
 
-      <!-- RIGHT -->
-      <div class="card">
-        <div class="section-title">Results</div>
-        <div id="results"></div>
-        <div id="verdict" style="font-weight:900;margin-top:10px"></div>
-
-        <div class="section-title">3‑D View (isometric schematic)</div>
-        <div class="canvas-wrap"><canvas id="plot"></canvas></div>
-        <div class="tiny" id="plotNote" style="margin-top:8px"></div>
+    <section class="panel results">
+      <div class="results-head">
+        <h2>Results • Bending in All Base Mats Present</h2>
+        <div id="verdict" class="badge">Awaiting input</div>
       </div>
-    </div>
-  </div>
+
+      <div class="summary-cards" id="summaryCards"></div>
+
+      <div class="base-results" id="baseResults"></div>
+
+      <div class="section-label">Load Distribution (all top mats → all sections)</div>
+      <div class="scroll-x">
+        <table class="table" id="distTable">
+          <thead>
+            <tr><th>Top Mat</th><th>Base Mat</th><th>Section</th><th>Overlap area (m²)</th><th>G share (t)</th><th>Q1 share (t)</th><th>Q2 share (t)</th><th>x-range on beam (m)</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 </div>
 
-<!-- Help modal -->
-<div id="help-modal" class="modal hide">
-  <div class="modal-content">
-    <div class="modal-head">
-      <div class="modal-title">Help</div>
-      <button id="help-close" class="btn">✕</button>
-    </div>
-    <p class="tiny">
-      rev 49.0 — Overhang OFF tiles base mats in <strong>both</strong> length and width to support the full top mat footprint.
-      Load is distributed to each section proportional to <strong>actual overlap area</strong> (so your 2 m top length over two 1 m mats made of 5×HEA200 gives 10 loaded sections, equal share).
-      Shear/Moment use ULS; Deflection uses SLS (matches typical beam tools).
-    </p>
-  </div>
-</div>
-
-<!-- Chart zoom modal -->
-<div id="chart-modal" class="modal hide">
-  <div class="modal-content">
-    <div class="modal-head">
-      <div class="modal-title" id="chart-modal-title">Chart</div>
-      <button id="chart-modal-close" class="btn">✕</button>
-    </div>
-    <div style="position:relative">
-      <canvas id="chart-modal-canvas" class="modal-canvas"></canvas>
-      <div id="chart-tooltip" class="tooltip hide"></div>
-    </div>
-    <div id="chart-modal-caption" class="tiny" style="margin-top:8px"></div>
-  </div>
-</div>
-
+<script src="sections_data_rev52.js"></script>
 <script>
-// Auto-generated from ArcelorMittal 'Sections and Merchant Bars' Excel (V2024-1).
-// Source: https://sections.arcelormittal.com/repo/Sections/Sections%20and%20Merchant%20Bars-ArcelorMittal_V2024-1.xlsx
-/* eslint-disable */
-const PROFILE_DB = {"IPE":[{"name":"IPE 80","h_mm":80.0,"b_mm":46.0,"mass_kg_m":6.0,"Wel_y_mm3":20030.0,"Wpl_y_mm3":23210.0,"Avz_mm2":357.7,"Iy_mm4":801300.0},{"name":"IPE A 80","h_mm":78.0,"b_mm":46.0,"mass_kg_m":5.0,"Wel_y_mm3":16500.0,"Wpl_y_mm3":18970.0,"Avz_mm2":307.0,"Iy_mm4":643700.0},{"name":"IPE AA 80","h_mm":78.0,"b_mm":46.0,"mass_kg_m":4.9,"Wel_y_mm3":16430.0,"Wpl_y_mm3":18850.0,"Avz_mm2":299.6,"Iy_mm4":640900.0},{"name":"IPE 100","h_mm":100.0,"b_mm":55.0,"mass_kg_m":8.1,"Wel_y_mm3":34200.0,"Wpl_y_mm3":39400.0,"Avz_mm2":508.4,"Iy_mm4":1710000.0},{"name":"IPE A 100","h_mm":98.0,"b_mm":55.0,"mass_kg_m":6.9,"Wel_y_mm3":28800.0,"Wpl_y_mm3":32980.0,"Avz_mm2":443.70000000000005,"Iy_mm4":1411000.0},{"name":"IPE AA 100","h_mm":97.6,"b_mm":55.0,"mass_kg_m":6.7,"Wel_y_mm3":27840.0,"Wpl_y_mm3":31900.0,"Avz_mm2":440.2,"Iy_mm4":1358000.0},{"name":"IPE 120","h_mm":120.0,"b_mm":64.0,"mass_kg_m":10.4,"Wel_y_mm3":52950.0,"Wpl_y_mm3":60720.0,"Avz_mm2":630.5,"Iy_mm4":3177000.0},{"name":"IPE A 120","h_mm":117.6,"b_mm":64.0,"mass_kg_m":8.7,"Wel_y_mm3":43760.0,"Wpl_y_mm3":49870.0,"Avz_mm2":540.9,"Iy_mm4":2573000.0},{"name":"IPE AA 120","h_mm":117.0,"b_mm":64.0,"mass_kg_m":8.4,"Wel_y_mm3":41730.0,"Wpl_y_mm3":47610.0,"Avz_mm2":535.6,"Iy_mm4":2441000.0},{"name":"IPE 140","h_mm":140.0,"b_mm":73.0,"mass_kg_m":12.9,"Wel_y_mm3":77310.0,"Wpl_y_mm3":88340.0,"Avz_mm2":764.2,"Iy_mm4":5412000.0},{"name":"IPE A 140","h_mm":137.4,"b_mm":73.0,"mass_kg_m":10.5,"Wel_y_mm3":63290.0,"Wpl_y_mm3":71590.0,"Avz_mm2":621.3,"Iy_mm4":4348000.0},{"name":"IPE AA 140","h_mm":136.6,"b_mm":73.0,"mass_kg_m":10.1,"Wel_y_mm3":59650.0,"Wpl_y_mm3":67590.0,"Avz_mm2":614.1,"Iy_mm4":4074000.0},{"name":"IPE 160","h_mm":160.0,"b_mm":82.0,"mass_kg_m":15.8,"Wel_y_mm3":108600.0,"Wpl_y_mm3":123800.0,"Avz_mm2":965.7,"Iy_mm4":8692000.0},{"name":"IPE A 160","h_mm":157.0,"b_mm":82.0,"mass_kg_m":12.7,"Wel_y_mm3":87800.0,"Wpl_y_mm3":99090.0,"Avz_mm2":780.1,"Iy_mm4":6892000.0},{"name":"IPE AA 160","h_mm":156.4,"b_mm":82.0,"mass_kg_m":12.3,"Wel_y_mm3":84280.0,"Wpl_y_mm3":95230.0,"Avz_mm2":773.5,"Iy_mm4":6590000.0},{"name":"IPE O 180","h_mm":182.0,"b_mm":92.0,"mass_kg_m":21.3,"Wel_y_mm3":165400.0,"Wpl_y_mm3":189100.0,"Avz_mm2":1269.0,"Iy_mm4":15050000.0},{"name":"IPE 180","h_mm":180.0,"b_mm":91.0,"mass_kg_m":18.8,"Wel_y_mm3":146300.0,"Wpl_y_mm3":166400.0,"Avz_mm2":1125.0,"Iy_mm4":13160000.0},{"name":"IPE A 180","h_mm":177.0,"b_mm":91.0,"mass_kg_m":15.4,"Wel_y_mm3":120000.0,"Wpl_y_mm3":135300.0,"Avz_mm2":919.6,"Iy_mm4":10620000.0},{"name":"IPE AA 180","h_mm":176.4,"b_mm":91.0,"mass_kg_m":14.9,"Wel_y_mm3":115600.0,"Wpl_y_mm3":130500.0,"Avz_mm2":912.9,"Iy_mm4":10200000.0},{"name":"IPE O 200","h_mm":202.0,"b_mm":102.0,"mass_kg_m":25.1,"Wel_y_mm3":218900.0,"Wpl_y_mm3":249400.0,"Avz_mm2":1545.0,"Iy_mm4":22110000.0},{"name":"IPE 200","h_mm":200.0,"b_mm":100.0,"mass_kg_m":22.4,"Wel_y_mm3":194300.0,"Wpl_y_mm3":220600.0,"Avz_mm2":1400.0,"Iy_mm4":19430000.0},{"name":"IPE A 200","h_mm":197.0,"b_mm":100.0,"mass_kg_m":18.4,"Wel_y_mm3":161500.0,"Wpl_y_mm3":181600.0,"Avz_mm2":1146.0,"Iy_mm4":15910000.0},{"name":"IPE AA 200","h_mm":196.4,"b_mm":100.0,"mass_kg_m":18.0,"Wel_y_mm3":156100.0,"Wpl_y_mm3":175700.0,"Avz_mm2":1138.0,"Iy_mm4":15330000.0},{"name":"IPE O 220","h_mm":222.0,"b_mm":112.0,"mass_kg_m":29.4,"Wel_y_mm3":282300.0,"Wpl_y_mm3":321100.0,"Avz_mm2":1766.0,"Iy_mm4":31340000.0},{"name":"IPE 220","h_mm":220.0,"b_mm":110.0,"mass_kg_m":26.2,"Wel_y_mm3":251900.0,"Wpl_y_mm3":285400.0,"Avz_mm2":1588.0,"Iy_mm4":27710000.0},{"name":"IPE A 220","h_mm":217.0,"b_mm":110.0,"mass_kg_m":22.2,"Wel_y_mm3":213500.0,"Wpl_y_mm3":240200.0,"Avz_mm2":1354.0,"Iy_mm4":23160000.0},{"name":"IPE AA 220","h_mm":216.4,"b_mm":110.0,"mass_kg_m":21.2,"Wel_y_mm3":205000.0,"Wpl_y_mm3":230000.0,"Avz_mm2":1283.0,"Iy_mm4":22180000.0},{"name":"IPE O 240","h_mm":242.0,"b_mm":122.0,"mass_kg_m":34.3,"Wel_y_mm3":361000.0,"Wpl_y_mm3":410200.0,"Avz_mm2":2135.0,"Iy_mm4":43690000.0},{"name":"IPE 240","h_mm":240.0,"b_mm":120.0,"mass_kg_m":30.7,"Wel_y_mm3":324300.0,"Wpl_y_mm3":366600.0,"Avz_mm2":1914.0,"Iy_mm4":38910000.0},{"name":"IPE A 240","h_mm":237.0,"b_mm":120.0,"mass_kg_m":26.2,"Wel_y_mm3":277600.0,"Wpl_y_mm3":311500.0,"Avz_mm2":1630.9999999999998,"Iy_mm4":32900000.0},{"name":"IPE AA 240","h_mm":236.4,"b_mm":120.0,"mass_kg_m":24.9,"Wel_y_mm3":266800.0,"Wpl_y_mm3":298100.0,"Avz_mm2":1529.0,"Iy_mm4":31530000.0},{"name":"IPE O 270","h_mm":274.0,"b_mm":136.0,"mass_kg_m":42.3,"Wel_y_mm3":507000.0,"Wpl_y_mm3":574600.0,"Avz_mm2":2522.0,"Iy_mm4":69470000.0},{"name":"IPE 270","h_mm":270.0,"b_mm":135.0,"mass_kg_m":36.1,"Wel_y_mm3":428800.0,"Wpl_y_mm3":483900.0,"Avz_mm2":2213.0,"Iy_mm4":57890000.0},{"name":"IPE A 270","h_mm":267.0,"b_mm":135.0,"mass_kg_m":30.7,"Wel_y_mm3":368300.0,"Wpl_y_mm3":412400.0,"Avz_mm2":1873.9999999999998,"Iy_mm4":49170000.0},{"name":"IPE O 300","h_mm":304.0,"b_mm":152.0,"mass_kg_m":49.3,"Wel_y_mm3":657500.0,"Wpl_y_mm3":743800.0,"Avz_mm2":2904.0,"Iy_mm4":99940000.0},{"name":"IPE 300","h_mm":300.0,"b_mm":150.0,"mass_kg_m":42.2,"Wel_y_mm3":557000.0,"Wpl_y_mm3":628300.0,"Avz_mm2":2568.0,"Iy_mm4":83560000.0},{"name":"IPE A 300","h_mm":297.0,"b_mm":150.0,"mass_kg_m":36.5,"Wel_y_mm3":483000.0,"Wpl_y_mm3":541700.0,"Avz_mm2":2224.0,"Iy_mm4":71730000.0},{"name":"IPE O 330","h_mm":334.0,"b_mm":162.0,"mass_kg_m":57.0,"Wel_y_mm3":832900.0,"Wpl_y_mm3":942700.0,"Avz_mm2":3488.0000000000005,"Iy_mm4":139100000.0},{"name":"IPE 330","h_mm":330.0,"b_mm":160.0,"mass_kg_m":49.1,"Wel_y_mm3":713100.0,"Wpl_y_mm3":804300.0,"Avz_mm2":3080.0,"Iy_mm4":117600000.0},{"name":"IPE A 330","h_mm":327.0,"b_mm":160.0,"mass_kg_m":43.0,"Wel_y_mm3":625700.0,"Wpl_y_mm3":701900.0,"Avz_mm2":2698.0,"Iy_mm4":102300000.0},{"name":"IPE O 360","h_mm":364.0,"b_mm":172.0,"mass_kg_m":66.0,"Wel_y_mm3":1046000.0,"Wpl_y_mm3":1186000.0,"Avz_mm2":4020.0000000000005,"Iy_mm4":190400000.0},{"name":"IPE 360","h_mm":360.0,"b_mm":170.0,"mass_kg_m":57.1,"Wel_y_mm3":903600.0,"Wpl_y_mm3":1019000.0,"Avz_mm2":3513.0000000000005,"Iy_mm4":162600000.0},{"name":"IPE A 360","h_mm":357.6,"b_mm":170.0,"mass_kg_m":50.2,"Wel_y_mm3":811800.0,"Wpl_y_mm3":906700.0,"Avz_mm2":2976.0,"Iy_mm4":145100000.0},{"name":"IPE AA 360","h_mm":356.4,"b_mm":170.0,"mass_kg_m":47.0,"Wel_y_mm3":767500.0,"Wpl_y_mm3":853500.0,"Avz_mm2":2743.0,"Iy_mm4":136700000.0},{"name":"IPE V 400","h_mm":408.0,"b_mm":182.0,"mass_kg_m":84.0,"Wel_y_mm3":1477000.0,"Wpl_y_mm3":1681000.0,"Avz_mm2":5252.0,"Iy_mm4":301300000.0},{"name":"IPE O 400","h_mm":404.0,"b_mm":182.0,"mass_kg_m":75.7,"Wel_y_mm3":1324000.0,"Wpl_y_mm3":1502000.0,"Avz_mm2":4798.0,"Iy_mm4":267400000.0},{"name":"IPE 400","h_mm":400.0,"b_mm":180.0,"mass_kg_m":66.3,"Wel_y_mm3":1156000.0,"Wpl_y_mm3":1307000.0,"Avz_mm2":4269.0,"Iy_mm4":231200000.0},{"name":"IPE A 400","h_mm":397.0,"b_mm":180.0,"mass_kg_m":57.4,"Wel_y_mm3":1022000.0,"Wpl_y_mm3":1143000.0,"Avz_mm2":3577.0000000000005,"Iy_mm4":202900000.0},{"name":"IPE AA 400","h_mm":395.6,"b_mm":180.0,"mass_kg_m":53.4,"Wel_y_mm3":960500.0,"Wpl_y_mm3":1069000.0,"Avz_mm2":3274.0,"Iy_mm4":190000000.0},{"name":"IPE V 450","h_mm":460.0,"b_mm":194.0,"mass_kg_m":107.0,"Wel_y_mm3":2008000.0,"Wpl_y_mm3":2301000.0,"Avz_mm2":6662.0,"Iy_mm4":462000000.0},{"name":"IPE O 450","h_mm":456.0,"b_mm":192.0,"mass_kg_m":92.4,"Wel_y_mm3":1794000.0,"Wpl_y_mm3":2046000.0,"Avz_mm2":5940.0,"Iy_mm4":409200000.0},{"name":"IPE 450","h_mm":450.0,"b_mm":190.0,"mass_kg_m":77.6,"Wel_y_mm3":1499000.0,"Wpl_y_mm3":1701000.0,"Avz_mm2":5084.0,"Iy_mm4":337400000.0},{"name":"IPE A 450","h_mm":447.0,"b_mm":190.0,"mass_kg_m":67.2,"Wel_y_mm3":1331000.0,"Wpl_y_mm3":1494000.0,"Avz_mm2":4226.0,"Iy_mm4":297500000.0},{"name":"IPE AA 450","h_mm":445.4,"b_mm":190.0,"mass_kg_m":62.1,"Wel_y_mm3":1246000.0,"Wpl_y_mm3":1391000.0,"Avz_mm2":3840.0,"Iy_mm4":277400000.0},{"name":"IPE V 500","h_mm":514.0,"b_mm":204.0,"mass_kg_m":129.0,"Wel_y_mm3":2751000.0,"Wpl_y_mm3":3168000.0,"Avz_mm2":8316.0,"Iy_mm4":707100000.0},{"name":"IPE O 500","h_mm":506.0,"b_mm":202.0,"mass_kg_m":107.0,"Wel_y_mm3":2283000.0,"Wpl_y_mm3":2612000.0,"Avz_mm2":7020.0,"Iy_mm4":577700000.0},{"name":"IPE 500","h_mm":500.0,"b_mm":200.0,"mass_kg_m":90.7,"Wel_y_mm3":1927000.0,"Wpl_y_mm3":2194000.0,"Avz_mm2":5987.0,"Iy_mm4":481900000.0},{"name":"IPE A 500","h_mm":497.0,"b_mm":200.0,"mass_kg_m":79.4,"Wel_y_mm3":1727000.0,"Wpl_y_mm3":1946000.0,"Avz_mm2":5040.0,"Iy_mm4":429300000.0},{"name":"IPE AA 500","h_mm":495.2,"b_mm":200.0,"mass_kg_m":73.2,"Wel_y_mm3":1613000.0,"Wpl_y_mm3":1807000.0,"Avz_mm2":4561.0,"Iy_mm4":399400000.0},{"name":"IPE O 550","h_mm":556.0,"b_mm":212.0,"mass_kg_m":123.0,"Wel_y_mm3":2847000.0,"Wpl_y_mm3":3263000.0,"Avz_mm2":8268.0,"Iy_mm4":791500000.0},{"name":"IPE 550","h_mm":550.0,"b_mm":210.0,"mass_kg_m":106.0,"Wel_y_mm3":2440000.0,"Wpl_y_mm3":2787000.0,"Avz_mm2":7234.0,"Iy_mm4":671100000.0},{"name":"IPE A 550","h_mm":547.0,"b_mm":210.0,"mass_kg_m":92.1,"Wel_y_mm3":2193000.0,"Wpl_y_mm3":2474000.0,"Avz_mm2":6029.0,"Iy_mm4":599700000.0},{"name":"IPE AA 550","h_mm":541.0,"b_mm":210.0,"mass_kg_m":79.5,"Wel_y_mm3":1831000.0,"Wpl_y_mm3":2078000.0,"Avz_mm2":5586.0,"Iy_mm4":495500000.0},{"name":"IPE V 600","h_mm":618.0,"b_mm":228.0,"mass_kg_m":184.0,"Wel_y_mm3":4581000.0,"Wpl_y_mm3":5324000.0,"Avz_mm2":12450.0,"Iy_mm4":1415800000.0},{"name":"IPE O 600","h_mm":610.0,"b_mm":224.0,"mass_kg_m":154.0,"Wel_y_mm3":3878000.0,"Wpl_y_mm3":4471000.0,"Avz_mm2":10430.0,"Iy_mm4":1183000000.0},{"name":"IPE 600","h_mm":600.0,"b_mm":220.0,"mass_kg_m":122.0,"Wel_y_mm3":3069000.0,"Wpl_y_mm3":3512000.0,"Avz_mm2":8378.0,"Iy_mm4":920800000.0},{"name":"IPE A 600","h_mm":597.0,"b_mm":220.0,"mass_kg_m":108.0,"Wel_y_mm3":2777000.0,"Wpl_y_mm3":3141000.0,"Avz_mm2":7013.0,"Iy_mm4":829100000.0},{"name":"IPE 750 x 220","h_mm":779.0,"b_mm":266.0,"mass_kg_m":220.0,"Wel_y_mm3":7173000.0,"Wpl_y_mm3":8231000.0,"Avz_mm2":13900.0,"Iy_mm4":2793900000.0},{"name":"IPE 750 x 196","h_mm":770.0,"b_mm":268.0,"mass_kg_m":196.0,"Wel_y_mm3":6271000.0,"Wpl_y_mm3":7207000.0,"Avz_mm2":12969.999999999998,"Iy_mm4":2414700000.0},{"name":"IPE 750 x 173","h_mm":762.0,"b_mm":267.0,"mass_kg_m":173.0,"Wel_y_mm3":5433000.0,"Wpl_y_mm3":6251000.0,"Avz_mm2":11860.0,"Iy_mm4":2070100000.0},{"name":"IPE 750 x 147","h_mm":753.0,"b_mm":265.0,"mass_kg_m":147.0,"Wel_y_mm3":4442000.0,"Wpl_y_mm3":5143000.0,"Avz_mm2":10730.0,"Iy_mm4":1672500000.0},{"name":"IPE 750 x 134","h_mm":750.0,"b_mm":264.0,"mass_kg_m":134.0,"Wel_y_mm3":4050000.0,"Wpl_y_mm3":4678000.0,"Avz_mm2":9777.0,"Iy_mm4":1518900000.0}],"HEM":[{"name":"HE 100 M","h_mm":120.0,"b_mm":106.0,"mass_kg_m":41.8,"Wel_y_mm3":190400.0,"Wpl_y_mm3":235800.0,"Avz_mm2":1803.0,"Iy_mm4":11420000.0},{"name":"HE 120 M","h_mm":140.0,"b_mm":126.0,"mass_kg_m":52.1,"Wel_y_mm3":288200.0,"Wpl_y_mm3":350600.0,"Avz_mm2":2115.0,"Iy_mm4":20170000.0},{"name":"HE 140 M","h_mm":160.0,"b_mm":146.0,"mass_kg_m":63.2,"Wel_y_mm3":411400.0,"Wpl_y_mm3":493800.0,"Avz_mm2":2445.0,"Iy_mm4":32910000.0},{"name":"HE 160 M","h_mm":180.0,"b_mm":166.0,"mass_kg_m":76.2,"Wel_y_mm3":566400.0,"Wpl_y_mm3":674500.0,"Avz_mm2":3081.0,"Iy_mm4":50980000.0},{"name":"HE 180 M","h_mm":200.0,"b_mm":186.0,"mass_kg_m":88.9,"Wel_y_mm3":748300.0,"Wpl_y_mm3":883400.0,"Avz_mm2":3465.0,"Iy_mm4":74830000.0},{"name":"HE 200 M","h_mm":220.0,"b_mm":206.0,"mass_kg_m":103.0,"Wel_y_mm3":967400.0,"Wpl_y_mm3":1135000.0,"Avz_mm2":4103.0,"Iy_mm4":106400000.0},{"name":"HE 220 M","h_mm":240.0,"b_mm":226.0,"mass_kg_m":117.0,"Wel_y_mm3":1217000.0,"Wpl_y_mm3":1419000.0,"Avz_mm2":4531.0,"Iy_mm4":146000000.0},{"name":"HE 240 M","h_mm":270.0,"b_mm":248.0,"mass_kg_m":157.0,"Wel_y_mm3":1799000.0,"Wpl_y_mm3":2116000.0,"Avz_mm2":6006.0,"Iy_mm4":242800000.0},{"name":"HE 260 M","h_mm":290.0,"b_mm":268.0,"mass_kg_m":172.0,"Wel_y_mm3":2159000.0,"Wpl_y_mm3":2523000.0,"Avz_mm2":6689.0,"Iy_mm4":313000000.0},{"name":"HE 280 M","h_mm":310.0,"b_mm":288.0,"mass_kg_m":189.0,"Wel_y_mm3":2551000.0,"Wpl_y_mm3":2965000.0,"Avz_mm2":7202.0,"Iy_mm4":395400000.0},{"name":"HE 300 M","h_mm":340.0,"b_mm":310.0,"mass_kg_m":238.0,"Wel_y_mm3":3482000.0,"Wpl_y_mm3":4077000.0,"Avz_mm2":9052.0,"Iy_mm4":592000000.0},{"name":"HE 320 M","h_mm":359.0,"b_mm":309.0,"mass_kg_m":245.0,"Wel_y_mm3":3795000.0,"Wpl_y_mm3":4435000.0,"Avz_mm2":9484.0,"Iy_mm4":681300000.0},{"name":"HE 340 M","h_mm":377.0,"b_mm":309.0,"mass_kg_m":248.0,"Wel_y_mm3":4051000.0,"Wpl_y_mm3":4717000.0,"Avz_mm2":9862.0,"Iy_mm4":763700000.0},{"name":"HE 360 M","h_mm":395.0,"b_mm":308.0,"mass_kg_m":250.0,"Wel_y_mm3":4297000.0,"Wpl_y_mm3":4989000.0,"Avz_mm2":10240.0,"Iy_mm4":848600000.0},{"name":"HE 400 M","h_mm":432.0,"b_mm":307.0,"mass_kg_m":256.0,"Wel_y_mm3":4820000.0,"Wpl_y_mm3":5570000.0,"Avz_mm2":11010.0,"Iy_mm4":1041100000.0},{"name":"HE 450 M","h_mm":478.0,"b_mm":307.0,"mass_kg_m":263.0,"Wel_y_mm3":5501000.0,"Wpl_y_mm3":6331000.0,"Avz_mm2":11980.0,"Iy_mm4":1314800000.0},{"name":"HE 500 M","h_mm":524.0,"b_mm":306.0,"mass_kg_m":270.0,"Wel_y_mm3":6180000.0,"Wpl_y_mm3":7094000.0,"Avz_mm2":12940.0,"Iy_mm4":1619200000.0},{"name":"HE 550 M","h_mm":572.0,"b_mm":306.0,"mass_kg_m":278.0,"Wel_y_mm3":6922000.0,"Wpl_y_mm3":7932000.0,"Avz_mm2":13950.0,"Iy_mm4":1979800000.0},{"name":"HE 600 M","h_mm":620.0,"b_mm":305.0,"mass_kg_m":285.0,"Wel_y_mm3":7659000.0,"Wpl_y_mm3":8772000.0,"Avz_mm2":14960.0,"Iy_mm4":2374400000.0},{"name":"HE 650 M","h_mm":668.0,"b_mm":305.0,"mass_kg_m":293.0,"Wel_y_mm3":8433000.0,"Wpl_y_mm3":9656000.0,"Avz_mm2":15969.999999999998,"Iy_mm4":2816600000.0},{"name":"HE 700 M","h_mm":716.0,"b_mm":304.0,"mass_kg_m":301.0,"Wel_y_mm3":9197000.0,"Wpl_y_mm3":10530000.0,"Avz_mm2":16980.0,"Iy_mm4":3292700000.0},{"name":"HE 800 M","h_mm":814.0,"b_mm":303.0,"mass_kg_m":317.0,"Wel_y_mm3":10870000.0,"Wpl_y_mm3":12480000.0,"Avz_mm2":19420.0,"Iy_mm4":4425900000.0},{"name":"HE 900 M","h_mm":910.0,"b_mm":302.0,"mass_kg_m":333.0,"Wel_y_mm3":12530000.0,"Wpl_y_mm3":14440000.0,"Avz_mm2":21440.0,"Iy_mm4":5704300000.0},{"name":"HE 1000 M","h_mm":1008.0,"b_mm":302.0,"mass_kg_m":349.0,"Wel_y_mm3":14330000.0,"Wpl_y_mm3":16560000.0,"Avz_mm2":23500.0,"Iy_mm4":7222900000.0}],"HEB":[{"name":"HE 100 B","h_mm":100.0,"b_mm":100.0,"mass_kg_m":20.4,"Wel_y_mm3":89900.0,"Wpl_y_mm3":104200.0,"Avz_mm2":903.5999999999999,"Iy_mm4":4495000.0},{"name":"HE 120 B","h_mm":120.0,"b_mm":120.0,"mass_kg_m":26.7,"Wel_y_mm3":144000.0,"Wpl_y_mm3":165200.0,"Avz_mm2":1096.0,"Iy_mm4":8643000.0},{"name":"HE 140 B","h_mm":140.0,"b_mm":140.0,"mass_kg_m":33.7,"Wel_y_mm3":215600.0,"Wpl_y_mm3":245400.0,"Avz_mm2":1307.0,"Iy_mm4":15090000.0},{"name":"HE 160 B","h_mm":160.0,"b_mm":160.0,"mass_kg_m":42.6,"Wel_y_mm3":311400.0,"Wpl_y_mm3":353900.0,"Avz_mm2":1759.0,"Iy_mm4":24910000.0},{"name":"HE 180 B","h_mm":180.0,"b_mm":180.0,"mass_kg_m":51.2,"Wel_y_mm3":425600.0,"Wpl_y_mm3":481400.0,"Avz_mm2":2023.9999999999998,"Iy_mm4":38310000.0},{"name":"HE 200 B","h_mm":200.0,"b_mm":200.0,"mass_kg_m":61.3,"Wel_y_mm3":569600.0,"Wpl_y_mm3":642500.0,"Avz_mm2":2483.0,"Iy_mm4":56960000.0},{"name":"HE 220 B","h_mm":220.0,"b_mm":220.0,"mass_kg_m":71.5,"Wel_y_mm3":735500.0,"Wpl_y_mm3":827000.0,"Avz_mm2":2792.0,"Iy_mm4":80900000.0},{"name":"HE 240 B","h_mm":240.0,"b_mm":240.0,"mass_kg_m":83.2,"Wel_y_mm3":938200.0,"Wpl_y_mm3":1053000.0,"Avz_mm2":3322.0,"Iy_mm4":112500000.0},{"name":"HE 260 B","h_mm":260.0,"b_mm":260.0,"mass_kg_m":93.0,"Wel_y_mm3":1147000.0,"Wpl_y_mm3":1282000.0,"Avz_mm2":3759.0000000000005,"Iy_mm4":149100000.0},{"name":"HE 280 B","h_mm":280.0,"b_mm":280.0,"mass_kg_m":103.0,"Wel_y_mm3":1376000.0,"Wpl_y_mm3":1534000.0,"Avz_mm2":4109.0,"Iy_mm4":192700000.0},{"name":"HE 300 B","h_mm":300.0,"b_mm":300.0,"mass_kg_m":117.0,"Wel_y_mm3":1677000.0,"Wpl_y_mm3":1868000.0,"Avz_mm2":4742.0,"Iy_mm4":251600000.0},{"name":"HE 320 B","h_mm":320.0,"b_mm":300.0,"mass_kg_m":127.0,"Wel_y_mm3":1926000.0,"Wpl_y_mm3":2149000.0,"Avz_mm2":5177.0,"Iy_mm4":308200000.0},{"name":"HE 340 B","h_mm":340.0,"b_mm":300.0,"mass_kg_m":134.0,"Wel_y_mm3":2156000.0,"Wpl_y_mm3":2408000.0,"Avz_mm2":5608.0,"Iy_mm4":366500000.0},{"name":"HE 360 B","h_mm":360.0,"b_mm":300.0,"mass_kg_m":142.0,"Wel_y_mm3":2399000.0,"Wpl_y_mm3":2682000.0,"Avz_mm2":6059.0,"Iy_mm4":431900000.0},{"name":"HE 400 B","h_mm":400.0,"b_mm":300.0,"mass_kg_m":155.0,"Wel_y_mm3":2884000.0,"Wpl_y_mm3":3231000.0,"Avz_mm2":6997.0,"Iy_mm4":576800000.0},{"name":"HE 450 B","h_mm":450.0,"b_mm":300.0,"mass_kg_m":171.0,"Wel_y_mm3":3550000.0,"Wpl_y_mm3":3982000.0,"Avz_mm2":7965.000000000001,"Iy_mm4":798800000.0},{"name":"HE 500 B","h_mm":500.0,"b_mm":300.0,"mass_kg_m":187.0,"Wel_y_mm3":4287000.0,"Wpl_y_mm3":4814000.0,"Avz_mm2":8981.0,"Iy_mm4":1071700000.0},{"name":"HE 550 B","h_mm":550.0,"b_mm":300.0,"mass_kg_m":199.0,"Wel_y_mm3":4970000.0,"Wpl_y_mm3":5590000.0,"Avz_mm2":10000.0,"Iy_mm4":1366900000.0},{"name":"HE 600 B","h_mm":600.0,"b_mm":300.0,"mass_kg_m":212.0,"Wel_y_mm3":5701000.0,"Wpl_y_mm3":6425000.0,"Avz_mm2":11080.0,"Iy_mm4":1710400000.0},{"name":"HE 650 B","h_mm":650.0,"b_mm":300.0,"mass_kg_m":225.0,"Wel_y_mm3":6480000.0,"Wpl_y_mm3":7319000.0,"Avz_mm2":12200.0,"Iy_mm4":2106100000.0},{"name":"HE 700 B","h_mm":700.0,"b_mm":300.0,"mass_kg_m":241.0,"Wel_y_mm3":7339000.0,"Wpl_y_mm3":8327000.0,"Avz_mm2":13700.0,"Iy_mm4":2568800000.0},{"name":"HE 800 B","h_mm":800.0,"b_mm":300.0,"mass_kg_m":262.0,"Wel_y_mm3":8977000.0,"Wpl_y_mm3":10220000.0,"Avz_mm2":16169.999999999998,"Iy_mm4":3590800000.0},{"name":"HE 900 B","h_mm":900.0,"b_mm":300.0,"mass_kg_m":291.0,"Wel_y_mm3":10970000.0,"Wpl_y_mm3":12580000.0,"Avz_mm2":18870.0,"Iy_mm4":4940600000.0},{"name":"HE 1000 B","h_mm":1000.0,"b_mm":300.0,"mass_kg_m":314.0,"Wel_y_mm3":12890000.0,"Wpl_y_mm3":14850000.0,"Avz_mm2":21240.0,"Iy_mm4":6447400000.0}],"HEA":[{"name":"HE 100 A","h_mm":96.0,"b_mm":100.0,"mass_kg_m":16.7,"Wel_y_mm3":72750.0,"Wpl_y_mm3":83010.0,"Avz_mm2":755.6,"Iy_mm4":3492000.0},{"name":"HE 120 A","h_mm":114.0,"b_mm":120.0,"mass_kg_m":19.9,"Wel_y_mm3":106300.0,"Wpl_y_mm3":119400.0,"Avz_mm2":845.5999999999999,"Iy_mm4":6061000.0},{"name":"HE 140 A","h_mm":133.0,"b_mm":140.0,"mass_kg_m":24.7,"Wel_y_mm3":155300.0,"Wpl_y_mm3":173400.0,"Avz_mm2":1011.9999999999999,"Iy_mm4":10330000.0},{"name":"HE 160 A","h_mm":152.0,"b_mm":160.0,"mass_kg_m":30.4,"Wel_y_mm3":220100.0,"Wpl_y_mm3":245100.0,"Avz_mm2":1321.0,"Iy_mm4":16720000.0},{"name":"HE 180 A","h_mm":171.0,"b_mm":180.0,"mass_kg_m":35.5,"Wel_y_mm3":293600.0,"Wpl_y_mm3":324800.0,"Avz_mm2":1447.0,"Iy_mm4":25100000.0},{"name":"HE 200 A","h_mm":190.0,"b_mm":200.0,"mass_kg_m":42.3,"Wel_y_mm3":388600.0,"Wpl_y_mm3":429400.0,"Avz_mm2":1807.9999999999998,"Iy_mm4":36920000.0},{"name":"HE 220 A","h_mm":210.0,"b_mm":220.0,"mass_kg_m":50.5,"Wel_y_mm3":515200.00000000006,"Wpl_y_mm3":568400.0,"Avz_mm2":2067.0,"Iy_mm4":54090000.0},{"name":"HE 240 A","h_mm":230.0,"b_mm":240.0,"mass_kg_m":60.3,"Wel_y_mm3":675000.0,"Wpl_y_mm3":744600.0,"Avz_mm2":2517.0,"Iy_mm4":77630000.0},{"name":"HE 260 A","h_mm":250.0,"b_mm":260.0,"mass_kg_m":68.2,"Wel_y_mm3":836300.0,"Wpl_y_mm3":919700.0,"Avz_mm2":2875.0,"Iy_mm4":104500000.0},{"name":"HE 280 A","h_mm":270.0,"b_mm":280.0,"mass_kg_m":76.4,"Wel_y_mm3":1012000.0,"Wpl_y_mm3":1112000.0,"Avz_mm2":3174.0,"Iy_mm4":136700000.0},{"name":"HE 300 A","h_mm":290.0,"b_mm":300.0,"mass_kg_m":88.3,"Wel_y_mm3":1259000.0,"Wpl_y_mm3":1383000.0,"Avz_mm2":3727.0000000000005,"Iy_mm4":182600000.0},{"name":"HE 320 A","h_mm":310.0,"b_mm":300.0,"mass_kg_m":97.6,"Wel_y_mm3":1479000.0,"Wpl_y_mm3":1628000.0,"Avz_mm2":4113.0,"Iy_mm4":229200000.0},{"name":"HE 340 A","h_mm":330.0,"b_mm":300.0,"mass_kg_m":105.0,"Wel_y_mm3":1678000.0,"Wpl_y_mm3":1850000.0,"Avz_mm2":4495.0,"Iy_mm4":276900000.0},{"name":"HE 360 A","h_mm":350.0,"b_mm":300.0,"mass_kg_m":112.0,"Wel_y_mm3":1890000.0,"Wpl_y_mm3":2088000.0,"Avz_mm2":4895.0,"Iy_mm4":330800000.0},{"name":"HE 400 A","h_mm":390.0,"b_mm":300.0,"mass_kg_m":125.0,"Wel_y_mm3":2311000.0,"Wpl_y_mm3":2561000.0,"Avz_mm2":5732.0,"Iy_mm4":450600000.0},{"name":"HE 450 A","h_mm":440.0,"b_mm":300.0,"mass_kg_m":140.0,"Wel_y_mm3":2896000.0,"Wpl_y_mm3":3215000.0,"Avz_mm2":6578.0,"Iy_mm4":637200000.0},{"name":"HE 500 A","h_mm":490.0,"b_mm":300.0,"mass_kg_m":155.0,"Wel_y_mm3":3549000.0,"Wpl_y_mm3":3948000.0,"Avz_mm2":7470.999999999999,"Iy_mm4":869700000.0},{"name":"HE 550 A","h_mm":540.0,"b_mm":300.0,"mass_kg_m":166.0,"Wel_y_mm3":4145000.0,"Wpl_y_mm3":4621000.0,"Avz_mm2":8371.0,"Iy_mm4":1119300000.0},{"name":"HE 600 A","h_mm":590.0,"b_mm":300.0,"mass_kg_m":178.0,"Wel_y_mm3":4786000.0,"Wpl_y_mm3":5350000.0,"Avz_mm2":9320.0,"Iy_mm4":1412000000.0},{"name":"HE 650 A","h_mm":640.0,"b_mm":300.0,"mass_kg_m":190.0,"Wel_y_mm3":5474000.0,"Wpl_y_mm3":6136000.0,"Avz_mm2":10310.0,"Iy_mm4":1751700000.0},{"name":"HE 700 A","h_mm":690.0,"b_mm":300.0,"mass_kg_m":204.0,"Wel_y_mm3":6240000.0,"Wpl_y_mm3":7031000.0,"Avz_mm2":11690.0,"Iy_mm4":2153000000.0},{"name":"HE 800 A","h_mm":790.0,"b_mm":300.0,"mass_kg_m":224.0,"Wel_y_mm3":7682000.0,"Wpl_y_mm3":8699000.0,"Avz_mm2":13880.000000000002,"Iy_mm4":3034400000.0},{"name":"HE 900 A","h_mm":890.0,"b_mm":300.0,"mass_kg_m":252.0,"Wel_y_mm3":9484000.0,"Wpl_y_mm3":10810000.0,"Avz_mm2":16330.000000000002,"Iy_mm4":4220700000.0},{"name":"HE 1000 A","h_mm":990.0,"b_mm":300.0,"mass_kg_m":272.0,"Wel_y_mm3":11180000.0,"Wpl_y_mm3":12820000.0,"Avz_mm2":18450.0,"Iy_mm4":5538400000.0}],"HEAA":[{"name":"HE 100 AA","h_mm":91.0,"b_mm":100.0,"mass_kg_m":12.2,"Wel_y_mm3":51970.0,"Wpl_y_mm3":58350.0,"Avz_mm2":614.7,"Iy_mm4":2365000.0},{"name":"HE 120 AA","h_mm":109.0,"b_mm":120.0,"mass_kg_m":14.6,"Wel_y_mm3":75840.0,"Wpl_y_mm3":84110.0,"Avz_mm2":690.3,"Iy_mm4":4133000.0},{"name":"HE 140 AA","h_mm":128.0,"b_mm":140.0,"mass_kg_m":18.1,"Wel_y_mm3":112400.0,"Wpl_y_mm3":123700.0,"Avz_mm2":792.1999999999999,"Iy_mm4":7194000.0},{"name":"HE 160 AA","h_mm":148.0,"b_mm":160.0,"mass_kg_m":23.8,"Wel_y_mm3":173300.0,"Wpl_y_mm3":190400.0,"Avz_mm2":1037.0,"Iy_mm4":12820000.0},{"name":"HE 180 AA","h_mm":167.0,"b_mm":180.0,"mass_kg_m":28.7,"Wel_y_mm3":235500.0,"Wpl_y_mm3":258200.0,"Avz_mm2":1215.0,"Iy_mm4":19660000.0},{"name":"HE 200 AA","h_mm":186.0,"b_mm":200.0,"mass_kg_m":34.6,"Wel_y_mm3":316500.0,"Wpl_y_mm3":347000.0,"Avz_mm2":1545.0,"Iy_mm4":29440000.0},{"name":"HE 220 AA","h_mm":205.0,"b_mm":220.0,"mass_kg_m":40.4,"Wel_y_mm3":406800.0,"Wpl_y_mm3":445400.0,"Avz_mm2":1763.0,"Iy_mm4":41700000.0},{"name":"HE 240 AA","h_mm":224.0,"b_mm":240.0,"mass_kg_m":47.4,"Wel_y_mm3":520900.0,"Wpl_y_mm3":570500.0,"Avz_mm2":2154.0,"Iy_mm4":58350000.0},{"name":"HE 260 AA","h_mm":244.0,"b_mm":260.0,"mass_kg_m":54.1,"Wel_y_mm3":654100.0,"Wpl_y_mm3":714400.0,"Avz_mm2":2474.0,"Iy_mm4":79800000.0},{"name":"HE 280 AA","h_mm":264.0,"b_mm":280.0,"mass_kg_m":61.2,"Wel_y_mm3":799800.0,"Wpl_y_mm3":873000.0,"Avz_mm2":2752.0,"Iy_mm4":105500000.0},{"name":"HE 300 AA","h_mm":283.0,"b_mm":300.0,"mass_kg_m":69.8,"Wel_y_mm3":975500.0,"Wpl_y_mm3":1065000.0,"Avz_mm2":3236.0,"Iy_mm4":138000000.0},{"name":"HE 320 AA","h_mm":301.0,"b_mm":300.0,"mass_kg_m":74.2,"Wel_y_mm3":1092000.0,"Wpl_y_mm3":1196000.0,"Avz_mm2":3539.0,"Iy_mm4":164400000.0},{"name":"HE 340 AA","h_mm":320.0,"b_mm":300.0,"mass_kg_m":78.9,"Wel_y_mm3":1222000.0,"Wpl_y_mm3":1340000.0,"Avz_mm2":3869.0,"Iy_mm4":195500000.0},{"name":"HE 360 AA","h_mm":339.0,"b_mm":300.0,"mass_kg_m":83.7,"Wel_y_mm3":1359000.0,"Wpl_y_mm3":1495000.0,"Avz_mm2":4216.0,"Iy_mm4":230300000.0},{"name":"HE 400 AA","h_mm":378.0,"b_mm":300.0,"mass_kg_m":92.4,"Wel_y_mm3":1653000.0,"Wpl_y_mm3":1824000.0,"Avz_mm2":4795.0,"Iy_mm4":312500000.0},{"name":"HE 450 AA","h_mm":425.0,"b_mm":300.0,"mass_kg_m":99.7,"Wel_y_mm3":1971000.0,"Wpl_y_mm3":2183000.0,"Avz_mm2":5469.0,"Iy_mm4":418800000.0},{"name":"HE 500 AA","h_mm":472.0,"b_mm":300.0,"mass_kg_m":107.0,"Wel_y_mm3":2315000.0,"Wpl_y_mm3":2576000.0,"Avz_mm2":6190.0,"Iy_mm4":546400000.0},{"name":"HE 550 AA","h_mm":522.0,"b_mm":300.0,"mass_kg_m":120.0,"Wel_y_mm3":2792000.0,"Wpl_y_mm3":3127000.0,"Avz_mm2":7266.0,"Iy_mm4":728700000.0},{"name":"HE 600 AA","h_mm":571.0,"b_mm":300.0,"mass_kg_m":129.0,"Wel_y_mm3":3217000.0,"Wpl_y_mm3":3623000.0,"Avz_mm2":8128.0,"Iy_mm4":918700000.0},{"name":"HE 650 AA","h_mm":620.0,"b_mm":300.0,"mass_kg_m":138.0,"Wel_y_mm3":3675000.0,"Wpl_y_mm3":4159000.0,"Avz_mm2":9039.0,"Iy_mm4":1139400000.0},{"name":"HE 700 AA","h_mm":670.0,"b_mm":300.0,"mass_kg_m":150.0,"Wel_y_mm3":4260000.0,"Wpl_y_mm3":4840000.0,"Avz_mm2":10030.0,"Iy_mm4":1427200000.0},{"name":"HE 800 AA","h_mm":770.0,"b_mm":300.0,"mass_kg_m":172.0,"Wel_y_mm3":5425000.0,"Wpl_y_mm3":6224000.0,"Avz_mm2":12380.0,"Iy_mm4":2088800000.0},{"name":"HE 900 AA","h_mm":870.0,"b_mm":300.0,"mass_kg_m":198.0,"Wel_y_mm3":6922000.0,"Wpl_y_mm3":7998000.0,"Avz_mm2":14719.999999999998,"Iy_mm4":3011400000.0},{"name":"HE 1000 AA","h_mm":970.0,"b_mm":300.0,"mass_kg_m":222.0,"Wel_y_mm3":8380000.0,"Wpl_y_mm3":9776000.0,"Avz_mm2":17210.0,"Iy_mm4":4064500000.0}],"UPE":[{"name":"UPE 80","h_mm":80.0,"b_mm":50.0,"mass_kg_m":7.9,"Wel_y_mm3":26800.0,"Wpl_y_mm3":31200.0,"Avz_mm2":405.0,"Iy_mm4":1070000.0},{"name":"UPE 100","h_mm":100.0,"b_mm":55.0,"mass_kg_m":9.8,"Wel_y_mm3":41400.0,"Wpl_y_mm3":48000.0,"Avz_mm2":534.0,"Iy_mm4":2070000.0},{"name":"UPE 120","h_mm":120.0,"b_mm":60.0,"mass_kg_m":12.1,"Wel_y_mm3":60600.0,"Wpl_y_mm3":70300.0,"Avz_mm2":718.0,"Iy_mm4":3640000.0},{"name":"UPE 140","h_mm":140.0,"b_mm":65.0,"mass_kg_m":14.5,"Wel_y_mm3":85600.0,"Wpl_y_mm3":98800.0,"Avz_mm2":825.0,"Iy_mm4":6000000.0},{"name":"UPE 160","h_mm":160.0,"b_mm":70.0,"mass_kg_m":17.0,"Wel_y_mm3":114000.0,"Wpl_y_mm3":132000.0,"Avz_mm2":1000.0,"Iy_mm4":9110000.0},{"name":"UPE 180","h_mm":180.0,"b_mm":75.0,"mass_kg_m":19.7,"Wel_y_mm3":150000.0,"Wpl_y_mm3":173000.0,"Avz_mm2":1120.0,"Iy_mm4":13500000.0},{"name":"UPE 200","h_mm":200.0,"b_mm":80.0,"mass_kg_m":22.8,"Wel_y_mm3":191000.0,"Wpl_y_mm3":220000.0,"Avz_mm2":1350.0,"Iy_mm4":19100000.0},{"name":"UPE 220","h_mm":220.0,"b_mm":85.0,"mass_kg_m":26.6,"Wel_y_mm3":244000.0,"Wpl_y_mm3":281000.0,"Avz_mm2":1580.0,"Iy_mm4":26800000.0},{"name":"UPE 240","h_mm":240.0,"b_mm":90.0,"mass_kg_m":30.2,"Wel_y_mm3":300000.0,"Wpl_y_mm3":347000.0,"Avz_mm2":1880.0,"Iy_mm4":36000000.0},{"name":"UPE 270","h_mm":270.0,"b_mm":95.0,"mass_kg_m":35.2,"Wel_y_mm3":389000.0,"Wpl_y_mm3":451000.0,"Avz_mm2":2220.0,"Iy_mm4":52500000.0},{"name":"UPE 300","h_mm":300.0,"b_mm":100.0,"mass_kg_m":44.4,"Wel_y_mm3":522000.0,"Wpl_y_mm3":613000.0,"Avz_mm2":3030.0,"Iy_mm4":78200000.0},{"name":"UPE 330","h_mm":330.0,"b_mm":105.0,"mass_kg_m":53.2,"Wel_y_mm3":667000.0,"Wpl_y_mm3":792000.0,"Avz_mm2":3879.9999999999995,"Iy_mm4":110100000.0},{"name":"UPE 360","h_mm":360.0,"b_mm":110.0,"mass_kg_m":61.2,"Wel_y_mm3":824000.0,"Wpl_y_mm3":982000.0,"Avz_mm2":4560.0,"Iy_mm4":148300000.0},{"name":"UPE 400","h_mm":400.0,"b_mm":115.0,"mass_kg_m":72.2,"Wel_y_mm3":1050000.0,"Wpl_y_mm3":1260000.0,"Avz_mm2":5620.0,"Iy_mm4":209800000.0}],"UPN":[{"name":"UPN 50","h_mm":50.0,"b_mm":38.0,"mass_kg_m":5.6,"Wel_y_mm3":10600.0,"Wpl_y_mm3":13100.0,"Avz_mm2":277.0,"Iy_mm4":264000.0},{"name":"UPN 65","h_mm":65.0,"b_mm":42.0,"mass_kg_m":7.1,"Wel_y_mm3":17700.0,"Wpl_y_mm3":21700.0,"Avz_mm2":368.0,"Iy_mm4":575000.0},{"name":"UPN 80","h_mm":80.0,"b_mm":45.0,"mass_kg_m":8.6,"Wel_y_mm3":26500.0,"Wpl_y_mm3":32299.999999999996,"Avz_mm2":490.00000000000006,"Iy_mm4":1060000.0},{"name":"UPN 100","h_mm":100.0,"b_mm":50.0,"mass_kg_m":10.6,"Wel_y_mm3":41200.0,"Wpl_y_mm3":49000.0,"Avz_mm2":646.0,"Iy_mm4":2060000.0},{"name":"UPN 120","h_mm":120.0,"b_mm":55.0,"mass_kg_m":13.4,"Wel_y_mm3":60700.0,"Wpl_y_mm3":72600.0,"Avz_mm2":880.0000000000001,"Iy_mm4":3640000.0},{"name":"UPN 140","h_mm":140.0,"b_mm":60.0,"mass_kg_m":16.0,"Wel_y_mm3":86400.0,"Wpl_y_mm3":103000.0,"Avz_mm2":1040.0,"Iy_mm4":6050000.0},{"name":"UPN 160","h_mm":160.0,"b_mm":65.0,"mass_kg_m":18.8,"Wel_y_mm3":116000.0,"Wpl_y_mm3":138000.0,"Avz_mm2":1260.0,"Iy_mm4":9250000.0},{"name":"UPN 180","h_mm":180.0,"b_mm":70.0,"mass_kg_m":22.0,"Wel_y_mm3":150000.0,"Wpl_y_mm3":179000.0,"Avz_mm2":1510.0,"Iy_mm4":13500000.0},{"name":"UPN 200","h_mm":200.0,"b_mm":75.0,"mass_kg_m":25.3,"Wel_y_mm3":191000.0,"Wpl_y_mm3":228000.0,"Avz_mm2":1770.0,"Iy_mm4":19100000.0},{"name":"UPN 220","h_mm":220.0,"b_mm":80.0,"mass_kg_m":29.4,"Wel_y_mm3":245000.0,"Wpl_y_mm3":292000.0,"Avz_mm2":2060.0,"Iy_mm4":26900000.0},{"name":"UPN 240","h_mm":240.0,"b_mm":85.0,"mass_kg_m":33.2,"Wel_y_mm3":300000.0,"Wpl_y_mm3":358000.0,"Avz_mm2":2370.0,"Iy_mm4":36000000.0},{"name":"UPN 260","h_mm":260.0,"b_mm":90.0,"mass_kg_m":37.9,"Wel_y_mm3":371000.0,"Wpl_y_mm3":442000.0,"Avz_mm2":2710.0,"Iy_mm4":48200000.0},{"name":"UPN 280","h_mm":280.0,"b_mm":95.0,"mass_kg_m":41.8,"Wel_y_mm3":448000.0,"Wpl_y_mm3":532000.0,"Avz_mm2":2930.0,"Iy_mm4":62800000.0},{"name":"UPN 300","h_mm":300.0,"b_mm":100.0,"mass_kg_m":46.2,"Wel_y_mm3":535000.0,"Wpl_y_mm3":632000.0,"Avz_mm2":3180.0,"Iy_mm4":80300000.0},{"name":"UPN 320","h_mm":320.0,"b_mm":100.0,"mass_kg_m":59.5,"Wel_y_mm3":679000.0,"Wpl_y_mm3":826000.0,"Avz_mm2":4710.0,"Iy_mm4":108700000.0},{"name":"UPN 350","h_mm":350.0,"b_mm":100.0,"mass_kg_m":60.6,"Wel_y_mm3":734000.0,"Wpl_y_mm3":918000.0,"Avz_mm2":5080.0,"Iy_mm4":128400000.0},{"name":"UPN 380","h_mm":380.0,"b_mm":102.0,"mass_kg_m":63.1,"Wel_y_mm3":829000.0,"Wpl_y_mm3":1010000.0,"Avz_mm2":5320.0,"Iy_mm4":157600000.0},{"name":"UPN 400","h_mm":400.0,"b_mm":110.0,"mass_kg_m":71.8,"Wel_y_mm3":1020000.0,"Wpl_y_mm3":1240000.0,"Avz_mm2":5860.0,"Iy_mm4":203500000.0}]};
-window.PROFILE_DB = PROFILE_DB;
+(function(){
+'use strict';
 
-</script>
-<script>
-"use strict";
+/* ---------- Utilities ---------- */
+const $ = id => document.getElementById(id);
+const fmt = (v,p=2)=> (isFinite(v)? Number(v).toFixed(p): '—');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const roundN=(v,p)=>isFinite(v)? Number(Math.round(Number(v+'e'+p))+'e-'+p) : v;
+const TAU = Math.PI*2;
+const G_ACC = 9.81; // kN per t
+const SQRT3 = Math.sqrt(3);
+const THEME_KEY='lsp_theme_compact_v52';
 
-/* =========================
-   Theme toggle
-   ========================= */
-const THEME_KEY='lsp_theme_v7';
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  document.documentElement.style.colorScheme = (t==='light'?'light':'dark');
-  document.getElementById('theme-badge').textContent = t==='light' ? 'Light' : 'Dark';
+function safeNumber(v, def=0){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : def;
 }
-function initTheme(){
-  const saved = localStorage.getItem(THEME_KEY);
-  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-  applyTheme(saved || (prefersLight ? 'light' : 'dark'));
+function showErr(msg){
+  const e=$('globalErr');
+  if(!msg){ e.textContent=''; e.classList.add('hide'); return; }
+  e.textContent=msg; e.classList.remove('hide');
 }
-document.getElementById('theme-btn').addEventListener('click', ()=>{
-  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-  const next = cur==='dark' ? 'light' : 'dark';
-  localStorage.setItem(THEME_KEY, next);
-  applyTheme(next);
-  runCalc();
+function overlap1D(a1,a2,b1,b2){
+  const s=Math.max(a1,b1), e=Math.min(a2,b2);
+  return e>s ? [s,e,e-s] : null;
+}
+function overlapRect(r1,r2){
+  const ox = overlap1D(r1.x1,r1.x2,r2.x1,r2.x2);
+  if(!ox) return null;
+  const oy = overlap1D(r1.y1,r1.y2,r2.y1,r2.y2);
+  if(!oy) return null;
+  return {x1:ox[0],x2:ox[1],y1:oy[0],y2:oy[1], wx:ox[2], wy:oy[2], area:ox[2]*oy[2]};
+}
+function setTheme(mode){
+  if(mode==='light'){
+    document.documentElement.style.setProperty('--bg','#eef2fb');
+    document.documentElement.style.setProperty('--bg2','#e7edf9');
+    document.documentElement.style.setProperty('--panel','#ffffff');
+    document.documentElement.style.setProperty('--panel2','#f7f9ff');
+    document.documentElement.style.setProperty('--line','#d9e1f0');
+    document.documentElement.style.setProperty('--text','#0d172c');
+    document.documentElement.style.setProperty('--muted','#5b6b88');
+    document.documentElement.style.setProperty('--shadow','0 18px 35px rgba(8,20,55,.08)');
+    $('themeBadge').textContent='Light';
+  }else{
+    document.documentElement.style.removeProperty('--bg');
+    document.documentElement.style.removeProperty('--bg2');
+    document.documentElement.style.removeProperty('--panel');
+    document.documentElement.style.removeProperty('--panel2');
+    document.documentElement.style.removeProperty('--line');
+    document.documentElement.style.removeProperty('--text');
+    document.documentElement.style.removeProperty('--muted');
+    document.documentElement.style.removeProperty('--shadow');
+    $('themeBadge').textContent='Dark';
+  }
+  localStorage.setItem(THEME_KEY, mode);
+}
+$('themeBtn').addEventListener('click', ()=>{
+  const cur = localStorage.getItem(THEME_KEY)||'dark';
+  setTheme(cur==='dark'?'light':'dark');
 });
-initTheme();
+setTheme(localStorage.getItem(THEME_KEY)||'dark');
 
-/* =========================
-   Constants + helpers
-   ========================= */
-const g=9.81;
-const $=id=>document.getElementById(id);
-const getVar = (name)=>getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-const fmtBig=v=>{
-  if(!isFinite(v)||isNaN(v)) return String(v);
-  const av=Math.abs(v);
-  if(av>=1e7) return v.toExponential(3);
-  return Math.round(v).toLocaleString('en-GB');
-};
-const fmt1=v=>(isFinite(v)&&!isNaN(v))?v.toFixed(1):String(v);
-const fmt2=v=>(isFinite(v)&&!isNaN(v))?v.toFixed(2):String(v);
-const fmtXL=(x,L)=>`${(x/L).toFixed(2)}L`;
-const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-const diagramSrc={mat:'LSP.png',crawler:'crawler.png'};
+/* ---------- Accordion ---------- */
+document.querySelectorAll('.acc-head').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const item = btn.closest('.acc-item');
+    item.dataset.open = item.dataset.open==='1' ? '0' : '1';
+    if(viewer) viewer.requestRender();
+  });
+});
 
-const materials={
-  Azobe:{rho:1.05,sigma_max:25,tau_max:2,sigma_c_max:8, E:11000, matKind:'wood', fy:null},
-  S235:{rho:7.85,sigma_max:235,tau_max:135.7,sigma_c_max:319, E:210000, matKind:'steel', fy:235},
-  S355:{rho:7.85,sigma_max:355,tau_max:205,sigma_c_max:480, E:210000, matKind:'steel', fy:355}
-};
-
-function escapeHtml(s){
-  return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+/* ---------- Section DB ---------- */
+const DB = (window.PROFILE_DB && typeof window.PROFILE_DB === 'object') ? window.PROFILE_DB : null;
+if(!DB){
+  showErr('Section database file missing. Put sections_data_rev52.js in the same folder as this HTML.');
 }
+const SERIES_WHITELIST = ['HEA','HEB','HEM','IPE','UPN','UPE'];
 
-/* =========================
-   Load combinations (matching your preview screenshots)
-   ========================= */
-function getLC(){
-  const key = $('load_combo').value;
-  const psi1 = clamp(+$('psi_q1').value || 0, 0, 1);
-  const psi2 = clamp(+$('psi_q2').value || 0, 0, 1);
-  const psiText = n => (n===1?psi1:psi2).toFixed(1);
-
-  if(key==='basic'){
-    return { key, name:'Basic loads',
-      uls:{cG:1.0,cQ1:1.0,cQ2:1.0, note:`Basic: LC = G + Q1 + Q2`},
-      sls:{cG:1.0,cQ1:1.0,cQ2:1.0, note:`Basic: LC = G + Q1 + Q2`},
-      preview:`Basic loads: G + Q1 + Q2`};
+function getSeriesList(){
+  if(!DB) return SERIES_WHITELIST;
+  return SERIES_WHITELIST.filter(k => Array.isArray(DB[k]) && DB[k].length);
+}
+function populateSeries(){
+  const sel = $('sec_series');
+  const current = sel.value;
+  sel.innerHTML = '';
+  getSeriesList().forEach(k=>{
+    const op=document.createElement('option'); op.value=k; op.textContent=k; sel.appendChild(op);
+  });
+  if([...sel.options].some(o=>o.value===current)) sel.value=current;
+  else if([...sel.options].some(o=>o.value==='HEA')) sel.value='HEA';
+}
+function profileDisplayName(rec){ return rec?.name || ''; }
+function populateSizes(){
+  const series = $('sec_series').value;
+  const sizes = DB && DB[series] ? DB[series] : [];
+  const sel = $('sec_size');
+  const prev = sel.value;
+  sel.innerHTML='';
+  sizes.forEach((r,i)=>{
+    const op=document.createElement('option');
+    op.value = String(i);
+    op.textContent = profileDisplayName(r);
+    sel.appendChild(op);
+  });
+  // choose HE 200 A if series HEA and available
+  let target = prev;
+  if(series==='HEA'){
+    const idx = sizes.findIndex(r => /HE\s*200\s*A/i.test(r.name||''));
+    if(idx>=0) target = String(idx);
   }
-  if(key==='uls_sls'){
-    return { key, name:'ULS/SLS',
-      uls:{cG:1.0,cQ1:1.30,cQ2:0.70, note:`ULS: 1.00*G + 1.30*Q1 + 0.70*Q2`},
-      sls:{cG:1.0,cQ1:1.00,cQ2:1.00, note:`SLS: 1.00*G + 1.00*Q1 + 1.00*Q2`},
-      preview:`ULS: 1.00*G + 1.30*Q1 + 0.70*Q2\nSLS: 1.00*G + 1.00*Q1 + 1.00*Q2`};
-  }
-  if(key==='en1990_610' || key==='en1990_610a'){
-    const u={cG:1.35,cQ1:1.5*psi1,cQ2:1.5*psi2, note:`ULS: Eq 6.10a: LC = 1.35*G + 1.5*${psiText(1)}*Q1 + 1.5*${psiText(2)}*Q2`};
-    const s={cG:1.00,cQ1:1.00,cQ2:psi2, note:`SLS: Eq 6.14a: LC = G + Q1 + ${psiText(2)}*Q2`};
-    return {key, name:(key==='en1990_610'?'EN 1990 Eq 6.10':'EN 1990 Eq 6.10a'), uls:u, sls:s, preview:`${u.note}\n${s.note}`};
-  }
-  if(key==='en1990_610b'){
-    const u={cG:0.925*1.35,cQ1:1.5*1.0,cQ2:1.5*psi2, note:`ULS: Eq 6.10b: LC = 0.925*1.35*G + 1.5*Q1 + 1.5*${psiText(2)}*Q2`};
-    const s={cG:1.00,cQ1:1.00,cQ2:psi2, note:`SLS: Eq 6.14a: LC = G + Q1 + ${psiText(2)}*Q2`};
-    return {key, name:'EN 1990 Eq 6.10b', uls:u, sls:s, preview:`${u.note}\n${s.note}`};
-  }
-  const uA={cG:1.35,cQ1:1.5*psi1,cQ2:1.5*psi2, note:`ULS: Eq 6.10a: LC = 1.35*G + 1.5*${psiText(1)}*Q1 + 1.5*${psiText(2)}*Q2`};
-  const uB={cG:0.925*1.35,cQ1:1.5*1.0,cQ2:1.5*psi2, note:`ULS: Eq 6.10b: LC = 0.925*1.35*G + 1.5*Q1 + 1.5*${psiText(2)}*Q2`};
-  const s={cG:1.00,cQ1:1.00,cQ2:psi2, note:`SLS: Eq 6.14a: LC = G + Q1 + ${psiText(2)}*Q2`};
-  return {key, name:'EN 1990 Eq 6.10a/b', uls:{...uA, alt:uB}, sls:s, preview:`${uA.note}\n${uB.note}\n${s.note}`};
+  if([...sel.options].some(o=>o.value===target)) sel.value=target;
+  else if(sel.options.length) sel.selectedIndex=0;
 }
-function updateLCPreview(){ $('lc_preview').value = getLC().preview; }
-
-/* =========================
-   EC3 section class selection (My,Rd)
-   ========================= */
-function getSectionClass(){
-  const v = ($('sec_class') && $('sec_class').value) ? $('sec_class').value : '12';
-  if(v==='3') return 3;
-  if(v==='4') return 4;
-  return 2;
-}
-function getGammaM0(){
-  const v = +($('gammaM0') ? $('gammaM0').value : 1.0);
-  return (isFinite(v) && v>0) ? v : 1.0;
-}
-function getW_for_MRd(sec, cls){
-  const Wel = sec.Wel_y_mm3;
-  const Wpl = sec.Wpl_y_mm3;
-  const Weff = sec.Weff_y_mm3; // may be undefined
-
-  if(cls<=2){
-    return (isFinite(Wpl) && Wpl>0) ? {W:Wpl, label:'Wpl,y'} : {W:Wel, label:'Wel,y (fallback)'};
-  }
-  if(cls===3) return {W:Wel, label:'Wel,y'};
-  return (isFinite(Weff) && Weff>0) ? {W:Weff, label:'Weff,y'} : {W:Wel, label:'Wel,y (fallback)'};
-}
-
-/* =========================
-   Error helpers
-   ========================= */
-function clearErrs(){
-  ['err_top_wid','err_top_len','err_qmax','err_PA','err_PB','err_PC','err_PD','err_wmat',
-   'err_secn','err_secgap','err_Lsl','err_layers','err_GBP','err_precision'
-  ].forEach(id=>{const el=$(id); if(!el) return; el.classList.add('hide'); el.textContent='';});
-}
-function showErr(id,msg){ const el=$(id); if(!el) return; el.textContent=msg; el.classList.remove('hide'); }
-function parseOptNumber(id){
-  const raw=($(id).value||'').trim();
-  if(raw==='') return null;
-  const v=+raw;
-  if(!isFinite(v) || isNaN(v)) return NaN;
-  return v;
-}
-
-/* =========================
-   Profile dropdowns (from PROFILE_DB)
-   ========================= */
-function initProfileDropdowns(){
-  const supported = new Set(Object.keys(window.PROFILE_DB||{}));
-  const seriesEl = $('sec_series');
-
-  const items=[
-    {k:'HEA',label:'HEA'},
-    {k:'HEB',label:'HEB'},
-    {k:'HEM',label:'HEM'},
-    {k:'HEAA',label:'HEAA'},
-    {k:'IPE',label:'IPE'},
-    {k:'IPN',label:'IPN / INP'},
-    {k:'UPE',label:'UPE'},
-    {k:'UPN',label:'UPN / UNP'},
-  ];
-  seriesEl.innerHTML='';
-  const og=document.createElement('optgroup'); og.label='Profiles (EN)';
-  for(const it of items){
-    const opt=document.createElement('option');
-    opt.value=it.k;
-    opt.textContent = it.label + (supported.has(it.k)?'':' (not loaded)');
-    opt.disabled = !supported.has(it.k);
-    og.appendChild(opt);
-  }
-  seriesEl.appendChild(og);
-
-  seriesEl.value = supported.has('HEA') ? 'HEA' : (supported.values().next().value || 'HEA');
-  populateProfileSizes();
-}
-function populateProfileSizes(){
-  const fam=$('sec_series').value;
-  const list=(window.PROFILE_DB && window.PROFILE_DB[fam]) ? window.PROFILE_DB[fam] : [];
-  const sizeEl=$('sec_size');
-  if(!list.length){
-    sizeEl.innerHTML='<option value="">(no data loaded)</option>';
-    sizeEl.value='';
-    $('sec_summary').textContent='No data loaded.';
-    return;
-  }
-  sizeEl.innerHTML=list.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');
-  const pref = (fam==='HEA')?'HE 200 A': (fam==='HEB')?'HE 200 B': (fam==='HEM')?'HE 200 M':'IPE 200';
-  sizeEl.value = list.some(s=>s.name===pref) ? pref : list[0].name;
-  syncSecSummary();
-}
-function getSelectedProfile(){
-  const fam=$('sec_series').value;
-  const name=$('sec_size').value;
-  const list=(window.PROFILE_DB && window.PROFILE_DB[fam]) ? window.PROFILE_DB[fam] : [];
-  return list.find(s=>s.name===name) || null;
+function getSelectedSection(){
+  if(!DB) return null;
+  const series = $('sec_series').value;
+  const arr = DB[series];
+  if(!arr || !arr.length) return null;
+  const idx = clamp(Math.floor(safeNumber($('sec_size').value,0)),0,arr.length-1);
+  return arr[idx];
 }
 function syncSecSummary(){
-  const sec=getSelectedProfile();
-  if(!sec){ $('sec_summary').textContent=''; return; }
-  $('sec_summary').innerHTML =
-    `Selected: <strong>${sec.name}</strong> • b=${sec.b_mm} mm, h=${sec.h_mm} mm • ` +
-    `Wel,y=${fmtBig(sec.Wel_y_mm3)} mm³ • Wpl,y=${fmtBig(sec.Wpl_y_mm3)} mm³ • Av,z=${fmtBig(sec.Avz_mm2)} mm²` +
-    ` • class=${getSectionClass()<=2?'1–2':getSectionClass()} • γM0=${getGammaM0().toFixed(2)}`;
+  const s=getSelectedSection();
+  if(!s){ $('secSummary').textContent='No section data loaded'; return; }
+  $('secSummary').textContent =
+    `Selected ${s.name} • b=${fmt(s.b_mm,0)} mm • h=${fmt(s.h_mm,0)} mm • mass=${fmt(s.mass_kg_m,1)} kg/m • Wel,y=${fmt(s.Wel_y_mm3,0)} mm³ • Wpl,y=${fmt(s.Wpl_y_mm3,0)} mm³ • Av,z=${fmt(s.Avz_mm2,0)} mm²`;
+}
+populateSeries();
+populateSizes();
+syncSecSummary();
+
+/* ---------- Load combinations ---------- */
+function comboFactors(mode, psi1, psi2){
+  // returns array of cases {name, type:'ULS'|'SLS', aG,aQ1,aQ2, display}
+  const p1 = psi1, p2 = psi2;
+  switch(mode){
+    case 'basic':
+      return [
+        {name:'Basic loads', type:'ULS', aG:1, aQ1:1, aQ2:1, display:`Basic loads: G + Q1 + Q2`}
+      ];
+    case 'ulssls':
+      return [
+        {name:'ULS', type:'ULS', aG:1.00, aQ1:1.30, aQ2:0.70, display:'ULS: 1.00*G + 1.30*Q1 + 0.70*Q2'},
+        {name:'SLS', type:'SLS', aG:1.00, aQ1:1.00, aQ2:1.00, display:'SLS: 1.00*G + 1.00*Q1 + 1.00*Q2'}
+      ];
+    case 'eq610a':
+      return [
+        {name:'ULS Eq 6.10a', type:'ULS', aG:1.35, aQ1:1.5*p1, aQ2:1.5*p2, display:`ULS Eq 6.10a: 1.35*G + 1.5*${p1}*Q1 + 1.5*${p2}*Q2`},
+        {name:'SLS Eq 6.14a', type:'SLS', aG:1.00, aQ1:1.00, aQ2:p2, display:`SLS Eq 6.14a: G + Q1 + ${p2}*Q2`}
+      ];
+    case 'eq610b':
+      return [
+        {name:'ULS Eq 6.10b', type:'ULS', aG:0.925*1.35, aQ1:1.5, aQ2:1.5*p2, display:`ULS Eq 6.10b: 0.925*1.35*G + 1.5*Q1 + 1.5*${p2}*Q2`},
+        {name:'SLS Eq 6.14a', type:'SLS', aG:1.00, aQ1:1.00, aQ2:p2, display:`SLS Eq 6.14a: G + Q1 + ${p2}*Q2`}
+      ];
+    case 'eq610ab':
+      return [
+        {name:'ULS Eq 6.10a', type:'ULS', aG:1.35, aQ1:1.5*p1, aQ2:1.5*p2, display:`ULS Eq 6.10a: 1.35*G + 1.5*${p1}*Q1 + 1.5*${p2}*Q2`},
+        {name:'ULS Eq 6.10b', type:'ULS', aG:0.925*1.35, aQ1:1.5, aQ2:1.5*p2, display:`ULS Eq 6.10b: 0.925*1.35*G + 1.5*Q1 + 1.5*${p2}*Q2`},
+        {name:'SLS Eq 6.14a', type:'SLS', aG:1.00, aQ1:1.00, aQ2:p2, display:`SLS Eq 6.14a: G + Q1 + ${p2}*Q2`}
+      ];
+    case 'eq610':
+    default:
+      return [
+        {name:'ULS Eq 6.10', type:'ULS', aG:1.35, aQ1:1.5*p1, aQ2:1.5*p2, display:`ULS Eq 6.10: 1.35*G + 1.5*${p1}*Q1 + 1.5*${p2}*Q2`},
+        {name:'SLS Eq 6.14a', type:'SLS', aG:1.00, aQ1:1.00, aQ2:p2, display:`SLS Eq 6.14a: G + Q1 + ${p2}*Q2`}
+      ];
+  }
+}
+function updateComboPreview(){
+  const mode = $('lc_mode').value;
+  const psi1=safeNumber($('psi_q1').value,0.7), psi2=safeNumber($('psi_q2').value,0.7);
+  const arr = comboFactors(mode,psi1,psi2);
+  $('combo_preview').value = arr.map(c=>c.display).join('\n');
 }
 
-/* =========================
-   Mode switching
-   ========================= */
-function updateModeUI(){
-  const topType=$('top_type').value;
-  $('label_qmax').classList.toggle('hide', topType==='mat');
-  $('steel-loads').classList.toggle('hide', topType!=='mat');
-  $('diagram').src = diagramSrc[topType] || diagramSrc.mat;
+/* ---------- Top mats state & UI ---------- */
+let topMats = [];
+let topMatIdCounter = 1;
+function defaultTopMat(partial={}){
+  return Object.assign({
+    id: topMatIdCounter++,
+    label: 'A',
+    active: true,
+    x: 0, y: 0, z: 0,
+    Lx: 1.0, Ly: 2.0, t: 0.10,
+    G: 100.0, Q1: 0.0, Q2: 0.0, Wm: 0.0,
+    colour: '#9aa0aa'
+  }, partial);
 }
-
-/* =========================
-   Help modal
-   ========================= */
-$('help-btn').onclick=()=>$('help-modal').classList.remove('hide');
-$('help-close').onclick=()=>$('help-modal').classList.add('hide');
-$('help-modal').addEventListener('click',e=>{ if(e.target.id==='help-modal') $('help-modal').classList.add('hide'); });
-
-/* =========================
-   Chart modal + hover readout
-   ========================= */
-const chartModal=$('chart-modal');
-const chartModalCanvas=$('chart-modal-canvas');
-const chartTooltip=$('chart-tooltip');
-let chartModalState=null;
-
-function closeChartModal(){
-  chartModal.classList.add('hide');
-  chartModalState=null;
-  chartTooltip.classList.add('hide');
+function resetTopMatLabels(){
+  const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  topMats.forEach((m,i)=> m.label = alpha[i] || ('M'+(i+1)));
 }
-$('chart-modal-close').onclick=closeChartModal;
-chartModal.addEventListener('click',e=>{ if(e.target.id==='chart-modal') closeChartModal(); });
-
-function scheduleChartRender(canvas, state, opt){
-  requestAnimationFrame(()=>{
-    try{ renderChartToCanvas(canvas, state, opt||{}); }catch(e){}
-    setTimeout(()=>{ try{ renderChartToCanvas(canvas, state, opt||{}); }catch(e){} }, 80);
+function addTopMat(mat){
+  topMats.push(mat || defaultTopMat());
+  resetTopMatLabels();
+  renderTopMatsUI();
+  runCalc();
+}
+function removeTopMat(id){
+  if(topMats.length<=1) return;
+  topMats = topMats.filter(m=>m.id!==id);
+  resetTopMatLabels();
+  renderTopMatsUI();
+  runCalc();
+}
+function renderTopMatsUI(){
+  $('matCountPill').textContent = String(topMats.length);
+  const host = $('topMatsList');
+  host.innerHTML='';
+  topMats.forEach((m,idx)=>{
+    const card=document.createElement('div');
+    card.className='mat-card';
+    card.innerHTML = `
+      <div class="title">
+        <span class="pill">Top Mat ${m.label}</span>
+        <span class="grow mini">ID ${m.id}</span>
+        <label class="inline mini"><input type="checkbox" data-k="active" ${m.active?'checked':''}> active</label>
+        <button class="btn danger small" type="button" data-action="remove">Remove</button>
+      </div>
+      <div class="grid cols3" style="margin-top:8px">
+        <label>Centre X (m)<input type="number" step="0.01" data-k="x" value="${m.x}"></label>
+        <label>Centre Y (m)<input type="number" step="0.01" data-k="y" value="${m.y}"></label>
+        <label>Bottom Z (m)<input type="number" step="0.01" data-k="z" value="${m.z}"></label>
+      </div>
+      <div class="grid cols3">
+        <label>Top width along beam Lx (m)<input type="number" step="0.01" data-k="Lx" value="${m.Lx}"></label>
+        <label>Top length across base mats Ly (m)<input type="number" step="0.01" data-k="Ly" value="${m.Ly}"></label>
+        <label>Thickness t (m)<input type="number" step="0.01" data-k="t" value="${m.t}"></label>
+      </div>
+      <div class="grid cols4">
+        <label>G outrig. (t)<input type="number" step="0.1" data-k="G" value="${m.G}"></label>
+        <label>Q1 (t)<input type="number" step="0.1" data-k="Q1" value="${m.Q1}"></label>
+        <label>Q2 (t)<input type="number" step="0.1" data-k="Q2" value="${m.Q2}"></label>
+        <label>Self wt Wm (G) (t)<input type="number" step="0.01" data-k="Wm" value="${m.Wm}"></label>
+      </div>
+      <div class="small muted">0,0,0 is the global model origin. Each top mat uses the centre of its bottom face.</div>
+    `;
+    host.appendChild(card);
+    card.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const key=inp.dataset.k;
+        if(key==='active'){ m.active = inp.checked; }
+        else m[key]=safeNumber(inp.value, m[key]);
+        runCalc();
+      });
+      inp.addEventListener('change', ()=>{
+        const key=inp.dataset.k;
+        if(key==='active'){ m.active = inp.checked; }
+        else m[key]=safeNumber(inp.value, m[key]);
+        runCalc();
+      });
+    });
+    card.querySelector('[data-action="remove"]').addEventListener('click', ()=>removeTopMat(m.id));
   });
 }
-function openChartModal(state){
-  chartModalState=state;
-  $('chart-modal-title').textContent = state.title || 'Chart';
-  $('chart-modal-caption').textContent = state.caption || '';
-  chartModal.classList.remove('hide');
-  scheduleChartRender(chartModalCanvas, state, {big:true});
-}
+$('addTopMat').addEventListener('click', ()=>{
+  const last=topMats[topMats.length-1] || defaultTopMat();
+  addTopMat(defaultTopMat({x:last.x, y:last.y + (last.Ly||1.0)*0.75, z:last.z, Lx:last.Lx, Ly:last.Ly, t:last.t, G:last.G, Q1:last.Q1, Q2:last.Q2, Wm:last.Wm}));
+});
+$('resetTopMats').addEventListener('click', ()=>{
+  topMats = [defaultTopMat({x:0,y:0,z:0,Lx:1,Ly:2,t:0.10,G:100,Q1:0,Q2:0,Wm:0})];
+  topMatIdCounter = Math.max(...topMats.map(m=>m.id))+1;
+  resetTopMatLabels();
+  renderTopMatsUI();
+  runCalc();
+});
 
-function renderChartToCanvas(canvas, state, opt2={}){
-  const {xs, ys, title, xLabel, yLabel, lineColor, markers} = state;
-  const ctx = canvas.getContext('2d');
+/* ---------- Geometry + Solver ---------- */
+function buildModelGeometry(){
+  const sec = getSelectedSection();
+  if(!sec) throw new Error('No section selected');
+  const Lx = safeNumber($('Lx').value,5);
+  const nSecPerMat = Math.max(1, Math.floor(safeNumber($('n_sec_per_mat').value,1)));
+  const nMatY = Math.max(1, Math.floor(safeNumber($('n_mat_y').value,1)));
+  const nMatX = Math.max(1, Math.floor(safeNumber($('n_mat_x').value,1)));
+  const baseLayers = Math.max(1, Math.floor(safeNumber($('base_layers').value,1)));
+  const gapSec = Math.max(0, safeNumber($('gap_section_mm').value,0))/1000;
+  const gapMatY = Math.max(0, safeNumber($('gap_mat_y').value,0));
+  const gapMatX = Math.max(0, safeNumber($('gap_mat_x').value,0));
+  const bx = safeNumber($('base_x').value,0);
+  const by = safeNumber($('base_y').value,0);
+  const bz = safeNumber($('base_z').value,0);
 
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.max(1, Math.round(rect.width * dpr));
-  canvas.height = Math.max(1, Math.round(rect.height * dpr));
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const secW = (safeNumber(sec.b_mm,0))/1000;
+  const secH = (safeNumber(sec.h_mm,0))/1000;
+  const matW = nSecPerMat*secW + Math.max(0,nSecPerMat-1)*gapSec;  // across Y
+  const matLx = Lx; // beam length along X
+  const totalW = nMatY*matW + Math.max(0,nMatY-1)*gapMatY;
+  const totalLx = nMatX*matLx + Math.max(0,nMatX-1)*gapMatX;
+  const totalH = baseLayers*secH;
 
-  const W=rect.width, H=rect.height;
-  ctx.clearRect(0,0,W,H);
+  // Build individual sections as plan rectangles and 3D boxes
+  const sections = [];
+  const mats = [];
+  const xStart = bx - totalLx/2;
+  const yStart = by - totalW/2;
 
-  const padL = opt2.big ? 62 : 52;
-  const padR = opt2.big ? 20 : 16;
-  const padT = opt2.big ? 44 : 36;
-  const padB = opt2.big ? 56 : 48;
-
-  const text=getVar('--text')||'#111';
-  const muted=getVar('--muted')||'#666';
-  const grid=getVar('--line')||'#bbb';
-  const line=lineColor || (getVar('--primary')||'#3b82f6');
-
-  const xmin=Math.min(...xs), xmax=Math.max(...xs);
-  const ymin=Math.min(...ys), ymax=Math.max(...ys);
-  const ypad=(ymax-ymin)*0.10 || 1;
-  const y0=ymin-ypad, y1=ymax+ypad;
-
-  const X = x => padL + (x-xmin)/(xmax-xmin||1) * (W-padL-padR);
-  const Y = y => padT + (1 - (y-y0)/(y1-y0||1)) * (H-padT-padB);
-  state._proj = {padL,padR,padT,padB,xmin,xmax,y0,y1,X,Y,W,H};
-
-  ctx.fillStyle=text;
-  ctx.font = (opt2.big ? '900 16px' : '900 13px') + ' system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-  ctx.fillText(title||'', padL, 24);
-
-  ctx.strokeStyle=grid; ctx.lineWidth=1; ctx.globalAlpha=0.55;
-  for(let k=0;k<=4;k++){
-    const yy = padT + k*(H-padT-padB)/4;
-    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W-padR, yy); ctx.stroke();
-  }
-  ctx.globalAlpha=1;
-
-  if(y0<=0 && y1>=0){
-    ctx.strokeStyle=grid; ctx.globalAlpha=0.9;
-    ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(W-padR, Y(0)); ctx.stroke();
-    ctx.globalAlpha=1;
-  }
-
-  ctx.strokeStyle=line; ctx.lineWidth=opt2.big ? 3.0 : 2.2;
-  ctx.beginPath();
-  ctx.moveTo(X(xs[0]), Y(ys[0]));
-  for(let i=1;i<xs.length;i++) ctx.lineTo(X(xs[i]), Y(ys[i]));
-  ctx.stroke();
-
-  if(markers && Array.isArray(markers)){
-    ctx.save();
-    ctx.strokeStyle = grid;
-    ctx.setLineDash([6,4]);
-    ctx.globalAlpha = 0.9;
-    for(const mk of markers){
-      const mx = X(mk.x);
-      ctx.beginPath(); ctx.moveTo(mx, padT); ctx.lineTo(mx, H-padB); ctx.stroke();
-      if(mk.label){
-        ctx.setLineDash([]);
-        ctx.fillStyle = muted;
-        ctx.font=(opt2.big ? '800 12px' : '800 11px') + ' system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-        ctx.fillText(mk.label, Math.min(W-padR-45, mx+4), padT+14);
-        ctx.setLineDash([6,4]);
-      }
-    }
-    ctx.restore();
-    ctx.setLineDash([]);
-  }
-
-  ctx.fillStyle=muted;
-  ctx.font=(opt2.big ? '700 13px' : '700 12px') + ' system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-  ctx.fillText(xLabel||'', W-padR-90, H-16);
-
-  if(yLabel){
-    ctx.save();
-    ctx.translate(20, padT + (H-padT-padB)/2);
-    ctx.rotate(-Math.PI/2);
-    ctx.fillText(yLabel, 0, 0);
-    ctx.restore();
-  }
-}
-
-function onChartModalMove(ev){
-  if(!chartModalState || !chartModalState._proj) return;
-  const rect = chartModalCanvas.getBoundingClientRect();
-  const mx = ev.clientX - rect.left;
-  const my = ev.clientY - rect.top;
-
-  const p = chartModalState._proj;
-  if(mx < p.padL || mx > p.W-p.padR || my < p.padT || my > p.H-p.padB){
-    chartTooltip.classList.add('hide');
-    scheduleChartRender(chartModalCanvas, chartModalState, {big:true});
-    return;
-  }
-
-  const xVal = p.xmin + (mx - p.padL) / (p.W - p.padL - p.padR) * (p.xmax - p.xmin);
-  const xs = chartModalState.xs;
-  const ys = chartModalState.ys;
-
-  let lo=0, hi=xs.length-1;
-  while(hi-lo>1){
-    const mid=(lo+hi)>>1;
-    if(xs[mid] < xVal) lo=mid; else hi=mid;
-  }
-  const i = (Math.abs(xs[hi]-xVal) < Math.abs(xs[lo]-xVal)) ? hi : lo;
-  const yVal = ys[i];
-
-  scheduleChartRender(chartModalCanvas, chartModalState, {big:true});
-  // Draw tracer after render (next frame)
-  requestAnimationFrame(()=>{
-    const ctx = chartModalCanvas.getContext('2d');
-    const X = p.X(xs[i]);
-    const Y = p.Y(yVal);
-    ctx.save();
-    ctx.strokeStyle = getVar('--primary') || '#3b82f6';
-    ctx.globalAlpha = 0.9;
-    ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.moveTo(X, p.padT); ctx.lineTo(X, p.H - p.padB); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = getVar('--primary') || '#3b82f6';
-    ctx.beginPath(); ctx.arc(X, Y, 4.5, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-  });
-
-  chartTooltip.classList.remove('hide');
-  chartTooltip.style.left = `${mx}px`;
-  chartTooltip.style.top = `${my}px`;
-  chartTooltip.textContent = `x=${xs[i].toFixed(3)} m, y=${yVal.toFixed(3)} ${chartModalState.units||''}`;
-}
-chartModalCanvas.addEventListener('mousemove', onChartModalMove);
-chartModalCanvas.addEventListener('mouseleave', ()=>{ chartTooltip.classList.add('hide'); });
-
-/* =========================
-   Auto tile controls
-   ========================= */
-function updateTileUI(){
-  const auto = $('auto_tile').checked;
-  $('nMatWid').disabled = auto;
-  $('nMatLen').disabled = auto;
-}
-
-/* =========================
-   Build base mat / section layout from geometry + coordinates
-   ========================= */
-function buildLayout(p, sec){
-  const beamW = (p.baseModel==='sections' && sec) ? (sec.b_mm/1000) : p.Lsb_block;
-  const beamH = (p.baseModel==='sections' && sec) ? (sec.h_mm/1000) : p.Lsh_block;
-  const gap = (p.baseModel==='sections') ? (p.sec_gap/1000) : 0;
-  const pitch = beamW + gap;
-
-  const secPerMat = (p.baseModel==='sections') ? p.sec_n : 1;
-  const matWidth = secPerMat*beamW + Math.max(0,secPerMat-1)*gap;
-
-  // number of mats under top
-  let nLen, nWid;
-  if(p.overhang){
-    nLen = 1; nWid = 1;
-  } else if(p.auto_tile){
-    nLen = Math.max(1, Math.ceil(p.top_wid / p.Lsl));
-    nWid = Math.max(1, Math.ceil(p.top_len / matWidth));
-  } else {
-    nLen = Math.max(1, Math.round(p.nMatLen));
-    nWid = Math.max(1, Math.round(p.nMatWid));
-  }
-
-  // Positions: base assembly origin at (base_x, base_y, base_z) refers to the centre of the tiled footprint,
-  // and z is the bottom face level.
-  const baseX=p.base_x, baseY=p.base_y, baseZ=p.base_z;
-
-  // Build mats and beams
-  const mats=[];
-  const beams=[];
-
-  const baseLenTotal = nLen * p.Lsl;
-  const baseWidTotal = nWid * matWidth;
-
-  for(let i=0;i<nLen;i++){
-    for(let j=0;j<nWid;j++){
-      const matCx = baseX + (i - (nLen-1)/2)*p.Lsl;
-      const matCy = baseY + (j - (nWid-1)/2)*matWidth;
-      mats.push({i,j,cx:matCx, cy:matCy, cz:baseZ, L:p.Lsl, W:matWidth, H:beamH});
-      // beams within this mat (across its width)
-      for(let k=0;k<secPerMat;k++){
-        const beamCy = matCy + (k - (secPerMat-1)/2)*pitch;
-        const beam = {
-          matI:i, matJ:j, secK:k,
-          cx: matCx, cy: beamCy, cz: baseZ,
-          L: p.Lsl, W: beamW, H: beamH,
-          xLeft: matCx - p.Lsl/2,
-          xRight: matCx + p.Lsl/2,
-          yLeft: beamCy - beamW/2,
-          yRight: beamCy + beamW/2
-        };
-        beams.push(beam);
+  for(let ix=0; ix<nMatX; ix++){
+    const matX1 = xStart + ix*(matLx + gapMatX);
+    const matX2 = matX1 + matLx;
+    for(let iy=0; iy<nMatY; iy++){
+      const matY1 = yStart + iy*(matW + gapMatY);
+      const matY2 = matY1 + matW;
+      const matIndex = mats.length;
+      mats.push({
+        id: matIndex+1, ix, iy,
+        x1: matX1, x2: matX2, y1: matY1, y2: matY2,
+        z1: bz, z2: bz + totalH,
+        width: matW, length: matLx, height: totalH
+      });
+      for(let layer=0; layer<baseLayers; layer++){
+        const z1 = bz + layer*secH;
+        const z2 = z1 + secH;
+        for(let is=0; is<nSecPerMat; is++){
+          const sy1 = matY1 + is*(secW + gapSec);
+          const sy2 = sy1 + secW;
+          sections.push({
+            id: sections.length+1,
+            matId: matIndex+1,
+            ix, iy, layer, secIndex:is+1,
+            x1: matX1, x2: matX2, y1: sy1, y2: sy2, z1, z2,
+            rect: {x1:matX1,x2:matX2,y1:sy1,y2:sy2},
+            beam: {L:Lx, xOrigin:matX1}, // local beam x = globalX - x1
+            meta: {secW, secH}
+          });
+        }
       }
     }
   }
 
-  // Top mat is fixed at origin (0,0,0) at its base centre; bottom face at z=0.
-  const top = {
-    cx:0, cy:0, cz:0,
-    L:p.top_wid, W:p.top_len, T: Math.max(beamH*0.08, 0.02)
-  };
-  top.xLeft = top.cx - top.L/2;
-  top.xRight = top.cx + top.L/2;
-  top.yLeft = top.cy - top.W/2;
-  top.yRight = top.cy + top.W/2;
-
-  // Contact per beam
-  let sumA=0;
-  for(const b of beams){
-    const xA = Math.max(b.xLeft, top.xLeft);
-    const xB = Math.min(b.xRight, top.xRight);
-    const yA = Math.max(b.yLeft, top.yLeft);
-    const yB = Math.min(b.yRight, top.yRight);
-    const lx = Math.max(0, xB-xA);
-    const ly = Math.max(0, yB-yA);
-    const A = lx*ly;
-    b.contact = {A, lx, ly, xA, xB, yA, yB};
-    sumA += A;
-    // local coordinates for patch on this beam
-    b.patch = {x1: xA - b.xLeft, x2: xB - b.xLeft}; // within [0,L]
-  }
+  const topRects = topMats.filter(m=>m.active).map(m=>{
+    const x1 = m.x - m.Lx/2, x2 = m.x + m.Lx/2;
+    const y1 = m.y - m.Ly/2, y2 = m.y + m.Ly/2;
+    return {
+      id:m.id, label:m.label, x:m.x,y:m.y,z:m.z, Lx:m.Lx,Ly:m.Ly,t:m.t,
+      x1,x2,y1,y2, z1:m.z, z2:m.z+m.t, rect:{x1,x2,y1,y2},
+      loads:{G:Math.max(0,m.G)+Math.max(0,m.Wm), Q1:Math.max(0,m.Q1), Q2:Math.max(0,m.Q2)}
+    };
+  });
 
   return {
-    nLen, nWid, secPerMat, matWidth, pitch, beamW, beamH,
-    baseLenTotal, baseWidTotal,
-    mats, beams, top, sumA
+    sectionRec: sec,
+    Lx, secW, secH, nSecPerMat, nMatY, nMatX, baseLayers,
+    gapSec, gapMatY, gapMatX, baseCenter:{x:bx,y:by,z:bz},
+    matW, matLx, totalW, totalLx, totalH,
+    mats, sections, topRects
   };
 }
 
-/* =========================
-   Beam actions: simply supported, full-span UDL + patch UDL at arbitrary location
-   ========================= */
-function computeSeries(L, x1, x2, wPatch_kN_m, wBase_kN_m){
-  // Patch on [x1,x2] in metres, with wPatch in kN/m
-  const a = Math.max(0, x2-x1);
-  const Wp = wPatch_kN_m * a;
-  const xc = a>0 ? (x1+x2)/2 : 0;
+function createLoadSegmentsBySection(geom){
+  // returns map sectionId -> segments + distribution rows
+  const map = new Map();
+  geom.sections.forEach(s=>map.set(s.id, {section:s, segs:[], sharesByTop:[]}));
+  geom.topRects.forEach(top=>{
+    const areaTop = Math.max(0, top.Lx*top.Ly);
+    if(!(areaTop>0)) return;
+    const qG = top.loads.G/areaTop, qQ1 = top.loads.Q1/areaTop, qQ2 = top.loads.Q2/areaTop; // t/m²
+    geom.sections.forEach(sec=>{
+      const ov = overlapRect(top.rect, sec.rect);
+      if(!ov) return;
+      const localA = ov.x1 - sec.x1;
+      const localB = ov.x2 - sec.x1;
+      const widthY = ov.wy;
+      const line_tpm_G = qG * widthY; // t/m over x range
+      const line_tpm_Q1 = qQ1 * widthY;
+      const line_tpm_Q2 = qQ2 * widthY;
+      const seg = {
+        topId: top.id, topLabel: top.label,
+        a: localA, b: localB, // m local beam coords
+        area: ov.area,
+        G_t: qG * ov.area, Q1_t: qQ1 * ov.area, Q2_t: qQ2 * ov.area,
+        gLine_tpm: line_tpm_G, q1Line_tpm: line_tpm_Q1, q2Line_tpm: line_tpm_Q2,
+        xg1: ov.x1, xg2: ov.x2
+      };
+      const bucket = map.get(sec.id);
+      bucket.segs.push(seg);
+      bucket.sharesByTop.push(seg);
+    });
+  });
+  return map;
+}
 
-  const Wb = wBase_kN_m * L;
+function caseWkNm(seg, c){ // line load kN/m for one segment in one case
+  return (c.aG*seg.gLine_tpm + c.aQ1*seg.q1Line_tpm + c.aQ2*seg.q2Line_tpm) * G_ACC;
+}
+function baseSelfWeightLinekNm(geom){
+  const mass_kg_m = safeNumber(geom.sectionRec.mass_kg_m,0);
+  return mass_kg_m * 9.81 / 1000; // kN/m
+}
+function analyzeBeamSegments(L, segments, E_mpa, Iy_mm4, nPts){
+  nPts = Math.max(51, Math.floor(nPts));
+  if(nPts % 2 === 0) nPts += 1;
+  const xs = Array.from({length:nPts}, (_,i)=> i*L/(nPts-1));
+  // Reactions
+  let W=0, M_about_left=0;
+  for(const sg of segments){
+    const len = Math.max(0, sg.b - sg.a);
+    if(!(len>0)) continue;
+    const total = sg.w * len;
+    const xc = (sg.a + sg.b)/2;
+    W += total;
+    M_about_left += total * xc;
+  }
+  const R2 = L>0 ? M_about_left / L : 0;
+  const R1 = W - R2;
 
-  const Rl = Wb/2 + (a>0 ? Wp*(L-xc)/L : 0);
-  const Rr = Wb/2 + (a>0 ? Wp*xc/L : 0);
-
-  const N=320;
-  const xs=[], V=[], M=[];
-  let maxV=0,maxM=0,iV=0,iM=0;
-
-  for(let i=0;i<=N;i++){
-    const x=L*i/N;
-    xs.push(x);
-
-    const patchLeft = Math.max(0, Math.min(x, x2) - x1); // length of patch to the left of x
-    const Vx = Rl - wBase_kN_m*x - wPatch_kN_m*patchLeft;
-
-    let integ=0;
-    if(x<=x1) integ=0;
-    else if(x<x2) integ = (x-x1)*(x-x1)/2;
-    else integ = (x2-x1)*x - (x2*x2 - x1*x1)/2;
-
-    const Mx = Rl*x - wBase_kN_m*x*x/2 - wPatch_kN_m*integ;
-
-    V.push(Vx);
-    M.push(Mx);
-
-    const aV=Math.abs(Vx), aM=Math.abs(Mx);
-    if(aV>maxV){maxV=aV;iV=i;}
-    if(aM>maxM){maxM=aM;iM=i;}
+  const V = new Array(xs.length).fill(0);
+  const M = new Array(xs.length).fill(0);
+  for(let i=0;i<xs.length;i++){
+    const x=xs[i];
+    let v=R1;
+    let m=R1*x;
+    for(const sg of segments){
+      const a=sg.a, b=sg.b, w=sg.w;
+      if(x<=a){ /* no effect */ }
+      else if(x < b){
+        const dx = x-a;
+        v -= w*dx;
+        m -= w*dx*dx/2;
+      }else{
+        const len = b-a;
+        const total = w*len;
+        const xc = (a+b)/2;
+        v -= total;
+        m -= total*(x - xc);
+      }
+    }
+    V[i]=v;
+    M[i]=m;
   }
 
+  // Deflection via double integration of curvature κ = M/EI (use mm units)
+  const E = Math.max(1,E_mpa);
+  const I = Math.max(1,Iy_mm4);
+  const xmm = xs.map(x=>x*1000);
+  const kappa = M.map(m=> (m*1e6)/(E*I)); // 1/mm (M kN.m -> N.mm)
+  const theta0 = new Array(xs.length).fill(0);
+  const y0 = new Array(xs.length).fill(0);
+  for(let i=1;i<xs.length;i++){
+    const dx = xmm[i]-xmm[i-1];
+    theta0[i] = theta0[i-1] + 0.5*(kappa[i]+kappa[i-1])*dx;
+    y0[i] = y0[i-1] + 0.5*(theta0[i]+theta0[i-1])*dx; // mm
+  }
+  const Lmm = xmm[xmm.length-1] || 1;
+  const C1 = -y0[y0.length-1]/Lmm;
+  const y = y0.map((yy,i)=> yy + C1*xmm[i]); // mm, y(0)=y(L)=0
+  // Peak values
+  function peakAbs(arr){
+    let imax=0, vmax=-1;
+    for(let i=0;i<arr.length;i++){
+      const a=Math.abs(arr[i]);
+      if(a>vmax){vmax=a; imax=i;}
+    }
+    return {i:imax, value:arr[imax], abs:vmax, x:xs[imax]};
+  }
   return {
-    xs,V,M,
-    peakV:{val:maxV, x:xs[iV], xL: xs[iV]/L},
-    peakM:{val:maxM, x:xs[iM], xL: xs[iM]/L},
-    Rl,Rr, Wp,Wb, a, xc,
-    markers:[{x:x1,label:'x1'},{x:x2,label:'x2'}]
+    xs, V, M, y, reactions:{R1,R2,totalW:W},
+    peakV: peakAbs(V),
+    peakM: peakAbs(M),
+    peakY: peakAbs(y)
   };
 }
 
-function calcI_mm4(p, sec){
-  if(p.baseModel==='sections' && sec){
-    return sec.Iy_mm4 || (sec.Wel_y_mm3 * (sec.h_mm/2)); // fallback
-  }
-  const bmm=p.Lsb_block*1000, hmm=p.Lsh_block*1000;
-  return bmm*Math.pow(hmm,3)/12;
+function sectionResistances(sectionRec, fy, gammaM0, secClass){
+  const Wel = safeNumber(sectionRec.Wel_y_mm3,0);
+  const Wpl = safeNumber(sectionRec.Wpl_y_mm3,0);
+  const Avz = safeNumber(sectionRec.Avz_mm2,0);
+  let Wused = Wel;
+  if(secClass==='12') Wused = Wpl || Wel;
+  else if(secClass==='3') Wused = Wel;
+  else if(secClass==='4') Wused = 0.9*Wel;
+  const MyRd = (Wused * fy / Math.max(0.01,gammaM0)) / 1e6; // kN.m
+  const VzRd = (Avz * fy / (SQRT3*Math.max(0.01,gammaM0))) / 1e3; // kN
+  return {MyRd, VzRd, Wused};
 }
 
-function deflectionFromMoment(p, sec, L, xs, M_kNm){
-  const N = xs.length-1;
-  const L_mm=L*1000;
-  const dx_mm=L_mm/N;
-
-  const E=p.material.E; // MPa
-  const I=calcI_mm4(p,sec);
-  const EI=p.layers*E*I;
-
-  const M_Nmm = M_kNm.map(v=>v*1e6);
-  const curv = M_Nmm.map(m=>m/EI);
-
-  const theta=new Array(N+1).fill(0);
-  const y0=new Array(N+1).fill(0);
-  for(let i=1;i<=N;i++){
-    theta[i]=theta[i-1]+0.5*(curv[i-1]+curv[i])*dx_mm;
-    y0[i]=y0[i-1]+0.5*(theta[i-1]+theta[i])*dx_mm;
-  }
-  const C1=-y0[N]/L_mm;
-
-  const Y=new Array(N+1).fill(0);
-  let maxY=0,iY=0;
-  for(let i=0;i<=N;i++){
-    Y[i]=y0[i]+C1*(xs[i]*1000);
-    const ay=Math.abs(Y[i]);
-    if(ay>maxY){maxY=ay;iY=i;}
-  }
-  return {Y, peakY:{val:maxY, x:xs[iY], xL: xs[iY]/L}, I};
+function mathMLForBase(res, prec){
+  const p = prec;
+  const MyEd = roundN(res.governing.peakM.abs,p);
+  const VzEd = roundN(res.governing.peakV.abs,p);
+  const MyRd = roundN(res.sectionControl.MyRd,p);
+  const VzRd = roundN(res.sectionControl.VzRd,p);
+  const IRM = roundN(res.sectionControl.IR_M,2);
+  const IRV = roundN(res.sectionControl.IR_V,2);
+  return `
+  <div class="math">
+    <math display="block">
+      <mrow>
+        <mi>IR</mi><mo>=</mo>
+        <mfrac><msub><mi>M</mi><mrow><mi>y</mi><mo>,</mo><mi>Ed</mi></mrow></msub><msub><mi>M</mi><mrow><mi>y</mi><mo>,</mo><mi>Rd</mi></mrow></msub></mfrac>
+        <mo>=</mo><mfrac><mn>${MyEd}</mn><mn>${MyRd}</mn></mfrac>
+        <mo>=</mo><mn>${IRM}</mn>
+        <mo>${IRM<1 ? '&lt;' : '≥'}</mo><mn>1.0</mn>
+      </mrow>
+    </math>
+    <math display="block">
+      <mrow>
+        <mi>IR</mi><mo>=</mo>
+        <mfrac><msub><mi>V</mi><mrow><mi>z</mi><mo>,</mo><mi>Ed</mi></mrow></msub><msub><mi>V</mi><mrow><mi>z</mi><mo>,</mo><mi>Rd</mi></mrow></msub></mfrac>
+        <mo>=</mo><mfrac><mn>${VzEd}</mn><mn>${VzRd}</mn></mfrac>
+        <mo>=</mo><mn>${IRV}</mn>
+        <mo>${IRV<1 ? '&lt;' : '≥'}</mo><mn>1.0</mn>
+      </mrow>
+    </math>
+  </div>`;
 }
 
-/* =========================
-   Section Control (EC3) panel
-   ========================= */
-function sectionControlPanel(sec, mat, MyEd_kNm, xM, VzEd_kN, xV, L){
-  const wrap=document.createElement('div');
-  wrap.className='panel';
-  const title=document.createElement('div');
-  title.style.fontWeight='900';
-  title.style.marginBottom='6px';
-  title.textContent='Section Control (Eurocode 3)';
-  wrap.appendChild(title);
+function solveAll(){
+  updateComboPreview();
+  showErr('');
+  const prec = clamp(Math.floor(safeNumber($('precision').value,2)),0,6);
+  if(!DB) throw new Error('Missing section database JS file');
+  if(topMats.filter(m=>m.active).length===0) throw new Error('Activate at least one top mat');
 
-  if(!sec || !mat.fy){
-    const t=document.createElement('div');
-    t.className='tiny';
-    t.textContent='Section Control requires steel material + steel section selection.';
-    wrap.appendChild(t);
-    return wrap;
-  }
+  const geom = buildModelGeometry();
+  const secRec = geom.sectionRec;
+  const fy = $('steel_grade').value==='S235' ? 235 : 355;
+  const gammaM0 = Math.max(0.01, safeNumber($('gamma_M0').value,1.0));
+  const secClass = $('sec_class').value;
+  const E = Math.max(1000, safeNumber($('E_mpa').value,200000));
+  const nPts = Math.max(101, Math.floor(safeNumber($('n_points').value,401)));
+  const combos = comboFactors($('lc_mode').value, safeNumber($('psi_q1').value,0.7), safeNumber($('psi_q2').value,0.7));
+  const resists = sectionResistances(secRec, fy, gammaM0, secClass);
+  const includeBaseSW = $('include_base_sw').checked;
+  const wBaseSelf = includeBaseSW ? baseSelfWeightLinekNm(geom) : 0;
 
-  const fy=mat.fy;
-  const cls=getSectionClass();
-  const gammaM0=getGammaM0();
-  const Wsel=getW_for_MRd(sec,cls);
+  const distMap = createLoadSegmentsBySection(geom); // geometric distribution independent of load combo
+  const distributionRows = [];
+  distMap.forEach((bucket, sid)=>{
+    bucket.sharesByTop.forEach(sg=>{
+      distributionRows.push({
+        topLabel: sg.topLabel,
+        matId: bucket.section.matId,
+        secLabel: `M${bucket.section.matId}-S${bucket.section.secIndex}-L${bucket.section.layer+1}`,
+        area: sg.area, G: sg.G_t, Q1: sg.Q1_t, Q2: sg.Q2_t, x1: sg.a, x2: sg.b
+      });
+    });
+  });
 
-  const MyRd = (Wsel.W * fy / gammaM0) / 1e6;               // kN·m
-  const VzRd = (sec.Avz_mm2 * fy / (Math.sqrt(3)*gammaM0)) / 1e3; // kN
+  // Analyze every section for each combo case
+  const sectionCaseResults = []; // {case, sectionId, analysis}
+  distMap.forEach((bucket)=>{
+    for(const c of combos){
+      const segs = [];
+      bucket.segs.forEach(sg=>{
+        const w = caseWkNm(sg, c);
+        if((sg.b-sg.a)>1e-9 && Math.abs(w)>1e-9) segs.push({a:sg.a,b:sg.b,w, sourceTop:sg.topId});
+      });
+      if(includeBaseSW){
+        segs.push({a:0,b:bucket.section.beam.L,w:wBaseSelf, sourceTop:'baseSW'});
+      }
+      const analysis = analyzeBeamSegments(bucket.section.beam.L, segs, E, safeNumber(secRec.Iy_mm4,1), nPts);
+      sectionCaseResults.push({case:c, section:bucket.section, segs, analysis});
+    }
+  });
 
-  const IR_M = Math.abs(MyEd_kNm)/MyRd;
-  const IR_V = Math.abs(VzEd_kN)/VzRd;
+  // For each base mat, combine sections and identify governing by ULS and SLS
+  const matsOut = geom.mats.map(mat=>{
+    const perMatSectionCases = sectionCaseResults.filter(r=>r.section.matId===mat.id);
+    const ulsCases = perMatSectionCases.filter(r=>r.case.type==='ULS');
+    const slsCases = perMatSectionCases.filter(r=>r.case.type==='SLS');
 
-  const row=(txt, ok)=>{
-    const d=document.createElement('div');
-    d.className= ok ? 'green':'red';
-    d.textContent=txt;
-    return d;
+    // Envelope ULS for M/V and SLS for y
+    let govM=null, govV=null, govY=null;
+    ulsCases.forEach(r=>{
+      if(!govM || r.analysis.peakM.abs > govM.analysis.peakM.abs) govM = r;
+      if(!govV || r.analysis.peakV.abs > govV.analysis.peakV.abs) govV = r;
+    });
+    slsCases.forEach(r=>{
+      if(!govY || r.analysis.peakY.abs > govY.analysis.peakY.abs) govY = r;
+    });
+    // fallback if no sls
+    if(!govY){
+      const any = perMatSectionCases[0];
+      govY = any;
+    }
+    const governing = {
+      peakM: govM ? govM.analysis.peakM : {abs:0,x:0,value:0},
+      peakV: govV ? govV.analysis.peakV : {abs:0,x:0,value:0},
+      peakY: govY ? govY.analysis.peakY : {abs:0,x:0,value:0},
+      caseM: govM ? govM.case.name : '—',
+      caseV: govV ? govV.case.name : '—',
+      caseY: govY ? govY.case.name : '—',
+      secM: govM ? govM.section : null,
+      secV: govV ? govV.section : null,
+      secY: govY ? govY.section : null
+    };
+    const sc = {
+      MyRd: resists.MyRd,
+      VzRd: resists.VzRd,
+      IR_M: resists.MyRd>0 ? governing.peakM.abs / resists.MyRd : Infinity,
+      IR_V: resists.VzRd>0 ? governing.peakV.abs / resists.VzRd : Infinity,
+      xLM: geom.Lx>0 ? governing.peakM.x/geom.Lx : 0,
+      xLV: geom.Lx>0 ? governing.peakV.x/geom.Lx : 0
+    };
+    return {
+      mat, governing, sectionControl: sc,
+      perMatSectionCases
+    };
+  });
+
+  // Ground bearing (global, by footprint of base assembly block)
+  const totalTopLoadG = geom.topRects.reduce((a,t)=> a + (t.loads.G + t.loads.Q1 + t.loads.Q2), 0);
+  const baseArea = geom.totalLx * geom.totalW;
+  const totalBaseMass_t = geom.sections.length * (safeNumber(secRec.mass_kg_m,0)/1000) * geom.Lx;
+  const totalToGround_t = totalTopLoadG + totalBaseMass_t;
+  const GBP_tpm2 = baseArea>0 ? totalToGround_t/baseArea : 0;
+  const gbpAllow = Math.max(0, safeNumber($('gbp_allow').value,20));
+
+  // Overall verdict from all base mats IRs + GBP
+  let allPass = matsOut.every(m=> m.sectionControl.IR_M < 1 && m.sectionControl.IR_V < 1) && GBP_tpm2 < gbpAllow;
+  return {
+    prec, geom, secRec, fy, gammaM0, secClass, combos, matsOut, distributionRows,
+    sectionResist: resists,
+    baseWeight: {wBaseSelf_kNm:wBaseSelf, totalBaseMass_t},
+    global: {baseArea, totalTopLoadG, totalToGround_t, GBP_tpm2, GBP_kNm2: GBP_tpm2*G_ACC, gbpAllow},
+    allPass
   };
-
-  wrap.appendChild(row(`IR = My,Ed/My,Rd = ${fmt1(Math.abs(MyEd_kNm))}/${fmt1(MyRd)} = ${fmt2(IR_M)} < 1.0 (${fmtXL(xM,L)}; Ch 6.2.5)`, IR_M<1));
-  wrap.appendChild(row(`IR = Vz,Ed/Vz,Rd = ${fmt1(Math.abs(VzEd_kN))}/${fmt1(VzRd)} = ${fmt2(IR_V)} < 1.0 (${fmtXL(xV,L)}; Ch 6.2.6)`, IR_V<1));
-
-  const meta=document.createElement('div');
-  meta.className='tiny';
-  meta.style.marginTop='6px';
-  meta.textContent=`My,Rd = ${Wsel.label}·fy/γM0 ; Vz,Rd = Av,z·fy/(√3·γM0) ; class=${cls<=2?'1–2':cls} ; fy=${fy} MPa ; γM0=${gammaM0}`;
-  wrap.appendChild(meta);
-
-  return wrap;
 }
 
-/* =========================
-   MathML workings
-   ========================= */
-function mathWorkings(p, sec, layout, lc, caseName, comboNote, Wpatch_ULS_t, Wpatch_SLS_t, gov){
-  const div=document.createElement('div');
-  div.className='mathml';
+/* ---------- Rendering results ---------- */
+let lastSolve = null;
+function renderResults(out){
+  lastSolve = out;
+  const p = out.prec;
+  $('verdict').textContent = out.allPass ? '✅ PASS' : '❌ FAIL';
+  $('verdict').className = 'badge ' + (out.allPass ? 'green':'red');
 
-  const cls=getSectionClass();
-  const gammaM0=getGammaM0();
-  const fy=p.material.fy;
-  const Wsel = (sec && fy) ? getW_for_MRd(sec,cls) : null;
-
-  const lines=[];
-
-  // Load distribution to sections (by overlap area)
-  lines.push(`<math display="block">
-    <mrow>
-      <mi>W</mi><msub><mi>patch</mi><mi>Ed</mi></msub>
-      <mo>=</mo><mn>${Wpatch_ULS_t.toFixed(3)}</mn><mo>&#x00A0;</mo><mi>t</mi>
-    </mrow>
-  </math>`);
-
-  lines.push(`<math display="block">
-    <mrow>
-      <mi>A</mi><msub><mi>sum</mi></msub><mo>=</mo>
-      <mn>${layout.sumA.toFixed(4)}</mn><mo>&#x00A0;</mo><msup><mi>m</mi><mn>2</mn></msup>
-      <mo>,</mo><mo>&#x00A0;</mo>
-      <mi>W</mi><msub><mi>i</mi><mi>Ed</mi></msub><mo>=</mo>
-      <mi>W</mi><msub><mi>patch</mi><mi>Ed</mi></msub><mo>&#x22C5;</mo>
-      <mfrac><msub><mi>A</mi><mi>i</mi></msub><msub><mi>A</mi><mi>sum</mi></msub></mfrac>
-    </mrow>
-  </math>`);
-
-  // Beam patch UDL intensity
-  lines.push(`<math display="block">
-    <mrow>
-      <mi>w</mi><msub><mi>patch</mi><mi>i</mi></msub><mo>=</mo>
-      <mfrac>
-        <mrow><msub><mi>W</mi><mi>i</mi></msub><mo>&#x22C5;</mo><mi>g</mi></mrow>
-        <mrow><mi>a</mi><msub><mi>i</mi></msub></mrow>
-      </mfrac>
-      <mo>&#x00A0;</mo><mtext>kN/m</mtext>
-    </mrow>
-  </math>`);
-
-  // Actions from diagrams
-  lines.push(`<math display="block">
-    <mrow>
-      <mi>M</mi><msub><mi>y,Ed</mi></msub><mo>=</mo><mn>${gov.MyEd.toFixed(1)}</mn><mo>&#x00A0;</mo><mi>kN</mi><mo>&#x22C5;</mo><mi>m</mi>
-      <mo>,</mo><mo>&#x00A0;</mo>
-      <mi>V</mi><msub><mi>z,Ed</mi></msub><mo>=</mo><mn>${gov.VzEd.toFixed(1)}</mn><mo>&#x00A0;</mo><mi>kN</mi>
-    </mrow>
-  </math>`);
-
-  if(sec && fy){
-    // resistance
-    const MyRd = (Wsel.W * fy / gammaM0) / 1e6;
-    const VzRd = (sec.Avz_mm2 * fy / (Math.sqrt(3)*gammaM0)) / 1e3;
-    const IRM = Math.abs(gov.MyEd)/MyRd;
-    const IRV = Math.abs(gov.VzEd)/VzRd;
-
-    lines.push(`<math display="block">
-      <mrow>
-        <mi>M</mi><msub><mi>y,Rd</mi></msub><mo>=</mo>
-        <mfrac>
-          <mrow><msub><mi>${Wsel.label.replace(',','')}</mi></msub><mo>&#x22C5;</mo><mi>f</mi><msub><mi>y</mi></msub></mrow>
-          <mrow><mi>&#x03B3;</mi><msub><mi>M0</mi></msub></mrow>
-        </mfrac>
-        <mo>=</mo><mn>${MyRd.toFixed(1)}</mn><mo>&#x00A0;</mo><mi>kN</mi><mo>&#x22C5;</mo><mi>m</mi>
-      </mrow>
-    </math>`);
-
-    lines.push(`<math display="block">
-      <mrow>
-        <mi>I</mi><mi>R</mi><mo>=</mo><mfrac><msub><mi>M</mi><mi>y,Ed</mi></msub><msub><mi>M</mi><mi>y,Rd</mi></msub></mfrac>
-        <mo>=</mo><mfrac><mn>${Math.abs(gov.MyEd).toFixed(1)}</mn><mn>${MyRd.toFixed(1)}</mn></mfrac>
-        <mo>=</mo><mn>${IRM.toFixed(2)}</mn>
-      </mrow>
-    </math>`);
-
-    lines.push(`<math display="block">
-      <mrow>
-        <mi>V</mi><msub><mi>z,Rd</mi></msub><mo>=</mo>
-        <mfrac>
-          <mrow><msub><mi>A</mi><mi>v,z</mi></msub><mo>&#x22C5;</mo><mi>f</mi><msub><mi>y</mi></msub></mrow>
-          <mrow><msqrt><mn>3</mn></msqrt><mo>&#x22C5;</mo><mi>&#x03B3;</mi><msub><mi>M0</mi></msub></mrow>
-        </mfrac>
-        <mo>=</mo><mn>${VzRd.toFixed(1)}</mn><mo>&#x00A0;</mo><mi>kN</mi>
-      </mrow>
-    </math>`);
-
-    lines.push(`<math display="block">
-      <mrow>
-        <mi>I</mi><mi>R</mi><mo>=</mo><mfrac><msub><mi>V</mi><mi>z,Ed</mi></msub><msub><mi>V</mi><mi>z,Rd</mi></msub></mfrac>
-        <mo>=</mo><mfrac><mn>${Math.abs(gov.VzEd).toFixed(1)}</mn><mn>${VzRd.toFixed(1)}</mn></mfrac>
-        <mo>=</mo><mn>${IRV.toFixed(2)}</mn>
-      </mrow>
-    </math>`);
-  }
-
-  div.innerHTML = `<div class="tiny"><strong>${caseName}</strong> • LC: ${escapeHtml(lc.name)} • ${escapeHtml(comboNote)}</div>`
-    + lines.join('')
-    + `<div class="fallback mono math-note">If MathML is not supported in your browser, the numeric workings are still listed above in the Results block.</div>`;
-
-  return div;
-}
-
-/* =========================
-   Charts per loadcase
-   ========================= */
-function makeChartBlock(tag, seriesULS, seriesSLS, defl, L){
-  const grid=document.createElement('div');
-  grid.className='chart-grid';
-
-  const specs=[
-    {key:'V', title:'Shear V(x) — ULS', yLabel:'V [kN]', units:'kN', color:getVar('--primary')},
-    {key:'M', title:'Moment M(x) — ULS', yLabel:'M [kN·m]', units:'kN·m', color:getVar('--danger')},
-    {key:'Y', title:'Deflection y(x) — SLS', yLabel:'y [mm]', units:'mm', color:getVar('--good')},
+  // summary cards
+  const s = $('summaryCards');
+  s.innerHTML='';
+  const cards = [
+    ['Base mats present', `${out.geom.mats.length}`],
+    ['Individual sections', `${out.geom.sections.length}`],
+    ['Top mats active', `${out.geom.topRects.length}`],
+    ['Selected section', out.secRec.name || '—'],
+    ['My,Rd (kN·m)', fmt(out.sectionResist.MyRd,1)],
+    ['Vz,Rd (kN)', fmt(out.sectionResist.VzRd,1)],
+    ['GBP (t/m²)', fmt(out.global.GBP_tpm2,2)],
+    ['GBP allow (t/m²)', fmt(out.global.gbpAllow,2)]
   ];
+  cards.forEach(([k,v])=>{
+    const d=document.createElement('div');
+    d.className='summary';
+    d.innerHTML=`<div class="k">${k}</div><div class="v">${v}</div>`;
+    s.appendChild(d);
+  });
 
-  const capULS = `ULS peaks: My,Ed=${fmt1(seriesULS.peakM.val)} kN·m @ ${fmtXL(seriesULS.peakM.x,L)} • Vz,Ed=${fmt1(seriesULS.peakV.val)} kN @ ${fmtXL(seriesULS.peakV.x,L)}`;
-  const capSLS = `SLS peak deflection: |y|max=${fmt1(defl.peakY.val)} mm @ ${fmtXL(defl.peakY.x,L)}`;
+  // base-mat cards
+  const host = $('baseResults');
+  host.innerHTML='';
+  out.matsOut.forEach((br, idx)=>{
+    const c=document.createElement('div');
+    c.className='base-card';
+    const IRM = br.sectionControl.IR_M, IRV = br.sectionControl.IR_V;
+    const fail = (IRM>=1 || IRV>=1);
+    c.innerHTML = `
+      <h3>Base Mat ${br.mat.id} ${fail?'<span class="red">❌</span>':'<span class="green">✅</span>'}</h3>
+      <div class="kv">
+        <div>Location (ix,iy)</div><div>(${br.mat.ix+1}, ${br.mat.iy+1})</div>
+        <div>Envelope Peak My,Ed [kN·m]</div><div>${fmt(br.governing.peakM.abs,1)} @ ${(br.sectionControl.xLM).toFixed(2)}L</div>
+        <div>Envelope Peak Vz,Ed [kN]</div><div>${fmt(br.governing.peakV.abs,1)} @ ${(br.sectionControl.xLV).toFixed(2)}L</div>
+        <div>Peak deflection (SLS) [mm]</div><div>${fmt(br.governing.peakY.abs,1)} @ ${(out.geom.Lx? br.governing.peakY.x/out.geom.Lx:0).toFixed(2)}L</div>
+        <div>Governing M case</div><div>${br.governing.caseM}</div>
+        <div>Governing V case</div><div>${br.governing.caseV}</div>
+        <div>Governing y case</div><div>${br.governing.caseY}</div>
+      </div>
+      <div class="section-control">
+        <div style="font-weight:800;margin-bottom:5px">Section Control (Eurocode 3)</div>
+        <div class="line ${IRM<1?'green':'red'}">IR = My,Ed/My,Rd = ${fmt(br.governing.peakM.abs,1)}/${fmt(br.sectionControl.MyRd,1)} = ${fmt(IRM,2)} ${IRM<1?'&lt;':'≥'} 1.0 (${(br.sectionControl.xLM).toFixed(2)}L; Ch 6.2.5)</div>
+        <div class="line ${IRV<1?'green':'red'}">IR = Vz,Ed/Vz,Rd = ${fmt(br.governing.peakV.abs,1)}/${fmt(br.sectionControl.VzRd,1)} = ${fmt(IRV,2)} ${IRV<1?'&lt;':'≥'} 1.0 (${(br.sectionControl.xLV).toFixed(2)}L; Ch 6.2.6)</div>
+        <div class="small muted" style="margin-top:4px">My,Rd and Vz,Rd use selected section class, fy=${out.fy} MPa, γM0=${fmt(out.gammaM0,2)}.</div>
+      </div>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-weight:700">Full workings (math) + governing values</summary>
+        ${mathMLForBase(br, p)}
+        <div class="small muted">Governing section for My: ${br.governing.secM ? `M${br.governing.secM.matId}-S${br.governing.secM.secIndex}-L${br.governing.secM.layer+1}` : '—'} • Governing section for Vz: ${br.governing.secV ? `M${br.governing.secV.matId}-S${br.governing.secV.secIndex}-L${br.governing.secV.layer+1}` : '—'}</div>
+      </details>
+    `;
+    host.appendChild(c);
+  });
 
-  for(const sp of specs){
-    const wrap=document.createElement('div');
-    wrap.className='chart-wrap';
-    const canvas=document.createElement('canvas');
-    canvas.className='chart';
-    canvas.title='Click to enlarge';
-    const cap=document.createElement('div');
-    cap.className='chart-cap';
-    const capL=document.createElement('span'); capL.textContent=sp.title;
-    const capR=document.createElement('div'); capR.className='capR';
-    capR.innerHTML = `<div>${tag}</div><div class="mono">${sp.key==='Y'?capSLS:capULS}</div>`;
-    cap.appendChild(capL); cap.appendChild(capR);
-    wrap.appendChild(canvas); wrap.appendChild(cap);
-    grid.appendChild(wrap);
-
-    let xs, ys, markers, caption;
-    if(sp.key==='V'){ xs=seriesULS.xs; ys=seriesULS.V; markers=seriesULS.markers; caption=capULS; }
-    else if(sp.key==='M'){ xs=seriesULS.xs; ys=seriesULS.M; markers=seriesULS.markers; caption=capULS; }
-    else { xs=seriesSLS.xs; ys=defl.Y; markers=seriesSLS.markers; caption=capSLS; }
-
-    const state={xs, ys, title:sp.title, xLabel:'x [m]', yLabel:sp.yLabel, units:sp.units, caption, markers, lineColor:sp.color};
-    // render with ResizeObserver so it never stays blank
-    attachChart(canvas, state, {big:false});
-    canvas.addEventListener('click', ()=>openChartModal(state));
+  // distribution table
+  const tb = $('distTable').querySelector('tbody');
+  tb.innerHTML='';
+  const maxRows = 600;
+  out.distributionRows.slice(0,maxRows).forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.topLabel}</td>
+      <td>${r.matId}</td>
+      <td>${r.secLabel}</td>
+      <td>${fmt(r.area,4)}</td>
+      <td>${fmt(r.G,3)}</td>
+      <td>${fmt(r.Q1,3)}</td>
+      <td>${fmt(r.Q2,3)}</td>
+      <td>${fmt(r.x1,3)} → ${fmt(r.x2,3)}</td>`;
+    tb.appendChild(tr);
+  });
+  if(out.distributionRows.length > maxRows){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td colspan="8" class="muted">Showing first ${maxRows} of ${out.distributionRows.length} distribution rows.</td>`;
+    tb.appendChild(tr);
   }
-  return grid;
+
+  // dims overlay list
+  renderDimsOverlay(out);
+
+  // viewer info
+  $('viewerInfo').textContent = `Base mats ${out.geom.nMatX}×${out.geom.nMatY}, sections/mat ${out.geom.nSecPerMat}, layers ${out.geom.baseLayers}.`;
 }
 
-function attachChart(canvas, state, opt){
-  canvas._chartState = state;
-  const ro = new ResizeObserver(()=> scheduleChartRender(canvas, state, opt||{}));
-  ro.observe(canvas);
-  scheduleChartRender(canvas, state, opt||{});
+function renderDimsOverlay(out){
+  const d=$('dimsList');
+  d.innerHTML='';
+  const add=(t)=>{ const x=document.createElement('div'); x.textContent=t; d.appendChild(x); };
+  add(`Base assembly: ${fmt(out.geom.totalLx,3)} m (Lx) × ${fmt(out.geom.totalW,3)} m (W) × ${fmt(out.geom.totalH,3)} m (H)`);
+  add(`Base mat (each): ${fmt(out.geom.matLx,3)} m × ${fmt(out.geom.matW,3)} m × ${fmt(out.geom.totalH,3)} m`);
+  add(`Section ${out.secRec.name}: b=${fmt(out.secRec.b_mm,0)} mm, h=${fmt(out.secRec.h_mm,0)} mm`);
+  out.geom.topRects.forEach(t=>{
+    add(`Top Mat ${t.label}: ${fmt(t.Lx,3)} × ${fmt(t.Ly,3)} × ${fmt(t.t,3)} m at (${fmt(t.x,2)}, ${fmt(t.y,2)}, ${fmt(t.z,2)})`);
+  });
 }
 
-/* =========================
-   3D view renderer: shows all mats, all sections, profiles on both ends
-   ========================= */
-function renderIso3D(p, sec, layout){
-  const c=$('plot'), ctx=c.getContext('2d');
-  c.width=c.clientWidth;
-  c.height=c.clientHeight;
+/* ---------- Interactive 3D Viewer ---------- */
+const viewer = (function(){
+  const canvas = $('viewerCanvas');
+  const ctx = canvas.getContext('2d');
+  let dpr = Math.max(1, window.devicePixelRatio||1);
+  let yaw = -35 * Math.PI/180, pitch = 28*Math.PI/180, zoom = 1;
+  let panX=0, panY=0;
+  let dragging=false, lastX=0,lastY=0;
+  let needs=true;
+  let cachedOut=null;
 
-  const W=c.width, H=c.height;
-  ctx.clearRect(0,0,W,H);
-
-  const baseCol = (p.material.matKind==='wood') ? '#8B4513' : '#707070';
-  const topCol  = '#6b7280';
-  const loadedCol = '#9aa4b2'; // highlight loaded beams slightly
-
-  const isoAng=Math.PI/6;
-  const sc = 0.85*Math.min(
-    W/Math.max(1,(Math.max(layout.baseLenTotal, layout.top.L)+Math.max(layout.baseWidTotal, layout.top.W))*Math.cos(isoAng)*120),
-    H/Math.max(1,(Math.max(layout.baseLenTotal, layout.top.L)+Math.max(layout.baseWidTotal, layout.top.W))*Math.sin(isoAng)*120 + p.layers*layout.beamH*120)
-  );
-
-  const iso=(x,y,z)=>{
-    // left-hand viewpoint by mirroring y
-    y=-y;
-    const xm=x*100, ym=y*100, zm=z*100;
-    const ix=(xm-ym)*Math.cos(isoAng);
-    const iy=(xm+ym)*Math.sin(isoAng)-zm;
-    return [W/2 + ix*sc, H*0.62 + iy*sc];
-  };
-
-  const poly=(pts, fill, stroke, alpha=1)=>{
-    ctx.save();
-    ctx.globalAlpha=alpha;
-    ctx.fillStyle=fill;
-    ctx.strokeStyle=stroke;
-    ctx.lineWidth=1;
+  function resize(){
+    const r=canvas.getBoundingClientRect();
+    dpr=Math.max(1, window.devicePixelRatio||1);
+    canvas.width=Math.max(1,Math.round(r.width*dpr));
+    canvas.height=Math.max(1,Math.round(r.height*dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    requestRender();
+  }
+  function requestRender(){ needs=true; }
+  function project(pt, cam){
+    // rotate world by yaw then pitch
+    let x=pt.x, y=pt.y, z=pt.z;
+    const cy=Math.cos(yaw), sy=Math.sin(yaw);
+    let x1 = x*cy - y*sy;
+    let y1 = x*sy + y*cy;
+    let z1 = z;
+    const cp=Math.cos(pitch), sp=Math.sin(pitch);
+    let y2 = y1*cp - z1*sp;
+    let z2 = y1*sp + z1*cp;
+    const s = cam.scale * zoom;
+    return {
+      x: cam.cx + x1*s + panX,
+      y: cam.cy - (y2*s + panY),
+      depth: z2
+    };
+  }
+  function boxFaces(b){
+    const v = [
+      {x:b.x1,y:b.y1,z:b.z1},{x:b.x2,y:b.y1,z:b.z1},{x:b.x2,y:b.y2,z:b.z1},{x:b.x1,y:b.y2,z:b.z1},
+      {x:b.x1,y:b.y1,z:b.z2},{x:b.x2,y:b.y1,z:b.z2},{x:b.x2,y:b.y2,z:b.z2},{x:b.x1,y:b.y2,z:b.z2}
+    ];
+    return [
+      {pts:[v[0],v[1],v[2],v[3]], shade:0.60, name:'bottom'},
+      {pts:[v[4],v[5],v[6],v[7]], shade:0.95, name:'top'},
+      {pts:[v[0],v[1],v[5],v[4]], shade:0.82, name:'front'},
+      {pts:[v[1],v[2],v[6],v[5]], shade:0.75, name:'right'},
+      {pts:[v[2],v[3],v[7],v[6]], shade:0.67, name:'back'},
+      {pts:[v[3],v[0],v[4],v[7]], shade:0.72, name:'left'}
+    ];
+  }
+  function shadeColor(hex, factor, alpha){
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex||'');
+    if(!m) return `rgba(160,160,160,${alpha??1})`;
+    const n = parseInt(m[1],16);
+    let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+    r=Math.round(clamp(r*factor,0,255)); g=Math.round(clamp(g*factor,0,255)); b=Math.round(clamp(b*factor,0,255));
+    return `rgba(${r},${g},${b},${alpha??1})`;
+  }
+  function drawPoly(pts, fill, stroke){
+    if(pts.length<3) return;
     ctx.beginPath();
-    ctx.moveTo(pts[0][0], pts[0][1]);
-    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
     ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-  };
-
-  const box=(x,y,z,dx,dy,dz,fill,alpha)=>{
-    const stroke='rgba(255,255,255,0.10)';
-    const A=iso(x,    y,    z);
-    const B=iso(x+dx, y,    z);
-    const C=iso(x+dx, y+dy, z);
-    const D=iso(x,    y+dy, z);
-    const A2=iso(x,    y,    z+dz);
-    const B2=iso(x+dx, y,    z+dz);
-    const C2=iso(x+dx, y+dy, z+dz);
-    const D2=iso(x,    y+dy, z+dz);
-    poly([D, C, C2, D2], fill, stroke, alpha);
-    poly([B, C, C2, B2], fill, stroke, alpha);
-    poly([A, B, B2, A2], fill, stroke, alpha);
-    poly([A, D, D2, A2], fill, stroke, alpha);
-    poly([A2, B2, C2, D2], fill, stroke, alpha);
-  };
-
-  // Draw beams (as boxes) across all mats and layers
-  for(let layer=0; layer<p.layers; layer++){
-    const z = layout.baseZ + layer*layout.beamH;
-    for(const b of layout.beams){
-      const x0=b.xLeft;
-      const y0=b.yLeft;
-      const isLoaded = b.contact.A > 0;
-      box(x0, y0, z, b.L, b.W, layout.beamH, isLoaded?loadedCol:baseCol, 0.78);
-    }
+    if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke(); }
   }
 
-  // Draw top plate (full dims), bottom at z=0
-  box(layout.top.xLeft, layout.top.yLeft, 0, layout.top.L, layout.top.W, layout.top.T, topCol, 0.80);
-
-  // Draw end profiles on both ends of every beam (if enabled)
-  const showProfiles = $('show_end_profiles').checked;
-  if(showProfiles && sec && p.baseModel==='sections'){
-    const fam=$('sec_series').value;
-    const drawShape = fam.startsWith('UP') ? 'C' : 'I';
-    const tf=0.14, tw=(drawShape==='C'?0.16:0.20);
-    const webOff=(drawShape==='C'?0.10:0.0);
-
-    function drawFaceAt(b, xFace){
-      // Map u across width, v up height onto x-face
-      const y0=b.yLeft, z0=layout.baseZ + (p.layers-1)*layout.beamH;
-      const P0=iso(xFace, y0, z0);
-      const P1=iso(xFace, y0+b.W, z0);
-      const P3=iso(xFace, y0, z0+layout.beamH);
-      const ex=[P1[0]-P0[0], P1[1]-P0[1]];
-      const ey=[P3[0]-P0[0], P3[1]-P0[1]];
-      const mapUV=(u,v)=>[P0[0]+ex[0]*u+ey[0]*v, P0[1]+ex[1]*u+ey[1]*v];
-
-      let pts;
-      if(drawShape==='I'){
-        const webX0=0.5-tw/2, webX1=0.5+tw/2;
-        pts=[
-          [0.0, 1.0], [1.0, 1.0], [1.0, 1.0-tf], [webX1, 1.0-tf], [webX1, tf], [1.0, tf],
-          [1.0, 0.0], [0.0, 0.0], [0.0, tf], [webX0, tf], [webX0, 1.0-tf], [0.0, 1.0-tf]
-        ].map(([u,v])=>mapUV(u,v));
-      } else {
-        // Channel "C": open on right side (u~1)
-        const lip=0.06;
-        const webX=webOff+tw; // web thickness at left
-        pts=[
-          [0.0,0.0],[1.0,0.0],[1.0,lip],[webX,lip],[webX,1.0-lip],[1.0,1.0-lip],[1.0,1.0],[0.0,1.0],[0.0,0.0]
-        ].map(([u,v])=>mapUV(u,v));
-      }
-
+  function drawSectionEndFace(secBox, secType, cam){
+    if(!$('show_section_ends').checked) return;
+    // draw on x1 and x2 faces as small 2D schematic inside face projected quad
+    const ends = [
+      [{x:secBox.x1,y:secBox.y1,z:secBox.z1},{x:secBox.x1,y:secBox.y2,z:secBox.z1},{x:secBox.x1,y:secBox.y2,z:secBox.z2},{x:secBox.x1,y:secBox.y1,z:secBox.z2}],
+      [{x:secBox.x2,y:secBox.y1,z:secBox.z1},{x:secBox.x2,y:secBox.y2,z:secBox.z1},{x:secBox.x2,y:secBox.y2,z:secBox.z2},{x:secBox.x2,y:secBox.y1,z:secBox.z2}],
+    ];
+    ends.forEach(face=>{
+      const pp = face.map(v=>project(v,cam));
+      const cx = pp.reduce((a,p)=>a+p.x,0)/4, cy = pp.reduce((a,p)=>a+p.y,0)/4;
+      const w = Math.hypot(pp[1].x-pp[0].x, pp[1].y-pp[0].y);
+      const h = Math.hypot(pp[3].x-pp[0].x, pp[3].y-pp[0].y);
+      const size = Math.min(w,h)*0.8;
+      if(size < 6) return;
       ctx.save();
-      ctx.globalAlpha=0.90;
-      ctx.fillStyle='rgba(0,0,0,0.35)';
-      ctx.strokeStyle='rgba(255,255,255,0.35)';
+      // local axes from face
+      const ux = {x:(pp[1].x-pp[0].x)/w, y:(pp[1].y-pp[0].y)/w};
+      const uy = {x:(pp[3].x-pp[0].x)/h, y:(pp[3].y-pp[0].y)/h};
+      function lp(u,v){ return {x: cx + ux.x*u + uy.x*v, y: cy + ux.y*u + uy.y*v}; }
+      ctx.strokeStyle='rgba(255,255,255,.85)';
       ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
-      for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
-      ctx.closePath();
-      ctx.fill(); ctx.stroke();
+      const halfW = size*0.42, halfH = size*0.46;
+      if(/^UPN|^UPE/i.test(secType||'')){ // channel depiction
+        const tw = size*0.10, tf = size*0.12;
+        const pts = [
+          lp(-halfW,-halfH), lp(-halfW,halfH), lp(-halfW+tf,halfH), lp(-halfW+tf,tf/2),
+          lp(halfW,tf/2), lp(halfW,-tf/2), lp(-halfW+tf,-tf/2), lp(-halfW+tf,-halfH), lp(-halfW,-halfH)
+        ];
+        ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y); ctx.stroke();
+      }else{
+        // I / H depiction
+        const tf = size*0.12, tw = size*0.09;
+        const h1=halfH, w1=halfW;
+        const path = [
+          lp(-w1,-h1), lp(w1,-h1), lp(w1,-h1+tf), lp(tw/2,-h1+tf), lp(tw/2,h1-tf), lp(w1,h1-tf),
+          lp(w1,h1), lp(-w1,h1), lp(-w1,h1-tf), lp(-tw/2,h1-tf), lp(-tw/2,-h1+tf), lp(-w1,-h1+tf), lp(-w1,-h1)
+        ];
+        ctx.beginPath(); ctx.moveTo(path[0].x,path[0].y); for(let i=1;i<path.length;i++) ctx.lineTo(path[i].x,path[i].y); ctx.stroke();
+      }
       ctx.restore();
-    }
-
-    for(const b of layout.beams){
-      drawFaceAt(b, b.xLeft);
-      drawFaceAt(b, b.xRight);
-    }
-  }
-
-  $('plotNote').textContent =
-    `Overhang ${p.overhang?'ON (single base mat)':'OFF (tiled mats)'} • ` +
-    `Tiling: nL=${layout.nLen}, nW=${layout.nWid} • Total sections: ${layout.beams.length} • Loaded sections: ${layout.loadedCount}`;
-}
-
-
-/* =========================
-   Interactive input 3D viewer (top-left)
-   Drag = orbit, Wheel = zoom
-   ========================= */
-const input3DState = {
-  yaw: -35,      // left-hand iso style
-  pitch: 28,
-  zoom: 1.0,
-  dragging:false,
-  lastX:0,lastY:0
-};
-
-function setInput3DViewPreset(name){
-  if(name==='leftiso'){ input3DState.yaw=-35; input3DState.pitch=28; input3DState.zoom=1.0; }
-  else if(name==='rightiso'){ input3DState.yaw=35; input3DState.pitch=28; input3DState.zoom=1.0; }
-  else if(name==='top'){ input3DState.yaw=0; input3DState.pitch=88; input3DState.zoom=1.0; }
-  else if(name==='front'){ input3DState.yaw=0; input3DState.pitch=8; input3DState.zoom=1.0; }
-  else if(name==='side'){ input3DState.yaw=90; input3DState.pitch=8; input3DState.zoom=1.0; }
-  else if(name==='reset'){ input3DState.yaw=-35; input3DState.pitch=28; input3DState.zoom=1.0; }
-  if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
-}
-
-function initInput3DViewer(){
-  const c=$('input3d_canvas');
-  if(!c) return;
-
-  c.addEventListener('mousedown', e=>{
-    input3DState.dragging=true;
-    c.classList.add('dragging');
-    input3DState.lastX=e.clientX;
-    input3DState.lastY=e.clientY;
-  });
-  window.addEventListener('mouseup', ()=>{
-    input3DState.dragging=false;
-    c.classList.remove('dragging');
-  });
-  window.addEventListener('mousemove', e=>{
-    if(!input3DState.dragging) return;
-    const dx=e.clientX-input3DState.lastX;
-    const dy=e.clientY-input3DState.lastY;
-    input3DState.lastX=e.clientX;
-    input3DState.lastY=e.clientY;
-    input3DState.yaw += dx*0.45;
-    input3DState.pitch = Math.max(-89, Math.min(89, input3DState.pitch + dy*0.35));
-    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
-  });
-  c.addEventListener('wheel', e=>{
-    e.preventDefault();
-    const f = Math.exp(-e.deltaY*0.0012);
-    input3DState.zoom = Math.max(0.35, Math.min(3.5, input3DState.zoom*f));
-    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
-  }, {passive:false});
-
-  document.querySelectorAll('#input3d_nav [data-view]').forEach(btn=>{
-    btn.addEventListener('click', ()=> setInput3DViewPreset(btn.getAttribute('data-view')));
-  });
-  $('input3d_zoom_in')?.addEventListener('click', ()=>{
-    input3DState.zoom=Math.min(3.5, input3DState.zoom*1.12);
-    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
-  });
-  $('input3d_zoom_out')?.addEventListener('click', ()=>{
-    input3DState.zoom=Math.max(0.35, input3DState.zoom/1.12);
-    if(window.__last3dPayload) renderInput3D(window.__last3dPayload.p, window.__last3dPayload.sec, window.__last3dPayload.layout);
-  });
-}
-
-function renderInput3D(p, sec, layout){
-  const c=$('input3d_canvas');
-  if(!c || !layout) return;
-  const ctx=c.getContext('2d');
-  c.width = Math.max(10, Math.floor(c.clientWidth));
-  c.height = Math.max(10, Math.floor(c.clientHeight));
-  const W=c.width, H=c.height;
-  ctx.clearRect(0,0,W,H);
-
-  window.__last3dPayload = {p, sec, layout};
-
-  const baseCol = (p.material.matKind==='wood') ? '#8B4513' : '#7a7f87';
-  const loadedCol = (p.material.matKind==='wood') ? '#9a5b1c' : '#9aa4b2';
-  const topCol = '#9aa0aa';
-
-  // Rotation helpers (yaw about global Z, pitch about local X after yaw)
-  const yaw = input3DState.yaw*Math.PI/180;
-  const pit = input3DState.pitch*Math.PI/180;
-  const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pit), sp=Math.sin(pit);
-
-  function rotPt(x,y,z){
-    const x1 = x*cy - y*sy;
-    const y1 = x*sy + y*cy;
-    const z1 = z;
-    const x2 = x1;
-    const y2 = y1*cp - z1*sp;
-    const z2 = y1*sp + z1*cp;
-    return [x2,y2,z2];
-  }
-
-  const pts=[];
-  const addBoxPts=(x,y,z,dx,dy,dz)=>{
-    for(const X of [x,x+dx]) for(const Y of [y,y+dy]) for(const Z of [z,z+dz]) pts.push(rotPt(X,Y,Z));
-  };
-  for(let layer=0; layer<p.layers; layer++){
-    const z=layout.baseZ + layer*layout.beamH;
-    for(const b of layout.beams) addBoxPts(b.xLeft,b.yLeft,z,b.L,b.W,layout.beamH);
-  }
-  addBoxPts(layout.top.xLeft,layout.top.yLeft,0,layout.top.L,layout.top.W,layout.top.T);
-
-  let minx=Infinity,maxx=-Infinity,miny=Infinity,maxy=-Infinity;
-  for(const q of pts){
-    minx=Math.min(minx,q[0]); maxx=Math.max(maxx,q[0]);
-    miny=Math.min(miny,q[1]); maxy=Math.max(maxy,q[1]);
-  }
-  if(!isFinite(minx)){ minx=-1; maxx=1; miny=-1; maxy=1; }
-
-  const margin=28;
-  const sx=(W-2*margin)/Math.max(1e-6,(maxx-minx));
-  const sy2=(H-2*margin)/Math.max(1e-6,(maxy-miny));
-  const sc=Math.max(1, 0.92*Math.min(sx,sy2)*input3DState.zoom);
-  const cx0=(minx+maxx)/2, cy0=(miny+maxy)/2;
-
-  function proj(x,y,z){
-    const r=rotPt(x,y,z);
-    return [W/2 + (r[0]-cx0)*sc, H/2 + (r[1]-cy0)*sc, r[2]];
-  }
-
-  function boxFaces(x,y,z,dx,dy,dz){
-    const P = [
-      [x,y,z],[x+dx,y,z],[x+dx,y+dy,z],[x,y+dy,z],
-      [x,y,z+dz],[x+dx,y,z+dz],[x+dx,y+dy,z+dz],[x,y+dy,z+dz]
-    ];
-    const Q = P.map(v=>proj(v[0],v[1],v[2]));
-    const faces = [
-      [0,1,2,3], [4,5,6,7], [0,1,5,4], [1,2,6,5], [2,3,7,6], [3,0,4,7]
-    ];
-    return faces.map(idxs=>{
-      const pts2=idxs.map(i=>Q[i]);
-      const depth=pts2.reduce((a,b)=>a+b[2],0)/pts2.length;
-      return {pts:pts2, depth};
     });
   }
 
-  const primitives=[];
-
-  for(let layer=0; layer<p.layers; layer++){
-    const z=layout.baseZ + layer*layout.beamH;
-    for(const b of layout.beams){
-      const faces=boxFaces(b.xLeft,b.yLeft,z,b.L,b.W,layout.beamH);
-      const col = (b.contact && b.contact.A>0)? loadedCol : baseCol;
-      for(const f of faces) primitives.push({type:'face', pts:f.pts, depth:f.depth, fill:col, stroke:'rgba(255,255,255,.12)', alpha:0.82});
-    }
-  }
-  for(const f of boxFaces(layout.top.xLeft,layout.top.yLeft,0,layout.top.L,layout.top.W,layout.top.T)){
-    primitives.push({type:'face', pts:f.pts, depth:f.depth, fill:topCol, stroke:'rgba(255,255,255,.18)', alpha:0.80});
-  }
-
-  // Section end markers (small I/C glyphs on beam ends for top layer)
-  const fam = $('sec_series')?.value || 'HEA';
-  const glyph = fam.startsWith('UP') || fam.startsWith('UNP') ? 'C' : 'I';
-  if(p.baseModel==='sections' && $('show_end_profiles')?.checked && layout.beams.length<=120){
-    for(const b of layout.beams){
-      const z0=layout.baseZ + (p.layers-1)*layout.beamH + layout.beamH*0.5;
-      for(const xf of [b.xLeft, b.xRight]){
-        const m=proj(xf, b.cy, z0);
-        primitives.push({type:'glyph', x:m[0], y:m[1], depth:m[2], glyph, size:Math.max(6, Math.min(14, b.W*sc*0.45))});
-      }
-    }
-  }
-
-  primitives.sort((a,b)=>a.depth-b.depth);
-  for(const pr of primitives){
-    if(pr.type==='face'){
-      ctx.save();
-      ctx.globalAlpha=pr.alpha ?? 1;
-      ctx.fillStyle=pr.fill; ctx.strokeStyle=pr.stroke; ctx.lineWidth=1;
-      ctx.beginPath();
-      ctx.moveTo(pr.pts[0][0], pr.pts[0][1]);
-      for(let i=1;i<pr.pts.length;i++) ctx.lineTo(pr.pts[i][0], pr.pts[i][1]);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.restore();
-    } else if(pr.type==='glyph'){
-      ctx.save();
-      ctx.translate(pr.x, pr.y);
-      ctx.strokeStyle='rgba(0,0,0,.55)';
-      ctx.lineWidth=1.4;
-      const s=pr.size;
-      if(pr.glyph==='I'){
-        ctx.beginPath();
-        ctx.moveTo(-s*0.5,-s*0.38); ctx.lineTo(s*0.5,-s*0.38);
-        ctx.moveTo(0,-s*0.38); ctx.lineTo(0,s*0.38);
-        ctx.moveTo(-s*0.5,s*0.38); ctx.lineTo(s*0.5,s*0.38);
-        ctx.stroke();
-      }else{
-        ctx.beginPath();
-        ctx.moveTo(s*0.45,-s*0.38); ctx.lineTo(-s*0.35,-s*0.38);
-        ctx.lineTo(-s*0.35,s*0.38); ctx.lineTo(s*0.45,s*0.38);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-  }
-
-  // Simple dimension leader overlays (text + arrows) for top and base extents
-  function dimLine(a,b,label,off=0){
-    const ax=proj(...a), bx=proj(...b);
-    const dx=bx[0]-ax[0], dy=bx[1]-ax[1];
-    const len=Math.hypot(dx,dy)||1;
-    const nx=-(dy/len), ny=(dx/len);
-    const ox=nx*off, oy=ny*off;
-    const p1=[ax[0]+ox, ax[1]+oy], p2=[bx[0]+ox, bx[1]+oy];
-
+  function drawDimensions(cam, out){
+    if(!$('show_dims').checked || !out) return;
+    const geom=out.geom;
     ctx.save();
-    ctx.strokeStyle='rgba(255,255,255,.65)';
-    ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.strokeStyle='rgba(255,255,255,.33)';
+    ctx.fillStyle='rgba(230,238,255,.85)';
     ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]); ctx.stroke();
-    // arrowheads
-    const ah=6;
-    for(const [tx,ty,sx,sy] of [[p1[0],p1[1],dx,dy],[p2[0],p2[1],-dx,-dy]]){
-      const l=Math.hypot(sx,sy)||1; const ux=sx/l, uy=sy/l;
-      ctx.beginPath();
-      ctx.moveTo(tx,ty);
-      ctx.lineTo(tx+(-ux*ah + -uy*ah*0.45), ty+(-uy*ah + ux*ah*0.45));
-      ctx.moveTo(tx,ty);
-      ctx.lineTo(tx+(-ux*ah + uy*ah*0.45), ty+(-uy*ah + -ux*ah*0.45));
-      ctx.stroke();
+    ctx.font='12px system-ui';
+    function lineLabel(a,b,label){
+      const pa=project(a,cam), pb=project(b,cam);
+      ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke();
+      const mx=(pa.x+pb.x)/2, my=(pa.y+pb.y)/2;
+      ctx.fillText(label, mx+6, my-4);
     }
-    const mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
-    ctx.font='11px system-ui, sans-serif';
-    ctx.textAlign='center'; ctx.textBaseline='bottom';
-    ctx.fillText(label, mx, my-4);
+    // overall base assembly dims on base top plane
+    const bx1=geom.baseCenter.x-geom.totalLx/2, bx2=geom.baseCenter.x+geom.totalLx/2;
+    const by1=geom.baseCenter.y-geom.totalW/2,  by2=geom.baseCenter.y+geom.totalW/2;
+    const bz = geom.baseCenter.z + geom.totalH + 0.02;
+    lineLabel({x:bx1,y:by2,z:bz},{x:bx2,y:by2,z:bz},`Base Lx ${fmt(geom.totalLx,3)} m`);
+    lineLabel({x:bx1,y:by1,z:bz},{x:bx1,y:by2,z:bz},`Base W ${fmt(geom.totalW,3)} m`);
+    lineLabel({x:bx2,y:by2,z:geom.baseCenter.z},{x:bx2,y:by2,z:geom.baseCenter.z+geom.totalH},`H ${fmt(geom.totalH,3)} m`);
+    // top mats
+    out.geom.topRects.forEach(t=>{
+      const z = t.z + t.t + 0.02;
+      lineLabel({x:t.x1,y:t.y2,z},{x:t.x2,y:t.y2,z},`${t.label}: Lx ${fmt(t.Lx,3)} m`);
+      lineLabel({x:t.x1,y:t.y1,z},{x:t.x1,y:t.y2,z},`${t.label}: Ly ${fmt(t.Ly,3)} m`);
+      lineLabel({x:t.x2,y:t.y2,z:t.z},{x:t.x2,y:t.y2,z:t.z+t.t},`t ${fmt(t.t,3)} m`);
+    });
     ctx.restore();
   }
 
-  // top L and W (use top top-face edges)
-  dimLine([layout.top.xLeft, layout.top.yLeft, layout.top.T],[layout.top.xRight, layout.top.yLeft, layout.top.T], `Top L ${layout.top.L.toFixed(2)} m`, 14);
-  dimLine([layout.top.xRight, layout.top.yLeft, layout.top.T],[layout.top.xRight, layout.top.yRight, layout.top.T], `Top W ${layout.top.W.toFixed(2)} m`, 14);
-  // base overall L/W/H
-  const x0 = p.base_x - layout.baseLenTotal/2;
-  const x1 = p.base_x + layout.baseLenTotal/2;
-  const y0 = p.base_y - layout.baseWidTotal/2;
-  const y1 = p.base_y + layout.baseWidTotal/2;
-  const z0 = layout.baseZ;
-  const z1 = layout.baseZ + p.layers*layout.beamH;
-  dimLine([x0,y0,z0],[x1,y0,z0], `Base L ${layout.baseLenTotal.toFixed(2)} m`, -16);
-  dimLine([x1,y0,z0],[x1,y1,z0], `Base W ${layout.baseWidTotal.toFixed(2)} m`, -16);
-  dimLine([x1,y1,z0],[x1,y1,z1], `H ${((z1-z0)).toFixed(3)} m`, 18);
+  function render(out){
+    cachedOut = out || cachedOut;
+    if(!cachedOut) return;
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    ctx.clearRect(0,0,W,H);
+    const g = cachedOut.geom;
+    const cx = W*0.50, cy = H*0.58;
 
-  // HUD text
-  $('input3d_info').textContent = `Yaw ${input3DState.yaw.toFixed(0)}° • Pitch ${input3DState.pitch.toFixed(0)}° • Zoom ${input3DState.zoom.toFixed(2)}x`;
-  const secName = sec?.name || (p.baseModel==='sections' ? 'Section' : 'Block');
-  const baseHeight = (p.layers*layout.beamH).toFixed(3);
-  $('input3d_dims').textContent =
-    `3-D Dimensions\n` +
-    `Top mat (L×W×T): ${layout.top.L.toFixed(2)} × ${layout.top.W.toFixed(2)} × ${layout.top.T.toFixed(3)} m\n` +
-    `Base assembly (L×W×H): ${layout.baseLenTotal.toFixed(2)} × ${layout.baseWidTotal.toFixed(2)} × ${baseHeight} m\n` +
-    `Base layers: ${p.layers} × ${(layout.beamH).toFixed(3)} m\n` +
-    `Base mats: ${layout.nLen} × ${layout.nWid}  |  Sections/mat: ${layout.secPerMat}\n` +
-    `${p.baseModel==='sections' ? `Section: ${secName}` : 'Base model: solid block mats'}`;
-}
+    // camera fit from scene bounds
+    const allPts = [];
+    g.mats.forEach(m=>{ allPts.push({x:m.x1,y:m.y1,z:m.z1},{x:m.x2,y:m.y2,z:m.z2}); });
+    g.topRects.forEach(t=>{ allPts.push({x:t.x1,y:t.y1,z:t.z1},{x:t.x2,y:t.y2,z:t.z2}); });
+    if(!allPts.length) return;
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=Infinity,maxZ=-Infinity;
+    allPts.forEach(p=>{ if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y; if(p.z<minZ)minZ=p.z; if(p.z>maxZ)maxZ=p.z; });
+    const span = Math.max(maxX-minX, maxY-minY, (maxZ-minZ)*1.6, 1);
+    const cam = {cx,cy, scale: Math.min(W,H) * 0.26 / span};
 
+    // floor/grid
+    drawGrid(cam, {minX,maxX,minY,maxY,z:minZ-0.02});
 
-/* =========================
-   Main calculation
-   ========================= */
-function runCalc(){
-  clearErrs();
-  updateModeUI();
-  updateLCPreview();
-  updateTileUI();
-  syncSecSummary();
+    const primitives = [];
+    const secColor = ($('steel_grade').value==='S235'||$('steel_grade').value==='S355') ? '#8c939f' : '#8c939f';
+    const woodColor = '#7a4a16';
+    const showSections = $('show_individual_sections').checked;
 
-  const precision=+$('precision').value;
-  if(!(Number.isFinite(precision) && precision>=0 && precision<=6)) return showErr('err_precision','Precision should be 0–6.');
+    // Base mats blocks (wood/brown visual envelope)
+    g.mats.forEach(m=>{
+      primitives.push({kind:'box', box:{x1:m.x1,y1:m.y1,z1:m.z1,x2:m.x2,y2:m.y2,z2:m.z2}, color:woodColor, alpha:.72, edge:'rgba(0,0,0,.25)', type:'mat'});
+    });
 
-  const topType=$('top_type').value;
-  const mat=materials[$('material').value];
-
-  const top_wid=+$('top_wid').value;
-  const top_len=+$('top_len').value;
-  const Lsl=+$('Lsl').value;
-  const layers=+$('layers').value;
-  const GBP_allow=+$('GBP_allow').value;
-
-  if(!(top_wid>0)) return showErr('err_top_wid','Enter a valid value (>0).');
-  if(!(top_len>0)) return showErr('err_top_len','Enter a valid value (>0).');
-  if(!(Lsl>0)) return showErr('err_Lsl','Enter a valid value (>0).');
-  if(!(layers>=1)) return showErr('err_layers','Layers must be ≥ 1.');
-  if(!(GBP_allow>=0)) return showErr('err_GBP','Allowable GBP must be ≥ 0.');
-
-  const baseModel=$('base_model').value;
-  const sec_n=+$('sec_n').value;
-  const sec_gap=+$('sec_gap').value;
-  if(baseModel==='sections'){
-    if(!(sec_n>=1)) return showErr('err_secn','Must be ≥ 1.');
-    if(!(sec_gap>=0)) return showErr('err_secgap','Must be ≥ 0.');
-  }
-
-  // block placeholders (not used in this build, but kept safe)
-  const Lsb_block = 0.2;
-  const Lsh_block = 0.19;
-
-  const sec = (baseModel==='sections') ? getSelectedProfile() : null;
-
-  const p={
-    material:mat,
-    baseModel,
-    top_wid, top_len,
-    Lsl, layers,
-    sec_n, sec_gap,
-    Lsb_block, Lsh_block,
-    overhang:$('overhang').checked,
-    includeBaseSW:$('include_base_sw').checked,
-    auto_tile:$('auto_tile').checked,
-    nMatWid:+$('nMatWid').value,
-    nMatLen:+$('nMatLen').value,
-    base_x:+$('base_x').value||0,
-    base_y:+$('base_y').value||0,
-    base_z:+$('base_z').value||0,
-    GBP_allow,
-    precision
-  };
-
-  // Update auto tiling computed fields (so user sees them)
-  const tmpLayout = buildLayout({...p, auto_tile:true}, sec);
-  if(p.auto_tile && !p.overhang){
-    $('nMatLen').value = tmpLayout.nLen;
-    $('nMatWid').value = tmpLayout.nWid;
-  }
-  // Layout (actual)
-  const layout = buildLayout(p, sec);
-  layout.baseZ = p.base_z;
-  // loaded beam count
-  layout.loadedCount = layout.beams.filter(b=>b.contact.A>0).length;
-
-  // If no contact, cannot proceed
-  if(layout.sumA<=0){
-    const out=$('results'); out.innerHTML='';
-    const wrap=document.createElement('div'); wrap.className='result-block';
-    wrap.innerHTML = `<div class="result-title"><div>Contact error</div><div class="red">❌</div></div>
-      <div class="red">Top mat does not overlap any base sections with the current coordinates/tiling.</div>`;
-    out.appendChild(wrap);
-    $('verdict').textContent='❌ No contact';
-    $('verdict').className='red';
-    renderIso3D(p, sec, layout);
-    renderInput3D(p, sec, layout);
-    return;
-  }
-
-  // Base self-weight per beam (kN/m), characteristic
-  let wBase_char=0;
-  if(p.includeBaseSW){
-    if(p.baseModel==='sections' && sec){
-      const t_per_m = (sec.mass_kg_m/1000) * p.layers; // t/m per beam stack
-      wBase_char = t_per_m * g;
-    } else {
-      // block mode
-      const t_per_m = p.material.rho * (p.Lsb_block*p.Lsh_block) * p.layers;
-      wBase_char = t_per_m * g;
+    // Steel sections
+    if(showSections){
+      g.sections.forEach(s=>{
+        primitives.push({kind:'box', box:{x1:s.x1,y1:s.y1,z1:s.z1,x2:s.x2,y2:s.y2,z2:s.z2}, color:secColor, alpha:.94, edge:'rgba(255,255,255,.14)', type:'section', secType:$('sec_series').value});
+      });
     }
-  }
 
-  // For GBP: base footprint = (nLen*Lsl) * (nWid*matWidth)
-  const baseArea = (layout.nLen*p.Lsl) * (layout.nWid*layout.matWidth);
-  // total base selfweight for GBP (tonnes)
-  let Wbase_total=0;
-  if(p.baseModel==='sections' && sec){
-    const mass_t_per_m = sec.mass_kg_m/1000;
-    const totalBeamLen = layout.beams.length * p.Lsl * p.layers; // beams already per mat, per layer handled via layers later? We'll include layers separately:
-    // beams list is per mat, per section (one layer). Multiply by layers.
-    Wbase_total = mass_t_per_m * (layout.beams.length * p.Lsl * p.layers);
-  } else {
-    Wbase_total = p.material.rho * baseArea * p.layers * p.Lsh_block;
-  }
+    // Top mats (steel grey, fully opaque enough to avoid glitch look)
+    g.topRects.forEach(t=>{
+      primitives.push({kind:'box', box:{x1:t.x1,y1:t.y1,z1:t.z1,x2:t.x2,y2:t.y2,z2:t.z2}, color:'#9aa0aa', alpha:.92, edge:'rgba(255,255,255,.22)', type:'top', label:t.label});
+    });
 
-  const lc=getLC();
+    // depth sort (far -> near) using projected centroid depth
+    primitives.forEach(pr=>{
+      const b=pr.box;
+      const cpt = {x:(b.x1+b.x2)/2, y:(b.y1+b.y2)/2, z:(b.z1+b.z2)/2};
+      pr.depth = project(cpt, cam).depth;
+    });
+    primitives.sort((a,b)=> b.depth - a.depth);
 
-  // UI helpers
-  const out=$('results'); out.innerHTML='';
-  const block=(title)=>{
-    const wrap=document.createElement('div'); wrap.className='result-block';
-    const hdr=document.createElement('div'); hdr.className='result-title';
-    const left=document.createElement('div'); left.textContent=title;
-    const right=document.createElement('div'); right.textContent='…'; right.className='muted';
-    hdr.appendChild(left); hdr.appendChild(right);
-    wrap.appendChild(hdr);
-    out.appendChild(wrap);
-    return {wrap, badge:right};
-  };
-  const lineIn=(wrap, lab, val, ok)=>{
-    const d=document.createElement('div');
-    d.textContent=`${lab}: ${val}`;
-    if(ok!==undefined) d.className=ok?'green':'red';
-    wrap.appendChild(d);
-  };
-
-  function evaluateCombo(coeff, Gk, Q1, Q2){
-    const Wpatch = coeff.cG*Gk + coeff.cQ1*Q1 + coeff.cQ2*Q2; // tonnes
-    const wBase = wBase_char * coeff.cG; // kN/m
-    // Distribute Wpatch to beams by overlap area
-    const beamLoads=[];
-    for(const b of layout.beams){
-      const A=b.contact.A;
-      if(A<=0) continue;
-      const Wi = Wpatch * (A / layout.sumA);
-      const a = b.patch.x2 - b.patch.x1;
-      if(a<=0) continue;
-      const wPatch = (Wi * g) / a; // kN/m
-      beamLoads.push({beam:b, Wi, wPatch, x1:b.patch.x1, x2:b.patch.x2});
-    }
-    // Compute per-beam series and find governing (max moment)
-    let govM=null, govV=null;
-    for(const bl of beamLoads){
-      const s = computeSeries(p.Lsl, bl.x1, bl.x2, bl.wPatch, wBase);
-      s._beam = bl.beam;
-      s._Wi = bl.Wi;
-      s._wPatch = bl.wPatch;
-      if(!govM || s.peakM.val > govM.peakM.val) govM = s;
-      if(!govV || s.peakV.val > govV.peakV.val) govV = s;
-    }
-    return {Wpatch, wBase, beamLoads, govM, govV};
-  }
-
-  function computeLoadcase(caseName, Gk, Q1, Q2){
-    // Choose governing ULS for 6.10a/b by comparing governing moment
-    let ulsCoeff = lc.uls;
-    let ulsNote = ulsCoeff.note;
-    let ulsEval;
-
-    if(lc.key==='en1990_610ab'){
-      const evalA = evaluateCombo(lc.uls, Gk, Q1, Q2);
-      const evalB = evaluateCombo(lc.uls.alt, Gk, Q1, Q2);
-      if((evalB.govM?.peakM.val||0) > (evalA.govM?.peakM.val||0)){
-        ulsCoeff = lc.uls.alt;
-        ulsNote = lc.uls.alt.note;
-        ulsEval = evalB;
-      }else{
-        ulsCoeff = lc.uls;
-        ulsNote = lc.uls.note;
-        ulsEval = evalA;
+    for(const pr of primitives){
+      const faces = boxFaces(pr.box).map(f=>{
+        const pp = f.pts.map(v=>project(v,cam));
+        const depth = pp.reduce((s,p)=>s+p.depth,0)/pp.length;
+        return {pp, shade:f.shade, depth, name:f.name};
+      });
+      faces.sort((a,b)=> b.depth - a.depth);
+      faces.forEach(f=>{
+        drawPoly(f.pp, shadeColor(pr.color,f.shade,pr.alpha), pr.edge);
+      });
+      if(pr.type==='section') drawSectionEndFace(pr.box, pr.secType, cam);
+      if(pr.type==='top'){
+        // label
+        const c = project({x:(pr.box.x1+pr.box.x2)/2,y:(pr.box.y1+pr.box.y2)/2,z:pr.box.z2}, cam);
+        ctx.fillStyle='rgba(245,248,255,.92)'; ctx.font='12px system-ui';
+        ctx.fillText(`Top ${pr.label}`, c.x+6, c.y-6);
       }
-    } else {
-      ulsEval = evaluateCombo(lc.uls, Gk, Q1, Q2);
     }
 
-    const slsEval = evaluateCombo(lc.sls, Gk, Q1, Q2);
+    drawAxes(cam, {x:minX,y:minY,z:minZ}, span*0.35);
+    drawDimensions(cam, cachedOut);
 
-    // Governing series
-    const sULS = ulsEval.govM || ulsEval.govV;
-    const sSLS = slsEval.govM || slsEval.govV;
-
-    if(!sULS || !sSLS){
-      return {ok:false, msg:'No beam overlap found for this case (check tiling/coordinates).'};
-    }
-
-    // Actions (absolute max)
-    const MyEd = sULS.peakM.val;
-    const VzEd = sULS.peakV.val;
-    const xM = sULS.peakM.x;
-    const xV = sULS.peakV.x;
-
-    // Deflection from SLS moment on governing moment beam (same beam as SLS govM)
-    const defl = deflectionFromMoment(p, sec, p.Lsl, sSLS.xs, sSLS.M);
-
-    // Stress checks using governing ULS actions
-    let Ab, Sx;
-    if(p.baseModel==='sections' && sec){
-      Ab = sec.Avz_mm2;
-      // use elastic modulus for stress check (stress = M/Wel). Keep consistent with earlier method.
-      Sx = sec.Wel_y_mm3;
-    } else {
-      Ab = p.Lsb_block*1000 * p.Lsh_block*1000;
-      Sx = (Ab * p.Lsh_block*1000)/6;
-    }
-    const sigmaB = (MyEd*1e6)/(p.layers*Sx);
-    const tauS = (VzEd*1e3)/(p.layers*Ab);
-
-    // Contact pressure using total contact area
-    const qContact_t_m2 = ulsEval.Wpatch / layout.sumA;
-    const sigmaC = qContact_t_m2 * g / 1e3;
-
-    const Wtotal_ground = ulsEval.Wpatch + Wbase_total;
-    const GBP_t = Wtotal_ground / baseArea;
-
-    const passB = Math.abs(sigmaB) < p.material.sigma_max;
-    const passS = Math.abs(tauS) < p.material.tau_max;
-    const passC = sigmaC < p.material.sigma_c_max;
-    const passGBP = GBP_t < p.GBP_allow;
-    const passAll = passB && passS && passC && passGBP;
-
-    return {
-      ok:true,
-      caseName,
-      ulsNote,
-      ulsEval, slsEval,
-      MyEd,VzEd,xM,xV,
-      defl, sULS, sSLS,
-      sigmaB,tauS,sigmaC,
-      baseArea, Wbase_total, Wtotal_ground, GBP_t,
-      passB,passS,passC,passGBP,passAll
-    };
+    $('viewReadout').textContent = `Yaw ${(yaw*180/Math.PI).toFixed(0)}° • Pitch ${(pitch*180/Math.PI).toFixed(0)}° • Zoom ${zoom.toFixed(2)}×`;
   }
 
-  // Build load cases
-  const cases=[];
-  if(topType==='crawler'){
-    const qmax=+($('q_max').value||0);
-    if(!(qmax>0)) return showErr('err_qmax','Enter a valid qmax (>0).');
-    // Treat as permanent pressure on the actual contact area
-    const Gload = qmax * layout.sumA; // t (since qmax is t/m²)
-    cases.push(computeLoadcase('Crawler', Gload, 0, 0));
-  } else {
-    const Wm=+($('w_mat').value||0);
-    if(!(Wm>=0)) return showErr('err_wmat','Enter a valid Wm (≥0).');
-
-    const Q1_add=+($('Q1_add').value||0);
-    const Q2_add=+($('Q2_add').value||0);
-
-    const loads=[
-      {k:'A',id:'P_A',err:'err_PA'},
-      {k:'B',id:'P_B',err:'err_PB'},
-      {k:'C',id:'P_C',err:'err_PC'},
-      {k:'D',id:'P_D',err:'err_PD'},
-    ].map(o=>({...o, v:parseOptNumber(o.id)}));
-
-    for(const L of loads){
-      if(L.v===null) continue;
-      if(!isFinite(L.v) || isNaN(L.v)) return showErr(L.err,'Enter a valid number.');
-      if(!(L.v>=0)) return showErr(L.err,'Load must be ≥ 0.');
+  function drawGrid(cam, bounds){
+    const z = bounds.z;
+    const pad = 0.5;
+    const x1 = Math.floor((bounds.minX-pad)*2)/2, x2 = Math.ceil((bounds.maxX+pad)*2)/2;
+    const y1 = Math.floor((bounds.minY-pad)*2)/2, y2 = Math.ceil((bounds.maxY+pad)*2)/2;
+    ctx.save();
+    for(let x=x1; x<=x2+1e-9; x+=0.5){
+      const p1=project({x,y:y1,z},cam), p2=project({x,y:y2,z},cam);
+      ctx.strokeStyle = Math.abs(x) < 1e-9 ? 'rgba(120,170,255,.45)' : 'rgba(255,255,255,.06)';
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
     }
-    const active=loads.filter(L=>L.v!=null && L.v>0);
-    if(!active.length){
-      showErr('err_PA','Enter at least one outrigger load (A/B/C/D).');
-      return;
+    for(let y=y1; y<=y2+1e-9; y+=0.5){
+      const p1=project({x:x1,y,z},cam), p2=project({x:x2,y,z},cam);
+      ctx.strokeStyle = Math.abs(y) < 1e-9 ? 'rgba(120,255,180,.40)' : 'rgba(255,255,255,.06)';
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
     }
-    for(const L of active){
-      // outrigger is permanent G, plus Wm permanent
-      const Gk = Wm + L.v;
-      cases.push(computeLoadcase(`Outrigger ${L.k}`, Gk, Q1_add, Q2_add));
+    ctx.restore();
+  }
+  function drawAxes(cam, o, len){
+    ctx.save();
+    ctx.lineWidth=2;
+    const O=project(o,cam), X=project({x:o.x+len,y:o.y,z:o.z},cam), Y=project({x:o.x,y:o.y+len,z:o.z},cam), Z=project({x:o.x,y:o.y,z:o.z+len},cam);
+    function axis(P,col,label){
+      ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(O.x,O.y); ctx.lineTo(P.x,P.y); ctx.stroke();
+      ctx.fillStyle=col; ctx.font='12px system-ui'; ctx.fillText(label,P.x+4,P.y-2);
     }
+    axis(X,'#7aa2ff','X'); axis(Y,'#77f7b0','Y'); axis(Z,'#ff9f7a','Z');
+    ctx.restore();
   }
 
-  // Render results + charts + math
-  let allPass=true;
-  for(const cse of cases){
-    const b=block(cse.caseName);
-    if(!cse.ok){
-      allPass=false;
-      lineIn(b.wrap,'Error', cse.msg, false);
-      b.badge.textContent='❌ FAIL';
-      b.badge.className='red';
-      continue;
-    }
-    allPass = allPass && cse.passAll;
+  canvas.addEventListener('pointerdown', e=>{
+    dragging=true; lastX=e.clientX; lastY=e.clientY; canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+    yaw += dx*0.008;
+    pitch = clamp(pitch + dy*0.008, -Math.PI/2+0.05, Math.PI/2-0.05);
+    requestRender();
+  });
+  function endDrag(e){ dragging=false; try{ canvas.releasePointerCapture(e.pointerId);}catch(_){} }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const k = Math.exp(-e.deltaY*0.001);
+    zoom = clamp(zoom*k, 0.25, 8);
+    requestRender();
+  }, {passive:false});
+  canvas.addEventListener('dblclick', ()=>{
+    yaw = -35*Math.PI/180; pitch = 28*Math.PI/180; zoom = 1; panX=0; panY=0; requestRender();
+  });
 
-    lineIn(b.wrap,'LC (selected)', lc.name);
-    lineIn(b.wrap,'ULS expression used', cse.ulsNote);
-    lineIn(b.wrap,'SLS expression (deflection)', lc.sls.note);
-
-    lineIn(b.wrap,'Support tiling', `nL=${layout.nLen}, nW=${layout.nWid}, sections/mat=${layout.secPerMat} → total sections=${layout.beams.length}`);
-    lineIn(b.wrap,'Loaded sections (overlap > 0)', `${layout.loadedCount}`);
-    lineIn(b.wrap,'Total contact area ΣAi [m²]', fmt2(layout.sumA));
-
-    lineIn(b.wrap,'Patch load (ULS) Wpatch,Ed [t]', fmt2(cse.ulsEval.Wpatch));
-    lineIn(b.wrap,'Patch load (SLS) Wpatch [t]', fmt2(cse.slsEval.Wpatch));
-
-    // Show governing beam info
-    const gb = cse.sULS._beam;
-    lineIn(b.wrap,'Governing beam', `mat(${gb.matI},${gb.matJ}) secK=${gb.secK}`);
-    lineIn(b.wrap,'Patch on governing beam [m]', `${fmt2(gb.patch.x1)} → ${fmt2(gb.patch.x2)} (L=${fmt2(p.Lsl)})`);
-    lineIn(b.wrap,'wpatch on governing beam (ULS) [kN/m]', fmt1(cse.sULS._wPatch));
-    lineIn(b.wrap,'wG base selfweight (ULS) [kN/m]', fmt1(cse.ulsEval.wBase));
-
-    lineIn(b.wrap,'Peak My,Ed (ULS) [kN·m]', fmt1(cse.MyEd));
-    lineIn(b.wrap,'Peak Vz,Ed (ULS) [kN]', fmt1(cse.VzEd));
-    lineIn(b.wrap,'Peak My position x/L', fmtXL(cse.xM, p.Lsl));
-    lineIn(b.wrap,'Peak Vz position x/L', fmtXL(cse.xV, p.Lsl));
-
-    lineIn(b.wrap,'Peak deflection (SLS) |y|max [mm]', fmt1(cse.defl.peakY.val));
-    lineIn(b.wrap,'Deflection peak position x/L', fmtXL(cse.defl.peakY.x, p.Lsl));
-
-    // Section Control
-    b.wrap.appendChild(sectionControlPanel(sec, p.material, cse.MyEd, cse.xM, cse.VzEd, cse.xV, p.Lsl));
-
-    // Stresses (legacy check set)
-    lineIn(b.wrap,'Bending Stress σB [N/mm²]', fmt2(cse.sigmaB), cse.passB);
-    lineIn(b.wrap,'Shear Stress τS [N/mm²]', fmt2(cse.tauS), cse.passS);
-    lineIn(b.wrap,'Compression Stress σC [N/mm²]', fmt2(cse.sigmaC), cse.passC);
-
-    lineIn(b.wrap,'Base footprint area [m²]', fmt2(cse.baseArea));
-    lineIn(b.wrap,'Base self‑weight total [t]', fmt2(cse.Wbase_total));
-    lineIn(b.wrap,'Total to ground (ULS) [t]', fmt2(cse.Wtotal_ground));
-    lineIn(b.wrap,'GBP [t/m²]', fmt2(cse.GBP_t), cse.passGBP);
-    lineIn(b.wrap,'GBP [kN/m²]', fmt1(cse.GBP_t*9.81));
-
-    // Charts
-    b.wrap.appendChild(makeChartBlock(cse.caseName, cse.sULS, cse.sSLS, cse.defl, p.Lsl));
-
-    // Math workings (MathML)
-    const det=document.createElement('details');
-    const sum=document.createElement('summary');
-    sum.textContent='Full workings (MathML)';
-    det.appendChild(sum);
-    det.appendChild(mathWorkings(p, sec, layout, lc, cse.caseName, cse.ulsNote, cse.ulsEval.Wpatch, cse.slsEval.Wpatch, {MyEd:cse.MyEd, VzEd:cse.VzEd}));
-    b.wrap.appendChild(det);
-
-    b.badge.textContent = cse.passAll ? '✅ PASS' : '❌ FAIL';
-    b.badge.className = cse.passAll ? 'green' : 'red';
+  function setView(name){
+    if(name==='leftiso'){ yaw = -35*Math.PI/180; pitch = 28*Math.PI/180; }
+    else if(name==='rightiso'){ yaw = 35*Math.PI/180; pitch = 28*Math.PI/180; }
+    else if(name==='top'){ yaw = 0; pitch = 89*Math.PI/180; }
+    else if(name==='front'){ yaw = 0; pitch = 0; }
+    else if(name==='side'){ yaw = 90*Math.PI/180; pitch = 0; }
+    else if(name==='reset'){ yaw = -35*Math.PI/180; pitch = 28*Math.PI/180; zoom=1; panX=0; panY=0; }
+    requestRender();
   }
+  document.querySelectorAll('[data-view]').forEach(b=> b.addEventListener('click', ()=> setView(b.dataset.view)));
+  $('zoomIn').addEventListener('click', ()=>{ zoom = clamp(zoom*1.15,0.25,8); requestRender(); });
+  $('zoomOut').addEventListener('click', ()=>{ zoom = clamp(zoom/1.15,0.25,8); requestRender(); });
 
-  $('verdict').textContent = allPass ? '✅ All active loadcases passed' : '❌ One or more loadcases failed — see red items';
-  $('verdict').className = allPass ? 'green' : 'red';
+  const ro = new ResizeObserver(resize);
+  ro.observe(canvas);
 
-  // Render 3D
-  renderIso3D(p, sec, layout);
-  renderInput3D(p, sec, layout);
+  function tick(){
+    if(needs){ needs=false; render(); }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  return { resize, render, requestRender, setOut:(o)=>{cachedOut=o; requestRender();} };
+})();
+
+/* ---------- Main calc loop ---------- */
+let calcTimer = null;
+function runCalcDebounced(){
+  clearTimeout(calcTimer);
+  calcTimer = setTimeout(runCalc, 70);
+}
+function runCalc(){
+  try{
+    const out = solveAll();
+    renderResults(out);
+    viewer.setOut(out);
+  }catch(err){
+    showErr(err && err.message ? err.message : String(err));
+    $('summaryCards').innerHTML='';
+    $('baseResults').innerHTML='';
+    $('distTable').querySelector('tbody').innerHTML='';
+    $('verdict').textContent='Error'; $('verdict').className='badge red';
+    viewer.setOut(lastSolve);
+  }
 }
 
-/* =========================
-   Wire up events
-   ========================= */
-document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){
-    if(!$('help-modal').classList.contains('hide')) $('help-modal').classList.add('hide');
-    if(!$('chart-modal').classList.contains('hide')) closeChartModal();
-  }
-});
-
-// Special-case dropdown behaviour: when profile family changes, repopulate sizes immediately
-$('sec_series').addEventListener('change', ()=>{
-  populateProfileSizes();
-  syncSecSummary();
-  runCalc();
-});
-$('sec_size').addEventListener('change', ()=>{
-  syncSecSummary();
-  runCalc();
-});
-
-
-
-function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn.apply(this,a),ms);};}
-const liveRun=debounce(runCalc,140);
-
-['top_type','material','load_combo','psi_q1','psi_q2','top_wid','top_len','q_max',
- 'P_A','P_B','P_C','P_D','Q1_add','Q2_add','w_mat','overhang',
- 'base_model','sec_class','gammaM0','sec_n','sec_gap','Lsl','layers',
- 'auto_tile','nMatWid','nMatLen','include_base_sw','show_end_profiles',
- 'base_x','base_y','base_z','GBP_allow','precision'
+/* ---------- Wire events ---------- */
+[
+ 'steel_grade','lc_mode','psi_q1','psi_q2',
+ 'Lx','gap_section_mm','n_sec_per_mat','n_mat_y','n_mat_x','gap_mat_y','gap_mat_x','base_layers','base_x','base_y','base_z',
+ 'include_base_sw','gbp_allow','E_mpa','n_points','precision','sec_class','gamma_M0',
+ 'show_dims','show_section_ends','show_individual_sections'
 ].forEach(id=>{
-  const el=$(id);
-  if(!el) return;
-  el.addEventListener('input', liveRun);
-  el.addEventListener('change', liveRun);
+  $(id).addEventListener('input', runCalcDebounced);
+  $(id).addEventListener('change', runCalcDebounced);
 });
+$('sec_series').addEventListener('change', ()=>{ populateSizes(); syncSecSummary(); runCalc(); });
+$('sec_size').addEventListener('change', ()=>{ syncSecSummary(); runCalc(); });
+$('btnRecalc').addEventListener('click', runCalc);
+window.addEventListener('resize', ()=> viewer.requestRender());
 
-$('auto_tile').addEventListener('change', ()=>{ updateTileUI(); runCalc(); });
-
-window.addEventListener('resize', debounce(runCalc,180));
-
-/* init */
-if(typeof PROFILE_DB==='undefined'){
-  globalThis.PROFILE_DB = {
-    HEA:[{name:'HE 200 A', h_mm:190, b_mm:200, mass_kg_m:42.3, Wel_y_mm3:388600, Wpl_y_mm3:429500, Av_z_mm2:1808, Iy_mm4:36920000}],
-    HEB:[{name:'HE 200 B', h_mm:200, b_mm:200, mass_kg_m:61.3, Wel_y_mm3:569000, Wpl_y_mm3:651000, Av_z_mm2:2400, Iy_mm4:56900000}],
-    HEM:[{name:'HE 200 M', h_mm:220, b_mm:206, mass_kg_m:103.0, Wel_y_mm3:924000, Wpl_y_mm3:1080000, Av_z_mm2:3600, Iy_mm4:101600000}]
-  };
-  $('data_warning')?.classList.remove('hide');
-}else{
-  $('data_warning')?.classList.add('hide');
-}
-initInput3DViewer();
-initProfileDropdowns();
-updateModeUI();
-updateLCPreview();
-updateTileUI();
-syncSecSummary();
+/* ---------- Init ---------- */
+topMats = [defaultTopMat({x:0,y:0,z:0,Lx:1.0,Ly:2.0,t:0.10,G:100,Q1:0,Q2:0,Wm:0})];
+resetTopMatLabels();
+renderTopMatsUI();
+updateComboPreview();
 runCalc();
+
+})();
 </script>
 </body>
 </html>
